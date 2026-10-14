@@ -52,6 +52,44 @@ ON DUPLICATE KEY UPDATE
     email           = VALUES(email);
 
 -- -----------------------------------------------------------------------------
+--  Cuentas de los profesionales de demostración
+--
+--  Este script se puede ejecutar SIN 02_datos_prueba.sql: crea también las
+--  cuentas del resto de roles, para que el login del sistema tenga sentido
+--  desde el primer arranque. Si existen los médicos del seed, se enlazan.
+--
+--  Todos usan BCrypt("Ojitos2026*").
+-- -----------------------------------------------------------------------------
+
+INSERT INTO rol (codigo, nombre, descripcion) VALUES
+  ('OFTALMOLOGO','Oftalmólogo','Profesional tratante: consultas, diagnósticos y tratamientos.'),
+  ('RECEPCIONISTA','Recepcionista','Admisión de pacientes, agenda de citas y triaje.'),
+  ('PACIENTE','Paciente','Acceso de solo lectura a su propia información clínica.')
+ON DUPLICATE KEY UPDATE nombre = VALUES(nombre), descripcion = VALUES(descripcion);
+
+-- El hash BCrypt compartido de "Ojitos2026*"
+SET @hash_demo = '$2a$10$A0dcDmz59HQ2Gj7DsWNp/.lhQ8h.cA/biTvsKk8dB0jO.hqq7pqDW';
+
+SET @rol_oftalmo = (SELECT id FROM rol WHERE codigo = 'OFTALMOLOGO');
+SET @rol_recepcion = (SELECT id FROM rol WHERE codigo = 'RECEPCIONISTA');
+SET @rol_paciente = (SELECT id FROM rol WHERE codigo = 'PACIENTE');
+
+INSERT INTO usuario (username, password_hash, email, rol_id, activo, intentos_fallidos, fecha_creacion) VALUES
+  ('recepcion',  @hash_demo, 'recepcion@clinicaojitos.pe', @rol_recepcion, 1, 0, NOW()),
+  ('paciente',   @hash_demo, 'maria.gonzalez@email.com', @rol_paciente,  1, 0, NOW())
+ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash), rol_id = VALUES(rol_id), activo = 1,
+                            intentos_fallidos = 0;
+
+-- Las cuentas de los oftalmólogos se crean una vez existen los profesionales
+-- (lo hace el propio script 02 al dar de alta a los médicos).
+INSERT INTO usuario (username, password_hash, email, rol_id, activo, intentos_fallidos, fecha_creacion)
+SELECT u.username, @hash_demo, u.email, @rol_oftalmo, 1, 0, NOW()
+FROM usuario_oftalmologo uo
+INNER JOIN usuario u ON u.id = uo.usuario_id
+ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash), rol_id = VALUES(rol_id),
+                            intentos_fallidos = 0;
+
+-- -----------------------------------------------------------------------------
 --  Verificación
 -- -----------------------------------------------------------------------------
 SELECT

@@ -223,7 +223,7 @@ Desde **MySQL Workbench** (lo más cómodo: ves cada resultado en tabla):
 
 1. Abre la conexión y ve a **File → Open SQL Script**
 2. Carga y ejecuta, **en este orden**, con el botón ⚡:
-   `sql/01_esquema.sql` → `sql/02_datos_prueba.sql` → `sql/04_cuentas_iniciales.sql`
+   `sql/01_esquema.sql` → `sql/02_datos_prueba.sql` → `sql/04_cuentas_iniciales.sql` → `sql/05_sedes.sql`
 3. Verifica en una pestaña nueva:
    ```sql
    USE clinica_ojitos;
@@ -237,6 +237,7 @@ Desde la **terminal** (un comando por archivo):
 mysql -u root -p -e "source sql/01_esquema.sql"
 mysql -u root -p -e "source sql/02_datos_prueba.sql"
 mysql -u root -p -e "source sql/04_cuentas_iniciales.sql"
+mysql -u root -p -e "source sql/05_sedes.sql"
 ```
 
 > **En PowerShell no uses `mysql -u root -p < archivo.sql`.** El símbolo `<`
@@ -338,6 +339,37 @@ Las demás cuentas de demostración usan la clave `Ojitos2026*`:
 
 > En modo demostración el frontend acepta exactamente las mismas credenciales,
 > para que puedas alternar entre ambos sin surprises.
+
+> **Si solo ejecutaste `01` y `04`**, las cuentas de recepción y paciente se crean
+> igualmente: `04_cuentas_iniciales.sql` es autónomo y no necesita los datos de
+> demostración. Las de oftalmólogo aparecen cuando existan los profesionales del
+> seed.
+
+### Cuentas de los profesionales nuevos
+
+Cuando el administrador registra un oftalmólogo, el sistema **le genera una
+contraseña aleatoria de 12 caracteres**. No es una clave compartida: cada
+profesional recibe la suya.
+
+```
+POST /api/v1/oftalmologos
+→ 201 { oftalmologo: {...},
+        credenciales: { username, password, textoParaDescargar } }
+```
+
+El alta muestra un aviso con la credencial y un botón **Descargar credenciales**
+que guarda un `.txt` para entregarlo. **La contraseña se ve una sola vez**: en la
+base solo queda su hash BCrypt, así que no es recuperable. Si se pierde,
+`POST /api/v1/oftalmologos/{id}/credenciales` emite una nueva.
+
+El profesional la cambia desde **Configuración → Mi cuenta**:
+
+```
+PATCH /api/v1/auth/cambiar-clave  { passwordActual, passwordNueva }
+```
+
+Exige la contraseña actual para que nadie bloquee la cuenta desde un equipo
+dejado con la sesión abierta.
 
 > ### ⚠️ Cuentas de demostración — aviso de seguridad
 >

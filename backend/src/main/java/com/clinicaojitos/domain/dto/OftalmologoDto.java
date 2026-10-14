@@ -125,4 +125,39 @@ public final class OftalmologoDto {
     /** Verificación en tiempo real de la colegiatura. */
     public record ColegiaturaExiste(boolean existe, String mensaje) {
     }
+    /**
+     * Credenciales de la cuenta recién creada.
+     *
+     * <p>La contraseña se devuelve <strong>una sola vez</strong>, en la
+     * respuesta del alta. No existe ningún endpoint que la vuelva a mostrar,
+     * porque la base solo guarda el hash BCrypt: es imposible recuperarla.
+     */
+    public record Credenciales(
+            String username,
+            String password,
+            String nombreCompleto,
+            String textoParaDescargar
+    ) {
+    }
+
+    /**
+     * Ficha del profesional junto con sus credenciales de primer ingreso.
+     */
+    public record AltaConCredenciales(
+            Response oftalmologo,
+            Credenciales credenciales
+    ) {
+    }
+
+    /** Cambio voluntary de contraseña por el propio usuario. */
+    public record CambioClaveRequest(
+            @jakarta.validation.constraints.NotBlank(message = "La contraseña actual es obligatoria")
+            String passwordActual,
+
+            @jakarta.validation.constraints.NotBlank(message = "La nueva contraseña es obligatoria")
+            @jakarta.validation.constraints.Size(min = 8, max = 100,
+                    message = "La contraseña debe tener entre 8 y 100 caracteres")
+            String passwordNueva
+    ) {
+    }
 }

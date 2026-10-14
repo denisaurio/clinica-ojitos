@@ -60,24 +60,48 @@
           [error]="errorColegiatura()"
         />
 
-        <ui-select
-          formControlName="subespecialidad"
-          etiqueta="Subespecialidad"
-          placeholder="Seleccione un área de especialidad"
-          [opciones]="subespecialidades()"
-          [requerido]="true"
-          [error]="errorDe('subespecialidad', 'Seleccione una subespecialidad.')"
-        />
+        <div class="selector">
+          <ui-input
+            formControlName="subespecialidad"
+            etiqueta="Subespecialidad"
+            placeholder="Busque o escriba la especialidad"
+            listaId="lista-subespecialidades"
+            icono="search"
+            [requerido]="true"
+            [error]="errorDe('subespecialidad', 'Seleccione o escriba una subespecialidad.')"
+          />
+          <datalist id="lista-subespecialidades">
+            @for (op of subespecialidades(); track op.valor) {
+              <option [value]="op.valor">{{ op.etiqueta }}</option>
+            }
+          </datalist>
+          <p class="ayuda">
+            Elija una de las {{ subespecialidades().length }} áreas oftalmológicas
+            del catálogo o escriba la suya si no aparece. Se guarda tal como la
+            escriba.
+          </p>
+        </div>
 
-        <ui-select
-          formControlName="sede"
-          etiqueta="Sede"
-          placeholder="Clínica Principal (Centre)"
-          [opciones]="[
-            { valor: 'Clínica Principal (Centre)', etiqueta: 'Clínica Principal (Centre)' },
-            { valor: 'Clínica Norte', etiqueta: 'Clínica Norte' }
-          ]"
-        />
+        <div class="selector">
+          <ui-input
+            formControlName="sede"
+            etiqueta="Sede"
+            placeholder="Busque una universidad o escriba la sede"
+            listaId="lista-sedes"
+            icono="search"
+            [requerido]="true"
+            [error]="errorDe('sede', 'Seleccione o escriba la sede donde atiende.')"
+          />
+          <datalist id="lista-sedes">
+            @for (op of sedes(); track op.valor) {
+              <option [value]="op.valor">{{ op.etiqueta }}</option>
+            }
+          </datalist>
+          <p class="ayuda">
+            Busque entre las universidades y centros del país, o escriba
+            libremente el lugar donde atiende si no está en la lista.
+          </p>
+        </div>
       </div>
     </ui-card>
 
@@ -88,4 +112,35 @@
       </ui-button>
     </div>
   </form>
+
+  @if (credenciales(); as c) {
+    <ui-modal [titulo]="'Credenciales de ' + c.nombreCompleto" (cerrar)="continuar()">
+      <div class="credenciales">
+        <ui-alert tipo="warning">
+          <strong>Esta contraseña se muestra una sola vez.</strong>
+          Descárguela y entréguesela al profesional: no podrá volver a verla,
+          porque el sistema solo guarda su cifrado.
+        </ui-alert>
+
+        <dl class="credenciales__datos">
+          <dt>Usuario</dt>
+          <dd><code>{{ c.username }}</code></dd>
+          <dt>Contraseña</dt>
+          <dd><code class="credenciales__clave">{{ c.password }}</code></dd>
+        </dl>
+
+        <p class="ayuda">
+          El profesional podrá cambiarla cuando entre en
+          <strong>Configuración → Mi cuenta</strong>.
+        </p>
+      </div>
+
+      <ng-container pie>
+        <ui-button variante="contorno" tipo="button" (click)="continuar()">Cerrar</ui-button>
+        <ui-button variante="primario" tipo="button" icono="download" (click)="descargarCredenciales()">
+          Descargar credenciales
+        </ui-button>
+      </ng-container>
+    </ui-modal>
+  }
 </div>

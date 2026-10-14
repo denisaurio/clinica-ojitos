@@ -69,4 +69,15 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> logout() {
         return ResponseEntity.ok(Map.of("mensaje", "Sesión cerrada."));
     }
+
+    @PatchMapping("/cambiar-clave")
+    @Operation(summary = "Cambia la contraseña del usuario autenticado")
+    public ResponseEntity<Map<String, String>> cambiarClave(
+            @AuthenticationPrincipal String username,
+            @Valid @RequestBody com.clinicaojitos.domain.dto.OftalmologoDto.CambioClaveRequest request) {
+
+        authService.cambiarPassword(username, request.passwordActual(), request.passwordNueva());
+        return ResponseEntity.ok(Map.of(
+                "mensaje", "Contraseña actualizada correctamente."));
+    }
 }

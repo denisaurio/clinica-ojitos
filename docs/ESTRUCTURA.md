@@ -48,7 +48,8 @@ se pueden volver a ejecutar sin romper nada.
 | `01_esquema.sql` | Crea la base, las 24 tablas, los índices y las 3 vistas | Siempre, primero |
 | `02_datos_prueba.sql` | Carga los datos de demostración del prototipo | Después del esquema |
 | `03_consultas.sql` | Consultas de evidencia para la sustentación | Para documentar |
-| `04_cuentas_iniciales.sql` | Crea la cuenta `admin` / `admin123` | Después de los datos |
+| `04_cuentas_iniciales.sql` | Crea la cuenta `admin` / `admin123` y las de recepción y paciente | Después de los datos |
+| `05_sedes.sql` | Catálogo de 37 sedes: universidades y centros del Perú | Con los anteriores |
 
 ```bash
 # En bash o Git Bash:

@@ -5,7 +5,9 @@ import { delay } from 'rxjs/operators';
 
 import { environment } from '../../../environments/environment';
 import {
+  AltaOftalmologo,
   BloqueHorario,
+  Credenciales,
   ExisteColegiaturaResponse,
   HorarioSemanal,
   MetricasOftalmologo,
@@ -51,18 +53,57 @@ export class OftalmologoService {
     return this.http.get<Oftalmologo>(`${this.base}/${id}`);
   }
 
-  crear(peticion: OftalmologoRequest): Observable<Oftalmologo> {
+  crear(peticion: OftalmologoRequest): Observable<AltaOftalmologo> {
     if (environment.useMockApi) {
-      return of({
+      const nuevo: Oftalmologo = {
         id: this.demo.oftalmologos.length + 1,
         ...peticion,
         nombreCompleto: `Dr. ${peticion.nombres} ${peticion.apellidos}`,
         iniciales: this.demo.iniciales(`${peticion.nombres} ${peticion.apellidos}`),
         activo: true,
         fotoUrl: '',
+      };
+      return of({
+        oftalmologo: nuevo,
+        credenciales: {
+          username: peticion.email.split('@')[0],
+          password: 'Demo9!aZ#2kLq',
+          nombreCompleto: nuevo.nombreCompleto,
+          textoParaDescargar: 'Credenciales de demostración',
+        },
       }).pipe(delay(200));
     }
-    return this.http.post<Oftalmologo>(this.base, peticion);
+    return this.http.post<AltaOftalmologo>(this.base, this.aPeticion(peticion));
+  }
+
+  /**
+   * Pide nuevas credenciales para un profesional. La contraseña anterior no es
+   * recuperable —solo existe su hash—, así que el backend emite una nueva.
+   */
+  credenciales(id: number): Observable<Credenciales> {
+    if (environment.useMockApi) {
+      return of({
+        username: `demo${id}`,
+        password: 'Demo9!aZ#2kLq',
+        nombreCompleto: 'Oftalmólogo de demostración',
+        textoParaDescargar: 'Credenciales de demostración',
+      }).pipe(delay(150));
+    }
+    return this.http.post<Credenciales>(`${this.base}/${id}/credenciales`, {});
+  }
+
+  /** El backend guarda `subespecialidad` como id de catálogo, no como texto. */
+  private aPeticion(p: OftalmologoRequest) {
+    return {
+      nombres: p.nombres,
+      apellidos: p.apellidos,
+      email: p.email,
+      telefono: p.telefono,
+      numeroColegiatura: p.numeroColegiatura,
+      subespecialidadId: p.subespecialidadId ?? null,
+      sedeId: p.sedeId ?? null,
+      activo: true,
+    };
   }
 
   actualizar(id: number, peticion: OftalmologoRequest): Observable<Oftalmologo> {

@@ -8,7 +8,13 @@ export interface OpcionSelect {
   etiqueta: string;
 }
 
-/** Desplegable nativo estilizado; mantiene la accesibilidad del `<select>`. */
+/**
+ * Desplegable nativo estilizado; mantiene la accesibilidad del `<select>`.
+ *
+ * <p>Para campos que deben admitir texto libre con sugerencias —una
+ * subespecialidad o una sede que no esté en el catálogo— usa `ui-input` con
+ * `[listaId]`, que ya empareja un campo de texto con un `<datalist>`.
+ */
 @Component({
   selector: 'ui-select',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -35,6 +41,7 @@ export interface OpcionSelect {
         @if (icono()) {
           <ui-icon class="campo__icono" [nombre]="icono()" [tamano]="16" />
         }
+
         <select
           class="campo__select"
           [disabled]="deshabilitado()"
@@ -47,6 +54,7 @@ export interface OpcionSelect {
             <option [value]="opcion.valor">{{ opcion.etiqueta }}</option>
           }
         </select>
+
         <ui-icon class="campo__flecha" nombre="chevron-down" [tamano]="16" />
       </span>
 

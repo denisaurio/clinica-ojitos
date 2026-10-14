@@ -45,6 +45,8 @@ class OftalmologoServiceTest {
     @Mock private UsuarioOftalmologoRepository usuarioOftalmologoRepository;
     @Mock private UsuarioRepository usuarioRepository;
     @Mock private RolRepository rolRepository;
+    @Mock private com.clinicaojitos.security.GeneradorDeCredenciales generador;
+    @Mock private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
     @Mock private Mapeador mapeador;
 
     @InjectMocks private OftalmologoService servicio;

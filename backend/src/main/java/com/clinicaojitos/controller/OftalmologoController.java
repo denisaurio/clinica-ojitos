@@ -54,9 +54,20 @@ public class OftalmologoController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMINISTRADOR')")
-    @Operation(summary = "Registra un oftalmólogo (rechaza colegiaturas duplicadas, RF5.2)")
-    public OftalmologoDto.Response registrar(@Valid @RequestBody OftalmologoDto.Request request) {
+    @Operation(summary = "Registra un oftalmólogo y devuelve sus credenciales de primer ingreso")
+    public OftalmologoDto.AltaConCredenciales registrar(@Valid @RequestBody OftalmologoDto.Request request) {
         return oftalmologoService.registrar(request);
+    }
+
+    /**
+     * Genera una contraseña nueva para el profesional y la devuelve una sola vez.
+     * No existe forma de recuperar la anterior: la base solo guarda el hash BCrypt.
+     */
+    @PostMapping("/{id}/credenciales")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @Operation(summary = "Emite nuevas credenciales de acceso (la contraseña anterior no es recuperable)")
+    public OftalmologoDto.Credenciales credenciales(@PathVariable Long id) {
+        return oftalmologoService.regenerarCredenciales(id);
     }
 
     @PutMapping("/{id}")

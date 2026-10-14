@@ -13,10 +13,12 @@ import com.clinicaojitos.domain.repository.*;
 import com.clinicaojitos.exception.ColegiaturaDuplicadaException;
 import com.clinicaojitos.exception.OperacionInvalidaException;
 import com.clinicaojitos.exception.RecursoNoEncontradoException;
+import com.clinicaojitos.security.GeneradorDeCredenciales;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,6 +56,8 @@ public class OftalmologoService {
     private final UsuarioOftalmologoRepository usuarioOftalmologoRepository;
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
+    private final GeneradorDeCredenciales generador;
+    private final PasswordEncoder passwordEncoder;
     private final Mapeador mapeador;
 
     @Transactional(readOnly = true)
@@ -86,7 +90,7 @@ public class OftalmologoService {
 
     @Transactional
     @Auditado(accion = "CREAR", recurso = "OFTALMOLOGO", descripcion = "Alta de oftalmólogo")
-    public OftalmologoDto.Response registrar(OftalmologoDto.Request r) {
+    public OftalmologoDto.AltaConCredenciales registrar(OftalmologoDto.Request r) {
         String colegiatura = r.numeroColegiatura().trim();
 
         if (oftalmologoRepository.existsByNumeroColegiatura(colegiatura)) {
@@ -113,8 +117,26 @@ public class OftalmologoService {
         }
 
         Oftalmologo guardado = oftalmologoRepository.save(o);
-        crearCuentaDeAcceso(guardado);
-        return mapeador.aOftalmologo(guardado);
+        OftalmologoDto.Credenciales credenciales = crearCuentaDeAcceso(guardado);
+        return new OftalmologoDto.AltaConCredenciales(
+                mapeador.aOftalmologo(guardado), credenciales);
+    }
+
+    /**
+     * Genera una contraseña nueva para el profesional y la devuelve una sola vez.
+     * La anterior no es recuperable: en la base solo queda su hash BCrypt.
+     */
+    @Transactional
+    @Auditado(accion = "RESETEAR_CLAVE", recurso = "OFTALMOLOGO",
+            descripcion = "Emisión de nuevas credenciales")
+    public OftalmologoDto.Credenciales regenerarCredenciales(Long id) {
+        Oftalmologo o = obtenerEntidad(id);
+        OftalmologoDto.Credenciales credenciales = crearCuentaDeAcceso(o);
+        if (credenciales == null) {
+            throw new OperacionInvalidaException(
+                    "No se pudo emitir la credencial: el correo ya pertenece a otra cuenta.");
+        }
+        return credenciales;
     }
 
     @Transactional
@@ -239,38 +261,74 @@ public class OftalmologoService {
      * Crea la cuenta de acceso del profesional recién dado de alta.
      * La contraseña inicial es temporal y el administrador debe cambiarla.
      */
-    private void crearCuentaDeAcceso(Oftalmologo o) {
-        if (usuarioOftalmologoRepository.existsByOftalmologoId(o.getId())) {
-            return;
+    /**
+     * Crea —o restablece— la cuenta de acceso del profesional con una contraseña
+     * aleatoria y la devuelve para que el administrador se la entregue.
+     *
+     * @return las credenciales de primer ingreso, o {@code null} si el correo
+     *         ya está en uso por otra cuenta y no se puede crear la suya
+     */
+    private OftalmologoDto.Credenciales crearCuentaDeAcceso(Oftalmologo o) {
+
+        String username = usernameSugerido(o);
+        String password = generador.nuevaPassword();
+
+        UsuarioOftalmologo vinculo = usuarioOftalmologoRepository.findByOftalmologoId(o.getId())
+                .orElse(null);
+
+        Usuario cuenta;
+        if (vinculo != null) {
+            cuenta = usuarioRepository.findById(vinculo.getUsuarioId()).orElse(null);
+        } else {
+            cuenta = usuarioRepository.findByUsernameIgnoreCase(username).orElse(null);
+            // El correo ya pertenece a otra cuenta: no se pisa la de otro.
+            if (cuenta != null) {
+                log.warn("No se creó la cuenta de {}: el usuario {} ya existe.",
+                        o.getNombreCompleto(), username);
+                return null;
+            }
         }
-        Rol rolOftalmologo = rolRepository.findByCodigo("OFTALMOLOGO").orElse(null);
-        if (rolOftalmologo == null) {
-            return;
+
+        if (cuenta == null) {
+            Rol rolOftalmologo = rolRepository.findByCodigo("OFTALMOLOGO").orElse(null);
+            if (rolOftalmologo == null) {
+                log.warn("No se creó la cuenta de {}: falta el rol OFTALMOLOGO.",
+                        o.getNombreCompleto());
+                return null;
+            }
+            cuenta = new Usuario();
+            cuenta.setUsername(username);
+            cuenta.setEmail(o.getEmail());
+            cuenta.setRol(rolOftalmologo);
+            cuenta.setActivo(Boolean.TRUE);
+            cuenta.setIntentosFallidos(0);
         }
 
-        String base = o.getEmail().split("@")[0];
-        String username = base.length() > 59 ? base.substring(0, 59) : base;
-        if (usuarioRepository.existsByUsernameIgnoreCase(username)) {
-            log.warn("No se creó la cuenta de {}: el usuario {} ya existe.", o.getEmail(), username);
-            return;
+        cuenta.setPasswordHash(passwordEncoder.encode(password));
+        cuenta.setIntentosFallidos(0);
+        Usuario guardado = usuarioRepository.save(cuenta);
+
+        if (vinculo == null) {
+            usuarioOftalmologoRepository.save(UsuarioOftalmologo.builder()
+                    .usuarioId(guardado.getId())
+                    .oftalmologoId(o.getId())
+                    .build());
         }
 
-        Usuario nuevo = new Usuario();
-        nuevo.setUsername(username);
-        nuevo.setPasswordHash(PASSWORD_TEMPORAL_HASH);
-        nuevo.setEmail(o.getEmail());
-        nuevo.setRol(rolOftalmologo);
-        nuevo.setActivo(Boolean.TRUE);
-        nuevo.setIntentosFallidos(0);
+        return new OftalmologoDto.Credenciales(
+                guardado.getUsername(),
+                password,
+                o.getNombreCompleto(),
+                generador.comoCredencial(guardado.getUsername(), password, o.getNombreCompleto()));
+    }
 
-        Usuario guardado = usuarioRepository.save(nuevo);
-
-        usuarioOftalmologoRepository.save(UsuarioOftalmologo.builder()
-                .usuarioId(guardado.getId())
-                .oftalmologoId(o.getId())
-                .build());
-
-        log.info("Cuenta de acceso creada para el oftalmólogo {} (usuario: {})",
-                o.getNombreCompleto(), username);
+    /** El usuario es la parte del correo anterior a la arroba. */
+    private String usernameSugerido(Oftalmologo o) {
+        String base = o.getEmail() == null ? "" : o.getEmail().split("@")[0];
+        base = base.replaceAll("[^A-Za-z0-9._-]", "");
+        if (base.isEmpty()) {
+            base = "oftalmo" + o.getId();
+        }
+        return base.length() > 59 ? base.substring(0, 59) : base;
     }
 }

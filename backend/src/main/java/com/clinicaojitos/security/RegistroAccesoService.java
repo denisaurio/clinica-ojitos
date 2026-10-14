@@ -3,6 +3,7 @@ package com.clinicaojitos.security;
 import com.clinicaojitos.domain.entity.Usuario;
 import com.clinicaojitos.domain.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,7 @@ import java.time.LocalDateTime;
 public class RegistroAccesoService {
 
     private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * Suma un intento fallido y devuelve el total acumulado.
@@ -63,5 +65,20 @@ public class RegistroAccesoService {
             usuario.setActivo(Boolean.TRUE);
             usuarioRepository.save(usuario);
         });
+    }
+
+    /**
+     * Sustituye la contraseña de una cuenta.
+     *
+     * <p>Va en transacción propia porque se invoca desde
+     * {@code AuthService.cambiarPassword}, que puede terminar con una
+     * excepción: el cambio debe confirmar o revertirse entero.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void cambiarPassword(Long usuarioId, String nuevaPassword) {
+        Usuario usuario = usuarioRepository.findById(usuarioId).orElseThrow();
+        usuario.setPasswordHash(passwordEncoder.encode(nuevaPassword));
+        usuario.setIntentosFallidos(0);
+        usuarioRepository.save(usuario);
     }
 }

@@ -6,6 +6,7 @@ import com.clinicaojitos.domain.entity.Usuario;
 import com.clinicaojitos.domain.repository.UsuarioOftalmologoRepository;
 import com.clinicaojitos.domain.repository.UsuarioRepository;
 import com.clinicaojitos.exception.CredencialesInvalidasException;
+import com.clinicaojitos.exception.OperacionInvalidaException;
 import com.clinicaojitos.security.JwtService;
 import com.clinicaojitos.security.RegistroAccesoService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -168,5 +169,33 @@ public class AuthService {
 
     private String navegador(HttpServletRequest request) {
         return request == null ? null : request.getHeader("User-Agent");
+    }
+
+    /**
+     * Cambio de contraseña por el propio usuario (RF-06).
+     *
+     * <p>Exige la contraseña actual: así, si alguien se deja una sesión abierta
+     * en un equipo compartido, no puede dejar la cuenta bloqueada con una clave
+     * que el propietario no conoce.
+     *
+     * <p>Va en su propia transacción porque la validación se hace en la misma
+     * operación que el guardado: si fallara, el cambio debe revertirse entero.
+     */
+    @Transactional
+    public void cambiarPassword(String username, String passwordActual, String passwordNueva) {
+        Usuario usuario = usuarioRepository.buscarPorUsernameConRol(username)
+                .orElseThrow(() -> new CredencialesInvalidasException("El usuario no existe."));
+
+        if (!passwordEncoder.matches(passwordActual, usuario.getPasswordHash())) {
+            throw new CredencialesInvalidasException(
+                    "La contraseña actual no es correcta.");
+        }
+
+        if (passwordEncoder.matches(passwordNueva, usuario.getPasswordHash())) {
+            throw new OperacionInvalidaException(
+                    "La nueva contraseña debe ser distinta de la actual.");
+        }
+
+        registroAccesoService.cambiarPassword(usuario.getId(), passwordNueva);
     }
 }
