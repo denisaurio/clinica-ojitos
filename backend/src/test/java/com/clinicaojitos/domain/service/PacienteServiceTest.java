@@ -2,6 +2,7 @@ package com.clinicaojitos.domain.service;
 
 import com.clinicaojitos.domain.dto.PacienteDto;
 import com.clinicaojitos.domain.entity.Paciente;
+import com.clinicaojitos.domain.entity.Rol;
 import com.clinicaojitos.domain.entity.TipoSeguro;
 import com.clinicaojitos.domain.repository.*;
 import com.clinicaojitos.exception.DocumentoDuplicadoException;
@@ -16,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
@@ -42,6 +44,9 @@ class PacienteServiceTest {
     @Mock private CitaRepository citaRepository;
     @Mock private TratamientoRepository tratamientoRepository;
     @Mock private ExamenRepository examenRepository;
+    @Mock private RolRepository rolRepository;
+    @Mock private UsuarioRepository usuarioRepository;
+    @Mock private PasswordEncoder passwordEncoder;
     @Mock private Mapeador mapeador;
 
     @InjectMocks private PacienteService servicio;
@@ -50,7 +55,13 @@ class PacienteServiceTest {
 
     @BeforeEach
     void preparar() {
+        when(rolRepository.findByCodigo("PACIENTE")).thenReturn(Optional.of(
+                Rol.builder().id(4).codigo("PACIENTE").nombre("Paciente").build()));
+        when(passwordEncoder.encode(anyString()))
+                .thenAnswer(inv -> "{bcrypt}" + inv.getArgument(0));
+
         requestValido = new PacienteDto.Request(
+                "ClinicDemo2026", null,
                 "Juan Carlos",
                 "Pérez Gómez",
                 "45678912",
@@ -115,6 +126,7 @@ class PacienteServiceTest {
     @DisplayName("Normaliza el documento antes de validar la unicidad")
     void normalizaDocumento() {
         PacienteDto.Request conEspacios = new PacienteDto.Request(
+                "ClinicDemo2026", null,
                 "Ana", "Ramos", "  70124563B  ", null, 29, null, null, null,
                 null, null, null, null, null, null, null);
 

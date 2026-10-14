@@ -40,10 +40,23 @@ public final class OftalmologoDto {
                     message = "Formato de colegiatura no válido, por ejemplo COP-38472")
             String numeroColegiatura,
 
-            @NotNull(message = "La subespecialidad es obligatoria")
+            /**
+             * Id del catálogo de subespecialidades. Puede venir nulo si el
+             * profesional escribió el nombre a mano: en ese caso se usa
+             * {@link #subespecialidad}.
+             */
             Integer subespecialidadId,
 
+            /** Subespecialidad escrita a mano, cuando no está en el catálogo. */
+            @Size(max = 80, message = "Máximo 80 caracteres")
+            String subespecialidad,
+
             Integer sedeId,
+
+            /** Sede escrita a mano, cuando no está en el catálogo. */
+            @Size(max = 120, message = "Máximo 120 caracteres")
+            String sede,
+
             String fotoUrl,
             LocalDate fechaIngreso,
             Boolean activo

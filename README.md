@@ -718,3 +718,37 @@ Los códigos son ADMINISTRADOR, OFTALMOLOGO, RECEPCIONISTA y PACIENTE.
 
 > Para crear un rol nuevo solo hace falta insertarlo en la tabla ol; no hay
 > que tocar el esquema, porque los roles son un catálogo (RNF-05).
+---
+
+## Acceso de los pacientes al portal
+
+Al dar de alta un paciente —administrador o recepción— el formulario pide una
+**contraseña de acceso**. El paciente entra al portal con ella y puede
+cambiarla después desde Configuración → Mi cuenta.
+
+```
+POST /api/v1/pacientes
+→ 201 { paciente: {...}, credenciales: { username, password, ... } }
+```
+
+El **usuario** admite espacios: si se deja vacío se usa el nombre completo del
+paciente, y «denis quispe mamani tercero» es tan válido como «dquisupe». Si ya
+existe, se le añade un sufijo (`.2`, `.3`…) para no rechazar el alta del
+paciente por un choque de nombres.
+
+La contraseña se muestra y se descarga **una sola vez**: en la base solo queda
+su hash BCrypt.
+
+> **Requisito:** el alta sin contraseña se rechaza con un mensaje explícito. Es
+> preferible a crear una ficha sin forma de entrar.
+
+## Catálogos que se amplían solos
+
+Al registrar un oftalmólogo, la **subespecialidad** y la **sede** pueden elegirse
+del catálogo o escribirse a mano. Si el nombre no existe, el sistema lo da de
+alta como entrada nueva en lugar de rechazar el registro completo.
+
+No hace falta tocar el esquema: los catálogos son tablas, no `ENUM` de MySQL.
+Por eso se pueden ampliar (RNF-05). La comparación ignora mayúsculas, tildes y
+espacios sobrantes, así que «Vitreorretinologia» y «Vitreorretinología» apuntan a
+la misma entrada.

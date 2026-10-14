@@ -16,6 +16,26 @@ public final class PacienteDto {
 
     /** Alta y edición de paciente. */
     public record Request(
+            /**
+             * Contraseña de acceso del portal del paciente.
+             *
+             * <p>Obligatoria al dar de alta: el paciente entra al sistema con
+             * esta clave y debería cambiarla en su primer acceso.
+             */
+            @Size(min = 8, max = 100,
+                    message = "La contraseña debe tener entre 8 y 100 caracteres")
+            String password,
+
+            /**
+             * Nombre de usuario para entrar al portal.
+             *
+             * <p>Si viene vacío se usa el nombre completo del paciente. Admite
+             * espacios: «denis quispe mamani» es un usuario tan válido como
+             * «dquisupe».
+             */
+            @Size(max = 120, message = "Máximo 120 caracteres")
+            String username,
+
             @NotBlank(message = "Los nombres son obligatorios")
             @Size(max = 80, message = "Máximo 80 caracteres")
             String nombres,
@@ -115,6 +135,15 @@ public final class PacienteDto {
             long totalCitas,
             long tratamientosActivos,
             List<Actividad> actividadReciente
+    ) {
+    }
+
+    /**
+     * Ficha del paciente recién creado junto con sus credenciales de acceso.
+     */
+    public record AltaConCredenciales(
+            Response paciente,
+            CredencialesDto credenciales
     ) {
     }
 }

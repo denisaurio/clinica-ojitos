@@ -57,8 +57,8 @@ public class PacienteController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('ADMINISTRADOR','RECEPCIONISTA')")
-    @Operation(summary = "Registra un paciente nuevo (rechaza documentos duplicados)")
-    public PacienteDto.Response registrar(@Valid @RequestBody PacienteDto.Request request) {
+    @Operation(summary = "Registra un paciente y devuelve sus credenciales de acceso")
+    public PacienteDto.AltaConCredenciales registrar(@Valid @RequestBody PacienteDto.Request request) {
         return pacienteService.registrar(request);
     }
 

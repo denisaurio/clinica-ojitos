@@ -1,11 +1,14 @@
 package com.clinicaojitos.domain.service;
 
 import com.clinicaojitos.audit.Auditado;
+import com.clinicaojitos.domain.dto.CredencialesDto;
 import com.clinicaojitos.domain.dto.PacienteDto;
 import com.clinicaojitos.domain.entity.Cita;
 import com.clinicaojitos.domain.entity.Consulta;
 import com.clinicaojitos.domain.entity.Examen;
 import com.clinicaojitos.domain.entity.Paciente;
+import com.clinicaojitos.domain.entity.Rol;
+import com.clinicaojitos.domain.entity.Usuario;
 import com.clinicaojitos.domain.entity.TipoSeguro;
 import com.clinicaojitos.domain.entity.Tratamiento;
 import com.clinicaojitos.domain.repository.*;
@@ -13,6 +16,7 @@ import com.clinicaojitos.exception.DocumentoDuplicadoException;
 import com.clinicaojitos.exception.RecursoNoEncontradoException;
 import com.clinicaojitos.exception.OperacionInvalidaException;
 import com.clinicaojitos.security.SecurityUtils;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -42,6 +46,9 @@ public class PacienteService {
     private final ExamenRepository examenRepository;
     private final Mapeador mapeador;
     private final AutorizacionPacienteService autorizacion;
+    private final RolRepository rolRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
     public Page<PacienteDto.Resumen> buscar(String buscar, Pageable pageable) {
@@ -104,7 +111,7 @@ public class PacienteService {
 
     @Transactional
     @Auditado(accion = "CREAR", recurso = "PACIENTE", descripcion = "Alta de paciente")
-    public PacienteDto.Response registrar(PacienteDto.Request request) {
+    public PacienteDto.AltaConCredenciales registrar(PacienteDto.Request request) {
         String documento = normalizar(request.documento());
 
         if (documento.isEmpty()) {
@@ -115,11 +122,72 @@ public class PacienteService {
                     "Este documento de identidad ya está registrado en el sistema.");
         }
 
+        // La contraseña es obligatoria al dar de alta: sin ella el paciente
+        // se queda sin forma de entrar a su portal.
+        if (request.password() == null || request.password().isBlank()) {
+            throw new OperacionInvalidaException(
+                    "Debe asignar una contraseña de acceso al paciente.");
+        }
+
         Paciente p = new Paciente();
         aplicar(p, request);
         p.setDocumento(documento);
 
-        return mapeador.aPaciente(pacienteRepository.save(p));
+        Paciente guardado = pacienteRepository.save(p);
+        CredencialesDto credenciales = crearCuentaDeAcceso(guardado, request);
+
+        return new PacienteDto.AltaConCredenciales(
+                mapeador.aPaciente(guardado), credenciales);
+    }
+
+    /**
+     * Crea la cuenta del portal del paciente con la contraseña que eligió quien
+     * lo registró.
+     *
+     * <p>El usuario es el nombre completo tal como se escribió: admite espacios
+     * («denis quispe mamani tercero» es un usuario válido). Si ya existe se le
+     * añade un sufijo numérico para no rechazar el alta del paciente por un
+     * choque de nombres.
+     */
+    private CredencialesDto crearCuentaDeAcceso(Paciente p, PacienteDto.Request request) {
+
+        Rol rolPaciente = rolRepository.findByCodigo("PACIENTE")
+                .orElseThrow(() -> new OperacionInvalidaException(
+                        "Falta el rol PACIENTE en el catálogo."));
+
+        String base = (request.username() == null || request.username().isBlank())
+                ? p.getNombreCompleto()
+                : request.username().trim().replaceAll("\\s+", " ");
+
+        if (base.length() > 59) {
+            base = base.substring(0, 59);
+        }
+
+        String username = base;
+        int sufijo = 2;
+        while (usuarioRepository.existsByUsernameIgnoreCase(username)) {
+            String numero = "." + sufijo++;
+            int corte = Math.min(base.length(), 59 - numero.length());
+            username = base.substring(0, corte) + numero;
+        }
+
+        Usuario usuario = new Usuario();
+        usuario.setUsername(username);
+        usuario.setPasswordHash(passwordEncoder.encode(request.password()));
+        // El correo de la ficha es la vía para reenlazar el portal si cambia.
+        usuario.setEmail(p.getEmail() != null ? p.getEmail()
+                : (p.getDocumento() + "@sin-correo.clinicaojitos.pe"));
+        usuario.setRol(rolPaciente);
+        usuario.setActivo(Boolean.TRUE);
+        usuario.setIntentosFallidos(0);
+
+        usuarioRepository.save(usuario);
+
+        return new CredencialesDto(
+                username,
+                request.password(),
+                p.getNombreCompleto(),
+                CredencialesDto.formato(username, request.password(), p.getNombreCompleto()));
     }
 
     @Transactional

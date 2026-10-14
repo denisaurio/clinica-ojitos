@@ -111,6 +111,62 @@
           </span>
         </label>
       </ui-card>
+
+      <ui-card titulo="Acceso al Portal del Paciente" icono="lock">
+        <div class="credenciales">
+          <p class="credenciales__intro">
+            Así entrará el paciente al sistema para ver sus citas y su historial.
+            Anótale el usuario y la contraseña, y entrégaselas en mano.
+          </p>
+
+          <ui-input
+            formControlName="usuario"
+            etiqueta="Usuario de acceso (opcional)"
+            placeholder="Si lo dejas vacío se usa el nombre completo"
+            icono="user"
+            ayuda="Admite espacios: «denis quispe mamani» es un usuario válido."
+          />
+
+          <div class="grid-2">
+            <ui-input
+              formControlName="password"
+              etiqueta="Contraseña"
+              tipo="password"
+              icono="lock"
+              [requerido]="true"
+              [error]="
+                c.password.touched && c.password.invalid
+                  ? 'Debe tener al menos 8 caracteres.'
+                  : ''
+              "
+            />
+            <ui-input
+              formControlName="repetirPassword"
+              etiqueta="Repetir contraseña"
+              tipo="password"
+              icono="lock"
+              [requerido]="true"
+              [error]="
+                c.repetirPassword.touched && !coinciden()
+                  ? 'Las contraseñas no coinciden.'
+                  : ''
+              "
+            />
+          </div>
+
+          <button type="button" class="sugerida" (click)="usarSugerida()">
+            <ui-icon nombre="refresh" [tamano]="14" />
+            Generar una contraseña
+          </button>
+
+          <ui-alert tipo="info" titulo="La contraseña se entrega una sola vez">
+            Se mostrará en pantalla justo después de guardar y podrás descargarla
+            como archivo. El sistema solo guarda su cifrado, así que después no
+            se podrá recuperar: si se pierde, el administrador deberá emitir una
+            nueva.
+          </ui-alert>
+        </div>
+      </ui-card>
     }
 
     @case (3) {
@@ -164,4 +220,45 @@
     }
   </div>
   </form>
+
+  @if (credenciales(); as cred) {
+    <ui-modal
+      [titulo]="'Acceso creado para ' + cred.nombreCompleto"
+      (cerrar)="continuar()"
+    >
+      <div class="credenciales">
+        <ui-alert tipo="info" titulo="Anótela y entrégasela ahora">
+          Esta contraseña se muestra <strong>una sola vez</strong>. Después solo
+          quedará su cifrado en el sistema y no podrá recuperarse.
+        </ui-alert>
+
+        <dl class="credenciales__datos">
+          <dt>Usuario</dt>
+          <dd><code>{{ cred.username }}</code></dd>
+          <dt>Contraseña</dt>
+          <dd><code class="credenciales__clave">{{ cred.password }}</code></dd>
+        </dl>
+
+        <p class="credenciales__nota">
+          El paciente entra en <strong>http://localhost:4200/login</strong> con
+          estos datos. Puede cambiar la contraseña después desde
+          Configuración → Mi cuenta.
+        </p>
+      </div>
+
+      <ng-container pie>
+        <ui-button variante="contorno" tipo="button" (click)="continuar()">
+          Cerrar
+        </ui-button>
+        <ui-button
+          variante="primario"
+          tipo="button"
+          icono="download"
+          (click)="descargarCredenciales()"
+        >
+          Descargar credenciales
+        </ui-button>
+      </ng-container>
+    </ui-modal>
+  }
 </div>

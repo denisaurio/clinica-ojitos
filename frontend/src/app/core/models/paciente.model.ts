@@ -1,3 +1,5 @@
+import { Credenciales } from './common.model';
+
 /** Paciente registrado en la clínica. */
 export interface Paciente {
   id: number;
@@ -20,6 +22,11 @@ export interface Paciente {
 
 /** Cuerpo de alta y edición. El backend calcula `edad` y `nombreCompleto`. */
 export interface PacienteRequest {
+  /** Nombre de usuario para el portal. Vacío = nombre completo del paciente. */
+  usuario?: string;
+
+  /** Contraseña de acceso; el backend la guarda cifrada con BCrypt. */
+  password?: string;
   nombres: string;
   apellidos: string;
   documento: string;
@@ -56,4 +63,13 @@ export interface PacienteListItem {
   telefono: string;
   email: string;
   seguro: string;
+}
+/**
+ * Alta de paciente: la ficha junto con las credenciales del portal.
+ *
+ * La contraseña llega una sola vez, en la respuesta del alta.
+ */
+export interface AltaPaciente {
+  paciente: Paciente;
+  credenciales: Credenciales;
 }

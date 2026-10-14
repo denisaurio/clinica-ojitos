@@ -27,3 +27,16 @@ export const ROLES: Rol[] = ['ADMINISTRADOR', 'OFTALMOLOGO', 'RECEPCIONISTA', 'P
 export interface MensajeRespuesta {
   mensaje: string;
 }
+/**
+ * Credenciales de acceso de una cuenta recién creada.
+ *
+ * <p>La contraseña se devuelve <strong>una sola vez</strong>, en la respuesta del
+ * alta: en la base solo queda su hash BCrypt y no es recuperable. Se usa tanto
+ * para el alta de un oftalmólogo como para la de un paciente.
+ */
+export interface Credenciales {
+  username: string;
+  password: string;
+  nombreCompleto: string;
+  textoParaDescargar: string;
+}

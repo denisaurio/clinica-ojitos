@@ -6,6 +6,8 @@ import { delay } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {
   ActividadReciente,
+  AltaPaciente,
+  Credenciales,
   ExisteDocumentoResponse,
   PageResponse,
   Paciente,
@@ -76,13 +78,25 @@ export class PacienteService {
     );
   }
 
-  crear(peticion: PacienteRequest): Observable<Paciente> {
+  crear(peticion: PacienteRequest & { password?: string }): Observable<AltaPaciente> {
     if (environment.useMockApi) {
-      return of(this.construir(peticion, this.demo.pacientes.length + 1)).pipe(delay(150));
+      const usuario = peticion.usuario || `${peticion.nombres} ${peticion.apellidos}`;
+      return of({
+        paciente: this.construir(peticion, this.demo.pacientes.length + 1),
+        credenciales: {
+          username: usuario,
+          password: peticion.password ?? 'Demo9!aZ#2kLq',
+          nombreCompleto: `${peticion.nombres} ${peticion.apellidos}`,
+          textoParaDescargar: 'Credenciales de demostración',
+        },
+      }).pipe(delay(150));
     }
     return this.http
-      .post<PacienteApi>(this.base, this.aPeticion(peticion))
-      .pipe(map((r) => this.aPaciente(r)));
+      .post<{ paciente: PacienteApi; credenciales: Credenciales }>(
+        this.base,
+        this.aPeticion(peticion)
+      )
+      .pipe(map((r) => ({ paciente: this.aPaciente(r.paciente), credenciales: r.credenciales })));
   }
 
   actualizar(id: number, peticion: PacienteRequest): Observable<Paciente> {
@@ -177,7 +191,7 @@ export class PacienteService {
   }
 
   /** Envía los nombres que espera el backend. */
-  private aPeticion(p: PacienteRequest) {
+  private aPeticion(p: PacienteRequest & { password?: string }) {
     return {
       nombres: p.nombres,
       apellidos: p.apellidos,
@@ -191,6 +205,8 @@ export class PacienteService {
       grupoSanguineo: p.grupoSanguineo || null,
       historialOcular: p.antecedentesOculares || null,
       alergias: p.alergias || null,
+      password: p.password || null,
+      username: p.usuario || null,
       activo: true,
     };
   }

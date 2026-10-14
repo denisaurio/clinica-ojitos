@@ -1,3 +1,5 @@
+import { Credenciales } from './common.model';
+
 export interface Oftalmologo {
   id: number;
   nombres: string;
@@ -52,20 +54,7 @@ export interface MetricasOftalmologo {
 export interface ExisteColegiaturaResponse {
   existe: boolean;
 }
-/**
- * Credenciales del primer ingreso de un profesional.
- *
- * La contraseña llega una sola vez, en la respuesta del alta: el sistema solo
- * guarda su hash BCrypt y no existe forma de recuperarla después.
- */
-export interface Credenciales {
-  username: string;
-  password: string;
-  nombreCompleto: string;
-  textoParaDescargar: string;
-}
-
-/** Alta de oftalmólogo: la ficha junto con sus credenciales. */
+/** Alta de oftalmólogo: la ficha junto con sus credenciales de primer ingreso. */
 export interface AltaOftalmologo {
   oftalmologo: Oftalmologo;
   credenciales: Credenciales | null;

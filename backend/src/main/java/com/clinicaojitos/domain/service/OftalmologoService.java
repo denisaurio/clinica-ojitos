@@ -56,6 +56,7 @@ public class OftalmologoService {
     private final UsuarioOftalmologoRepository usuarioOftalmologoRepository;
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
+    private final CatalogoResolutorService catalogo;
     private final GeneradorDeCredenciales generador;
     private final PasswordEncoder passwordEncoder;
     private final Mapeador mapeador;
@@ -104,15 +105,25 @@ public class OftalmologoService {
         o.setEmail(r.email().trim());
         o.setTelefono(r.telefono());
         o.setNumeroColegiatura(colegiatura);
-        o.setSubespecialidad(subespecialidadRepository.findById(r.subespecialidadId())
-                .orElseThrow(() -> new OperacionInvalidaException("La subespecialidad no es válida.")));
+        // La subespecialidad puede elegirse del catálogo o escribirse a mano.
+        // Si el nombre no existe, se da de alta como entrada nueva en vez de
+        // rechazar todo el registro (los catálogos son tablas, no ENUM).
+        Subespecialidad subespecialidad = resolverSubespecialidad(
+                r.subespecialidadId(), r.subespecialidad());
+
+        if (subespecialidad == null) {
+            throw new OperacionInvalidaException(
+                    "Seleccione o escriba una subespecialidad.");
+        }
+        o.setSubespecialidad(subespecialidad);
+
         o.setFotoUrl(r.fotoUrl());
         if (r.fechaIngreso() != null) o.setFechaIngreso(r.fechaIngreso());
         if (r.activo() != null) o.setActivo(r.activo());
 
-        if (r.sedeId() != null) {
-            Sede sede = sedeRepository.findById(r.sedeId())
-                    .orElseThrow(() -> new OperacionInvalidaException("La sede no es válida."));
+        // La sede admite el mismo criterio: del catálogo o escrita a mano.
+        Sede sede = resolverSede(r.sedeId(), r.sede());
+        if (sede != null) {
             o.setSede(sede);
         }
 
@@ -120,6 +131,33 @@ public class OftalmologoService {
         OftalmologoDto.Credenciales credenciales = crearCuentaDeAcceso(guardado);
         return new OftalmologoDto.AltaConCredenciales(
                 mapeador.aOftalmologo(guardado), credenciales);
+    }
+
+    /**
+     * Resuelve la subespecialidad por id, o por nombre escrito.
+     *
+     * <p>{@code findById} no acepta un id nulo, de modo que el caso del id
+     * ausente se trata aparte en lugar de dejarlo pasar a la consulta.
+     */
+    private Subespecialidad resolverSubespecialidad(Integer id, String nombre) {
+        if (id != null) {
+            Subespecialidad porId = subespecialidadRepository.findById(id).orElse(null);
+            if (porId != null) {
+                return porId;
+            }
+        }
+        return catalogo.subespecialidad(nombre);
+    }
+
+    /** Resuelve la sede por id, o por nombre escrito. */
+    private Sede resolverSede(Integer id, String nombre) {
+        if (id != null) {
+            Sede porId = sedeRepository.findById(id).orElse(null);
+            if (porId != null) {
+                return porId;
+            }
+        }
+        return catalogo.sede(nombre);
     }
 
     /**

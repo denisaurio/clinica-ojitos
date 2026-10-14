@@ -21,6 +21,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 /**
@@ -47,6 +48,7 @@ class OftalmologoServiceTest {
     @Mock private RolRepository rolRepository;
     @Mock private com.clinicaojitos.security.GeneradorDeCredenciales generador;
     @Mock private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+    @Mock private CatalogoResolutorService catalogo;
     @Mock private Mapeador mapeador;
 
     @InjectMocks private OftalmologoService servicio;
@@ -54,7 +56,7 @@ class OftalmologoServiceTest {
     private OftalmologoDto.Request requestValido() {
         return new OftalmologoDto.Request(
                 "Elena", "Rostova", "e.rostova@clinicaojitos.pe", "987654321",
-                "COP-38472", 1, 1, null, null, Boolean.TRUE);
+                "COP-38472", 1, null, 1, null, null, null, Boolean.TRUE);
     }
 
     @Test

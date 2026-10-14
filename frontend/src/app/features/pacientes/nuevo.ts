@@ -9,6 +9,8 @@ import { InputComponent } from '../../shared/components/ui-input';
 import { SelectComponent, OpcionSelect } from '../../shared/components/ui-select';
 import { CardComponent } from '../../shared/components/ui-card';
 import { StepperComponent, PasoStepper } from '../../shared/components/ui-stepper';
+import { ModalComponent } from '../../shared/components/ui-modal';
+import { Credenciales } from '../../core/models';
 import { AlertComponent } from '../../shared/components/ui-alert';
 import { IconComponent } from '../../shared/components/ui-icon';
 import { AvatarComponent } from '../../shared/components/ui-avatar';
@@ -31,6 +33,7 @@ import { CatalogoService } from '../../core/services/catalogo.service';
     SelectComponent,
     CardComponent,
     StepperComponent,
+    ModalComponent,
     AlertComponent,
     IconComponent,
     AvatarComponent,
@@ -69,7 +72,43 @@ export class PacienteNuevoComponent implements OnDestroy {
     grupoSanguineo: [''],
     antecedentesOculares: [''],
     alergias: [''],
+    /** Credenciales de acceso al portal del paciente. */
+    usuario: [''],
+    password: ['', [Validators.required, Validators.minLength(8)]],
+    repetirPassword: ['', [Validators.required]],
   });
+
+  /** Credenciales del portal, mostradas una sola vez tras el alta. */
+  protected readonly credenciales = signal<Credenciales | null>(null);
+
+  /** Documento del paciente recién creado; permite volver a su ficha. */
+  protected readonly pacienteId = signal<string>('');
+
+  /** `true` cuando las dos contraseñas escritas coinciden. */
+  protected coinciden(): boolean {
+    const a = this.c.password.value;
+    const b = this.c.repetirPassword.value;
+    return a.length > 0 && a === b;
+  }
+
+  /** Contraseña temporal sugerida, para no tener que inventarla en el mostrador. */
+  protected usarSugerida(): void {
+    const sugerida = this.generarSugerida();
+    this.c.password.setValue(sugerida);
+    this.c.repetirPassword.setValue(sugerida);
+  }
+
+  private generarSugerida(): string {
+    const letras = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+    const numeros = '23456789';
+    let clave = '';
+    for (let i = 0; i < 8; i++) {
+      clave += letras.charAt(Math.floor(Math.random() * letras.length));
+    }
+    clave += numeros.charAt(Math.floor(Math.random() * numeros.length));
+    clave += '!@#$'.charAt(Math.floor(Math.random() * 4));
+    return clave;
+  }
 
   constructor() {
     this.catalogos
@@ -179,15 +218,55 @@ export class PacienteNuevoComponent implements OnDestroy {
   }
 
   protected guardar(): void {
+    if (this.formulario.invalid) {
+      this.formulario.markAllAsTouched();
+      return;
+    }
+
+    if (!this.coinciden()) {
+      this.error.set('Las dos contraseñas no coinciden.');
+      return;
+    }
+
     this.guardando.set(true);
     this.error.set('');
 
-    this.pacientes.crear(this.formulario.getRawValue()).subscribe({
-      next: (paciente) => this.router.navigate(['/pacientes/perfil', paciente.id]),
-      error: () => {
+    const valores = this.formulario.getRawValue();
+    const { repetirPassword, ...peticion } = valores;
+
+    this.pacientes.crear({ ...peticion, password: valores.password }).subscribe({
+      next: (alta) => {
         this.guardando.set(false);
-        this.error.set('No se pudo registrar el paciente. Revise los datos e inténtelo de nuevo.');
+        // Las credenciales se muestran una sola vez, al dar de alta.
+        this.credenciales.set(alta.credenciales);
+      },
+      error: (fallo) => {
+        this.guardando.set(false);
+        this.error.set(
+          fallo?.error?.message ||
+            'No se pudo registrar el paciente. Revise los datos e inténtelo de nuevo.'
+        );
       },
     });
+  }
+
+  /** Cierra el aviso de credenciales y vuelve al listado. */
+  protected continuar(): void {
+    this.credenciales.set(null);
+    this.router.navigate(['/pacientes']);
+  }
+
+  /** Descarga la credencial como archivo de texto para entregarla impreso. */
+  protected descargarCredenciales(): void {
+    const c = this.credenciales();
+    if (!c) return;
+
+    const blob = new Blob([c.textoParaDescargar], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = `credenciales-${c.username.replace(/\s+/g, '-')}.txt`;
+    enlace.click();
+    URL.revokeObjectURL(url);
   }
 }
