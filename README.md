@@ -14,6 +14,7 @@ Docente: Jose Fernando Matos Vera
 | **[`README.md`](README.md)** (este) | Qué hace el sistema, arquitectura, instalación, ruta de aprendizaje, API y fases |
 | **[`docs/ESTRUCTURA.md`](docs/ESTRUCTURA.md)** | Qué contiene **cada carpeta**, cómo funciona y cómo se relaciona con las demás |
 | **[`docs/FLUJO.md`](docs/FLUJO.md)** | Cómo se usa el sistema: recorrido por cada pantalla y qué endpoint usa |
+| **[`docs/interaccion-modulos.pdf`](docs/interaccion-modulos.pdf)** | Diagrama visual: cómo se relacionan los módulos entre sí y cómo se comunican las carpetas de backend y frontend |
 | **[`backend/README.md`](backend/README.md)** | La API: cómo ejecutarla, su arquitectura en capas y dónde mirar primero |
 | **[`frontend/README.md`](frontend/README.md)** | La interfaz: cómo ejecutarla, su estructura y las reglas del código |
 | **[`AGENTS.md`](AGENTS.md)** | Qué puede y qué no puede hacer un agente de IA en este repositorio |
