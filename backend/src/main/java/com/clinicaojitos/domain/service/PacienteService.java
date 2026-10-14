@@ -41,6 +41,7 @@ public class PacienteService {
     private final TratamientoRepository tratamientoRepository;
     private final ExamenRepository examenRepository;
     private final Mapeador mapeador;
+    private final AutorizacionPacienteService autorizacion;
 
     @Transactional(readOnly = true)
     public Page<PacienteDto.Resumen> buscar(String buscar, Pageable pageable) {
@@ -56,6 +57,7 @@ public class PacienteService {
 
     @Transactional(readOnly = true)
     public PacienteDto.Detalle obtenerDetalle(Long id) {
+        autorizacion.exigirAcceso(id);
         Paciente p = obtenerEntidad(id);
         List<PacienteDto.Actividad> actividad = actividadReciente(id);
         return new PacienteDto.Detalle(
@@ -74,6 +76,7 @@ public class PacienteService {
     /** Últimos exámenes y consultas del paciente, para la tarjeta de actividad. */
     @Transactional(readOnly = true)
     public List<PacienteDto.Actividad> actividadReciente(Long pacienteId) {
+        autorizacion.exigirAcceso(pacienteId);
         Paciente p = obtenerEntidad(pacienteId);
         List<PacienteDto.Actividad> actividad = new ArrayList<>();
 

@@ -1,6 +1,9 @@
 package com.clinicaojitos.domain.service;
 
 import com.clinicaojitos.domain.dto.CitaDto;
+import com.clinicaojitos.domain.entity.Paciente;
+import com.clinicaojitos.domain.entity.Usuario;
+import com.clinicaojitos.exception.RecursoNoEncontradoException;
 import com.clinicaojitos.domain.dto.DashboardDto;
 import com.clinicaojitos.domain.dto.PacienteDto;
 import com.clinicaojitos.domain.repository.*;
@@ -24,6 +27,7 @@ import java.util.List;
 public class DashboardService {
 
     private final PacienteRepository pacienteRepository;
+    private final UsuarioRepository usuarioRepository;
     private final OftalmologoRepository oftalmologoRepository;
     private final CitaRepository citaRepository;
     private final ConsultaRepository consultaRepository;
@@ -172,13 +176,21 @@ public class DashboardService {
         return new DashboardDto.Recepcion(indicadores, citas, consultorios, avisos);
     }
 
-    /** Portal del paciente (pantalla 3.6.24). */
+    /**
+     * Portal del paciente (pantalla 3.6.24).
+     *
+     * <p>La cuenta se identifica por su {@code username}, que no tiene por qué
+     * coincidir con el correo del paciente —en las cuentas de demostración es
+     * «paciente» frente a «maria.gonzalez@email.com»—. Por eso se resuelve el
+     * usuario y luego su ficha, en lugar de buscar directamente por correo.
+     *
+     * @param username usuario autenticado
+     * @param email    correo opcional, solo para el administrador que consulta
+     *                 la ficha de otro paciente
+     */
     @Transactional(readOnly = true)
-    public DashboardDto.Portal portal(String email) {
-        var paciente = pacienteRepository.findByEmailParaAcceso(email)
-                .orElseThrow(() -> new com.clinicaojitos.exception
-                        .RecursoNoEncontradoException(
-                                "No existe un paciente asociado a esta cuenta."));
+    public DashboardDto.Portal portal(String username, String email) {
+        var paciente = resolverPaciente(username, email);
 
         List<CitaDto.Response> proximas = citaRepository
                 .proximasCitas(paciente.getId(), LocalDate.now()).stream()
@@ -192,6 +204,22 @@ public class DashboardService {
                 proximas,
                 consultaService.diagnosticosVigentes(paciente.getId()),
                 consultaService.evolucion(paciente.getId()));
+    }
+
+    /** Ficha del paciente a la que pertenece la cuenta indicada. */
+    private Paciente resolverPaciente(String username, String email) {
+        String correo = email;
+
+        if (correo == null || correo.isBlank()) {
+            correo = usuarioRepository.findByUsernameIgnoreCase(username)
+                    .map(Usuario::getEmail)
+                    .orElseThrow(() -> new RecursoNoEncontradoException(
+                            "La cuenta no tiene un correo asociado."));
+        }
+
+        return pacienteRepository.findByEmailParaAcceso(correo)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "No hay ninguna ficha de paciente asociada a esta cuenta."));
     }
 
     private Long resolveOftalmologoId(Long solicitado) {

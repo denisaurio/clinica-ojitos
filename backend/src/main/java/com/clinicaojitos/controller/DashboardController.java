@@ -46,6 +46,6 @@ public class DashboardController {
     @Operation(summary = "Portal de salud visual del paciente")
     public DashboardDto.Portal paciente(@RequestParam(required = false) String email,
                                         @AuthenticationPrincipal String username) {
-        return dashboardService.portal(email != null ? email : username);
+        return dashboardService.portal(username, email);
     }
 }

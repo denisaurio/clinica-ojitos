@@ -35,10 +35,14 @@ public class ConsultaService {
     private final ExamenRepository examenRepository;
     private final UsuarioOftalmologoRepository usuarioOftalmologoRepository;
     private final AuthService authService;
+    private final AutorizacionPacienteService autorizacion;
     private final Mapeador mapeador;
 
     @Transactional(readOnly = true)
     public List<ConsultaDto.Response> listarPorPaciente(Long pacienteId) {
+        // La pertenencia se comprueba aquí, no en la pantalla: cualquiera puede
+        // escribir /historiales/paciente/{otroId} a mano (RNF-01).
+        autorizacion.exigirAcceso(pacienteId);
         pacienteRepository.findById(pacienteId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("El paciente no existe."));
         return consultaRepository.listarPorPaciente(pacienteId).stream()
@@ -48,6 +52,7 @@ public class ConsultaService {
 
     @Transactional(readOnly = true)
     public Page<ConsultaDto.Response> listarPaginado(Long pacienteId, Pageable pageable) {
+        autorizacion.exigirAcceso(pacienteId);
         return consultaRepository.listarPorPacientePaginado(pacienteId, pageable)
                 .map(mapeador::aConsulta);
     }
@@ -64,6 +69,7 @@ public class ConsultaService {
      */
     @Transactional(readOnly = true)
     public List<ConsultaDto.Evolución> evolucion(Long pacienteId) {
+        autorizacion.exigirAcceso(pacienteId);
         pacienteRepository.findById(pacienteId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("El paciente no existe."));
         return consultaRepository.evolucionPio(pacienteId).stream()
@@ -74,6 +80,7 @@ public class ConsultaService {
     /** Diagnósticos vigentes del paciente, deduplicados y ordenados por fecha. */
     @Transactional(readOnly = true)
     public List<ConsultaDto.DiagnosticoVigente> diagnosticosVigentes(Long pacienteId) {
+        autorizacion.exigirAcceso(pacienteId);
         Map<String, ConsultaDto.DiagnosticoVigente> porDiagnostico = new LinkedHashMap<>();
 
         for (Consulta c : consultaRepository.diagnosticosPorPaciente(pacienteId)) {

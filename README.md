@@ -397,6 +397,23 @@ WHERE username = 'la_cuenta';
 
 > Son credenciales de desarrollo local. Cámbialas antes de cualquier despliegue.
 
+### Aislamiento de datos clínicos (RNF-01)
+
+Un paciente **solo puede leer su propia ficha**. Los endpoints aceptan el
+identificador en la URL (`/historiales/paciente/{id}`), que cualquiera podría
+escribir a mano, así que la comprobación de pertenencia se hace en el servicio
+(`AutorizacionPacienteService`), nunca en la pantalla:
+
+| Rol | Ficha propia | Ficha ajena |
+|---|---|---|
+| `PACIENTE` | 200 | **403** |
+| `OFTALMOLOGO` | 200 | 200 |
+| `ADMINISTRADOR` | 200 | 200 |
+| `RECEPCIONISTA` | — | **403** |
+
+Recepción gestiona la agenda y el triaje, pero el historial clínico lo consulta
+el profesional tratante. Cubierto por `AutorizacionPacienteServiceTest`.
+
 ### La clave de firma de los tokens
 
 **El repositorio no publica ninguna clave JWT.** `application.yml` la deja

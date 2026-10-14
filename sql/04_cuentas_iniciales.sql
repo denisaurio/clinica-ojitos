@@ -74,11 +74,28 @@ SET @rol_oftalmo = (SELECT id FROM rol WHERE codigo = 'OFTALMOLOGO');
 SET @rol_recepcion = (SELECT id FROM rol WHERE codigo = 'RECEPCIONISTA');
 SET @rol_paciente = (SELECT id FROM rol WHERE codigo = 'PACIENTE');
 
+-- -----------------------------------------------------------------------------
+--  Cuenta del paciente
+--
+--  La cuenta se enlaza con la ficha por el CORREO, así que hay que usar el
+--  que exista realmente en `paciente`. Si la base tiene un paciente propio y no
+--  el del seed, la cuenta debe apuntar a ese: si no, el portal responde 404.
+-- -----------------------------------------------------------------------------
+SET @correo_paciente = COALESCE(
+    (SELECT p.email FROM paciente p
+      WHERE p.email IS NOT NULL AND TRIM(p.email) <> ''
+      ORDER BY p.id LIMIT 1),
+    'maria.gonzalez@email.com');
+
 INSERT INTO usuario (username, password_hash, email, rol_id, activo, intentos_fallidos, fecha_creacion) VALUES
   ('recepcion',  @hash_demo, 'recepcion@clinicaojitos.pe', @rol_recepcion, 1, 0, NOW()),
-  ('paciente',   @hash_demo, 'maria.gonzalez@email.com', @rol_paciente,  1, 0, NOW())
-ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash), rol_id = VALUES(rol_id), activo = 1,
-                            intentos_fallidos = 0;
+  ('paciente',   @hash_demo, @correo_paciente,             @rol_paciente,  1, 0, NOW())
+ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash),
+                            rol_id = VALUES(rol_id),
+                            activo = 1,
+                            intentos_fallidos = 0,
+                            -- Si la ficha cambió de correo, la cuenta se reengancha.
+                            email = IF(VALUES(username) = 'paciente', VALUES(email), email);
 
 -- Las cuentas de los oftalmólogos se crean una vez existen los profesionales
 -- (lo hace el propio script 02 al dar de alta a los médicos).

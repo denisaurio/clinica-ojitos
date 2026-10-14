@@ -29,10 +29,12 @@ public class TratamientoService {
     private final EstadoTratamientoRepository estadoRepository;
     private final OjoRepository ojoRepository;
     private final AuthService authService;
+    private final AutorizacionPacienteService autorizacion;
     private final Mapeador mapeador;
 
     @Transactional(readOnly = true)
     public List<TratamientoDto.Response> listarPorPaciente(Long pacienteId) {
+        autorizacion.exigirAcceso(pacienteId);
         pacienteRepository.findById(pacienteId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("El paciente no existe."));
         return tratamientoRepository.listarPorPaciente(pacienteId).stream()
@@ -42,6 +44,7 @@ public class TratamientoService {
 
     @Transactional(readOnly = true)
     public List<TratamientoDto.Response> vigentes(Long pacienteId) {
+        autorizacion.exigirAcceso(pacienteId);
         return tratamientoRepository.vigentesPorPaciente(pacienteId).stream()
                 .map(mapeador::aTratamiento)
                 .toList();
@@ -154,6 +157,7 @@ public class TratamientoService {
 
     @Transactional(readOnly = true)
     public List<TratamientoDto.CirugiaResponse> cirugiasPorPaciente(Long pacienteId) {
+        autorizacion.exigirAcceso(pacienteId);
         return cirugiaRepository.findByPacienteIdOrderByFechaProgramadaDesc(pacienteId).stream()
                 .map(mapeador::aCirugia)
                 .toList();
