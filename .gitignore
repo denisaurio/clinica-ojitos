@@ -66,3 +66,5 @@ frontend/*.log
 # --- Registros ------------------------------------------------------------
 *.log
 logs/
+# Scripts de correccion de una sola vez
+fix-*.js
