@@ -165,7 +165,7 @@ public class DashboardService {
                 new DashboardDto.Aviso("Equipos de diagnóstico",
                         "El retinógrafo de la sala 2 requiere mantenimiento.",
                         "ADVERTENCIA"),
-                new DashboardDto.Aviso("Trámite de手续imientos",
+                new DashboardDto.Aviso("Trámite de procedimientos",
                         "2 pacientes esperan firma de consentimiento informado.",
                         "INFO"));
 
