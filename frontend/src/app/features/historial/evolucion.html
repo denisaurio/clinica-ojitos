@@ -1,0 +1,95 @@
+<div class="page">
+  @if (paciente(); as p) {
+    <header class="encabezado">
+      <h1 class="page-title">Progreso y Evolución</h1>
+      <p class="page-subtitle">
+        Paciente: {{ p.nombreCompleto }} &bull; ID: {{ p.documento }}
+      </p>
+    </header>
+
+    <div class="rejilla">
+      <ui-card class="grafico">
+        @if (serie().length > 0) {
+          <app-grafico-pio [datos]="serie()" />
+        } @else {
+          <ui-skeleton [lineas]="6" alto="16px" />
+        }
+      </ui-card>
+
+      <div class="columna">
+        <ui-card class="diagnostico">
+          <p class="eyebrow">Diagnóstico Principal</p>
+          <h2 class="diagnostico__nombre">{{ diagnosticoPrincipal() }}</h2>
+          <p class="diagnostico__fecha">Diagnosticado: {{ fechaDiagnostico() }}</p>
+
+          <hr class="divider" />
+
+          <p class="eyebrow">PIO Objetivo</p>
+          <div class="objetivo">
+            <div class="objetivo__ojo">
+              <span class="objetivo__etiqueta">OD (Right)</span>
+              <span class="objetivo__valor">≤ 15</span>
+              <span class="objetivo__unidad">mmHg</span>
+            </div>
+            <div class="objetivo__ojo">
+              <span class="objetivo__etiqueta">OS (Left)</span>
+              <span class="objetivo__valor">≤ 14</span>
+              <span class="objetivo__unidad">mmHg</span>
+            </div>
+          </div>
+        </ui-card>
+
+        <ui-card titulo="Tratamiento Activo" class="tratamiento">
+          <ng-container slot="accion">
+            <ui-icon nombre="pill" [tamano]="17" />
+          </ng-container>
+
+          <ul class="tratamiento__lista">
+            @for (tratamiento of activos(); track tratamiento.id) {
+              <li class="tratamiento__item">
+                <span class="tratamiento__gota">
+                  <ui-icon nombre="dollar" [tamano]="12" />
+                </span>
+                <span>
+                  <span class="tratamiento__nombre">{{ tratamiento.medicamento }}</span>
+                  <span class="tratamiento__dosis">{{ tratamiento.frecuencia }}</span>
+                </span>
+              </li>
+            } @empty {
+              <li class="text-faint">Sin tratamientos activos.</li>
+            }
+          </ul>
+        </ui-card>
+      </div>
+    </div>
+
+    <ui-card titulo="Evolución de la Agudeza Visual" class="agudeza">
+      <ng-container slot="accion">
+        <ui-badge variante="success" icono="checkCircle">Estable</ui-badge>
+      </ng-container>
+
+      <table class="tabla-agudeza">
+        <thead>
+          <tr>
+            <th scope="col">Fecha</th>
+            <th scope="col">OD (Ojo Derecho)</th>
+            <th scope="col">OS (Ojo Izquierdo)</th>
+            <th scope="col">Observaciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (registro of agudeza(); track registro.fecha) {
+            <tr>
+              <td>{{ registro.etiqueta }}</td>
+              <td class="valor">{{ registro.agudezaOd }}</td>
+              <td class="valor">{{ registro.agudezaOi }}</td>
+              <td class="observaciones">{{ registro.observaciones }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </ui-card>
+  } @else {
+    <ui-skeleton [lineas]="8" alto="18px" padding="20px 0" />
+  }
+</div>

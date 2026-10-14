@@ -1,0 +1,73 @@
+@use 'variables' as *;
+
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.recuperar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  background: $page-bg;
+}
+
+.recuperar__tarjeta {
+  width: 100%;
+  max-width: 420px;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-md;
+  overflow: hidden;
+}
+
+.recuperar__marca {
+  padding: 22px 24px 16px;
+  text-align: center;
+}
+
+.recuperar__titulo {
+  font-size: 22px;
+  font-weight: 700;
+  color: $primary;
+}
+
+.recuperar__subtitulo {
+  font-size: 12.5px;
+  color: $text-muted;
+}
+
+.recuperar__cuerpo {
+  padding: 20px 24px 24px;
+  border-top: 1px solid $border;
+}
+
+.recuperar__encabezado {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.recuperar__texto {
+  margin: 6px 0 20px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: $text-muted;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.recuperar__enviar,
+.recuperar__volver {
+  width: 100%;
+}
+
+.recuperar__volver {
+  margin-top: 10px;
+}

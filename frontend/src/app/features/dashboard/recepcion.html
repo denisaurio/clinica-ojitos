@@ -1,0 +1,89 @@
+<div class="page">
+  <div class="encabezado">
+    <div>
+      <h1 class="page-title">Recepción</h1>
+      <p class="page-subtitle">Visión general operativa de hoy</p>
+    </div>
+    <ui-button
+      [enlace]="true"
+      destino="/pacientes/nuevo"
+      variante="primario"
+      icono="userPlus"
+    >
+      Registro Rápido de Paciente
+    </ui-button>
+  </div>
+
+  @if (datos(); as d) {
+    <div class="rejilla">
+      <ui-card titulo="Citas de Hoy" class="tabla-card">
+        <ng-container slot="accion">
+          <ui-badge variante="neutro">{{ d.totalCitas }} Totales</ui-badge>
+          <ui-badge variante="primario">{{ d.enEspera }} En Espera</ui-badge>
+        </ng-container>
+
+        <ui-table [columnas]="columnas">
+          @for (cita of d.citasHoy; track cita.id) {
+            <tr>
+              <td class="hora">{{ cita.horaInicio }}</td>
+              <td class="paciente">{{ cita.pacienteNombre }}</td>
+              <td>{{ cita.motivo }}</td>
+              <td class="doctor">Dr. Vega</td>
+              <td>
+                <ui-badge [variante]="variante(cita.estado)">
+                  {{ etiqueta(cita.estado) }}
+                </ui-badge>
+              </td>
+              <td>
+                @if (cita.estado === 'PROGRAMADA') {
+                  <ui-button variante="contorno" tamano="sm">Registrar Ingreso</ui-button>
+                } @else {
+                  <ui-button variante="enlace" tamano="sm">Ver Perfil</ui-button>
+                }
+              </td>
+            </tr>
+          }
+        </ui-table>
+
+        <a class="tabla-card__pie" routerLink="/citas/agenda">Ver agenda completa</a>
+      </ui-card>
+
+      <div class="columna">
+        <ui-card titulo="Disponibilidad Médica" icono="clock" class="medicos">
+          <ul class="medicos__lista">
+            @for (medico of d.medicos; track medico.id) {
+              <li class="medico">
+                <ui-avatar [iniciales]="medico.iniciales" [nombre]="medico.nombreCompleto" tamano="md" />
+                <span class="medico__datos">
+                  <span class="medico__nombre">{{ medico.nombreCompleto }}</span>
+                  <span class="medico__sub">{{ medico.subespecialidad }}</span>
+                </span>
+                <span class="medico__estado">
+                  @if (medico.estado === 'OCUPADO') {
+                    <ui-badge variante="danger">{{ medico.detalle }}</ui-badge>
+                  } @else {
+                    <ui-badge variante="success">{{ medico.detalle }}</ui-badge>
+                  }
+                </span>
+              </li>
+            }
+          </ul>
+        </ui-card>
+
+        <div class="avisos">
+          <h2 class="avisos__titulo">Avisos Operativos</h2>
+          <ul class="avisos__lista">
+            @for (aviso of d.avisos; track aviso.texto) {
+              <li class="aviso">
+                <ui-icon [nombre]="aviso.icono" [tamano]="15" />
+                <span>{{ aviso.texto }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <ui-skeleton [lineas]="6" alto="18px" padding="20px 0" />
+  }
+</div>

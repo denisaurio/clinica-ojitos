@@ -1,0 +1,217 @@
+@use 'variables' as *;
+
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.acceso {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  background: $page-bg;
+  overflow: hidden;
+}
+
+/* Círculos difusos del fondo, tal y como aparecen en el prototipo. */
+.acceso__mancha {
+  position: absolute;
+  border-radius: 50%;
+  background: $info-bg;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.acceso__mancha--una {
+  width: 360px;
+  height: 360px;
+  top: -140px;
+  left: -120px;
+}
+
+.acceso__mancha--dos {
+  width: 220px;
+  height: 220px;
+  top: 40px;
+  left: 60px;
+  opacity: 0.35;
+}
+
+.acceso__mancha--tres {
+  width: 300px;
+  height: 300px;
+  bottom: -140px;
+  right: -80px;
+  opacity: 0.3;
+}
+
+.acceso__tarjeta {
+  position: relative;
+  width: 100%;
+  max-width: 344px;
+  padding: 28px 26px 26px;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-md;
+}
+
+.acceso__marca {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.acceso__logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  background: $primary;
+  color: $text-invert;
+  margin-bottom: 12px;
+}
+
+.acceso__titulo {
+  font-size: 30px;
+  font-weight: 700;
+  color: $primary;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.acceso__subtitulo {
+  margin-top: 2px;
+  font-size: 13px;
+  color: $text-muted;
+}
+
+/* ------------------------------------------------------- Error de acceso */
+.fallo {
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  background: $danger-bg;
+  border: 1px solid $danger-border;
+  border-radius: $radius;
+  color: $danger;
+  font-size: 12.5px;
+}
+
+.fallo__cabecera {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+/* Fallo de conexión: avisa en ámbar porque no es un rechazo de credenciales
+   y no debe confundirse con la cuenta bloqueada por intentos (RF6.2). */
+.fallo--servidor {
+  background: $warning-bg;
+  border-color: $warning;
+  color: $warning;
+}
+
+.fallo__titulo {
+  font-weight: 700;
+}
+
+.fallo__texto {
+  line-height: 1.5;
+}
+
+.fallo__intento {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding: 8px 10px;
+  background: $surface;
+  border-radius: $radius-sm;
+  font-size: 11.5px;
+}
+
+.fallo__barra {
+  height: 3px;
+  margin-top: 8px;
+  background: rgba(220, 38, 38, 0.18);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.fallo__relleno {
+  display: block;
+  height: 100%;
+  background: $danger;
+  border-radius: 999px;
+  transition: width 0.2s ease;
+}
+
+/* --------------------------------------------------------------- Campos */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.acceso__contrasena {
+  position: relative;
+}
+
+.acceso__ver {
+  position: absolute;
+  right: 10px;
+  bottom: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  background: transparent;
+  color: $text-muted;
+  cursor: pointer;
+  border-radius: 4px;
+
+  &:hover {
+    color: $text;
+  }
+}
+
+.acceso__enlace {
+  align-self: flex-end;
+  margin-top: -6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.acceso__enviar {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.acceso__separador {
+  height: 1px;
+  margin: 22px 0 14px;
+  background: $border;
+}
+
+.acceso__ayuda {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 11.5px;
+  color: $text-muted;
+}
+
+.acceso__demo {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 10.5px;
+  color: $text-faint;
+}

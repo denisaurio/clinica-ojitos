@@ -1,0 +1,94 @@
+@use 'variables' as *;
+
+.tabla {
+  margin-top: 24px;
+}
+
+.celda-medico {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.celda-medico__nombre {
+  display: block;
+  font-weight: 700;
+}
+
+.celda-medico__correo {
+  display: block;
+  font-size: 11.5px;
+  color: $text-muted;
+}
+
+.celda-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ------------------------------------------------------------ Acciones */
+.acciones {
+  position: relative;
+  width: 1%;
+}
+
+.menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: $text-muted;
+  cursor: pointer;
+
+  &:hover {
+    background: $sidebar-bg;
+    color: $text;
+  }
+}
+
+.menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 10;
+  min-width: 200px;
+  padding: 6px;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius;
+  box-shadow: $shadow-md;
+  text-align: left;
+}
+
+.menu__opcion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: $radius-sm;
+  background: transparent;
+  font-family: $font-family;
+  font-size: 13px;
+  color: $text;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: $sidebar-bg;
+  }
+}
+
+.menu__opcion--peligro {
+  color: $danger;
+
+  &:hover {
+    background: $danger-bg;
+  }
+}

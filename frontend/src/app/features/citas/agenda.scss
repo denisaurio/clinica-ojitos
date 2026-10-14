@@ -1,0 +1,156 @@
+@use 'variables' as *;
+
+.agenda {
+  padding: 20px 20px 32px;
+}
+
+.agenda__cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.agenda__controles {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.agenda__medico {
+  width: 200px;
+}
+
+/* ------------------------------------------------------------- Rejilla */
+.rejilla {
+  display: grid;
+  grid-template-columns: 64px repeat(5, 1fr);
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius;
+  overflow: hidden;
+}
+
+.rejilla__horas {
+  border-right: 1px solid $border;
+}
+
+.rejilla__hueco {
+  height: 56px;
+  border-bottom: 1px solid $border;
+}
+
+.rejilla__hora {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 4px;
+  font-size: 11px;
+  color: $text-muted;
+  border-bottom: 1px solid $border;
+}
+
+/* --------------------------------------------------------- Columna día */
+.rejilla__dia {
+  border-right: 1px solid $border;
+
+  &:last-child {
+    border-right: 0;
+  }
+}
+
+.dia__cabecera {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  height: 56px;
+  border-bottom: 1px solid $border;
+}
+
+.dia__etiqueta {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $text-muted;
+}
+
+.dia__numero {
+  font-size: 17px;
+  font-weight: 700;
+  color: $text;
+}
+
+.dia__cuerpo {
+  position: relative;
+}
+
+.dia__fila {
+  border-bottom: 1px solid $border;
+}
+
+/* ------------------------------------------------------------ Almuerzo */
+.almuerzo {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $page-bg;
+  border: 1px dashed $border-strong;
+  border-radius: $radius-sm;
+  font-size: 11px;
+  color: $text-muted;
+  z-index: 1;
+}
+
+/* ------------------------------------------------------------- Eventos */
+.evento {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  background: $primary;
+  color: $text-invert;
+  border-radius: $radius-sm;
+  overflow: hidden;
+  text-decoration: none;
+  z-index: 2;
+  box-shadow: $shadow-sm;
+  transition: background $transition;
+
+  &:hover {
+    background: $primary-hover;
+    text-decoration: none;
+  }
+}
+
+.evento--cancelada {
+  background: $border;
+  color: $text-muted;
+  text-decoration: line-through;
+}
+
+.evento__titulo {
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.evento__detalle {
+  font-size: 10px;
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

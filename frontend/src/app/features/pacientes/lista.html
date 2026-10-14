@@ -1,0 +1,86 @@
+<div class="page">
+  <div class="encabezado">
+    <div>
+      <h1 class="page-title">Gestión de Pacientes</h1>
+      <p class="page-subtitle">Visualiza y administra el registro de pacientes de la clínica.</p>
+    </div>
+    <ui-button [enlace]="true" destino="/pacientes/nuevo" variante="primario" icono="plus">
+      Nuevo paciente
+    </ui-button>
+  </div>
+
+  <!-- Barra de búsqueda -->
+  <ui-card class="filtros">
+    <div class="filtros__fila">
+      <ui-input
+        class="filtros__buscador"
+        [formControl]="buscador"
+        placeholder="Buscar por Nombre o DNI..."
+        icono="search"
+        tipo="search"
+      />
+      <ui-button variante="contorno" icono="filter">Filtros</ui-button>
+    </div>
+  </ui-card>
+
+  @if (resultado()) {
+    @if (filas().length > 0) {
+      <ui-card class="tabla">
+        <ui-table [columnas]="columnas">
+          @for (paciente of filas(); track paciente.id) {
+            <tr class="fila" (click)="verPerfil(paciente.id)">
+              <td>
+                <span class="celda-paciente">
+                  <ui-avatar [iniciales]="iniciales(paciente.nombreCompleto)" tamano="sm" />
+                  <span class="celda-paciente__nombre">{{ paciente.nombreCompleto }}</span>
+                </span>
+              </td>
+              <td>{{ paciente.documento }}</td>
+              <td>{{ paciente.edad }}</td>
+              <td>
+                <span class="celda-contacto">
+                  <span>{{ paciente.telefono }}</span>
+                  <span class="celda-contacto__correo">{{ paciente.email }}</span>
+                </span>
+              </td>
+              <td>
+                <ui-badge variante="neutro">{{ paciente.seguro }}</ui-badge>
+              </td>
+              <td>
+                <ui-button
+                  variante="fantasma"
+                  tamano="sm"
+                  icono="chevron-right"
+                  (click)="$event.stopPropagation(); verPerfil(paciente.id)"
+                />
+              </td>
+            </tr>
+          }
+        </ui-table>
+
+        <ui-pagination
+          class="tabla__pie"
+          [pagina]="paginaActual()"
+          [totalPaginas]="totalPaginas()"
+          [totalElementos]="totalElementos()"
+          [tamanoPagina]="tamanoRespuesta()"
+          (paginaCambia)="cambiarPagina($event)"
+        />
+      </ui-card>
+    } @else {
+      <ui-card class="tabla">
+        <ui-empty-state
+          icono="search"
+          titulo="No se encontraron pacientes"
+          descripcion="No hay registros que coincidan con su búsqueda actual. Intente con otros términos o registre un nuevo paciente."
+        >
+          <ui-button variante="contorno" (click)="limpiarBusqueda()">Limpiar búsqueda</ui-button>
+        </ui-empty-state>
+      </ui-card>
+    }
+  } @else {
+    <ui-card class="tabla">
+      <ui-skeleton [lineas]="5" alto="14px" padding="16px 20px" />
+    </ui-card>
+  }
+</div>

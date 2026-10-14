@@ -1,0 +1,235 @@
+@use 'variables' as *;
+
+.reprogramar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ------------------------------------------------------- Cita actual */
+.actual {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: $page-bg;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+}
+
+.actual__icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: $info-bg;
+  color: $primary;
+  flex-shrink: 0;
+}
+
+.actual__tipo {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.actual__fecha,
+.actual__medico {
+  font-size: 12.5px;
+  color: $text-muted;
+}
+
+/* ------------------------------------------------------------ Campo */
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.campo__etiqueta {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.campo__control {
+  width: 100%;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid $border-strong;
+  border-radius: $radius-sm;
+  background: $surface;
+  font-family: $font-family;
+  font-size: 13px;
+  color: $text;
+  outline: none;
+
+  &:focus {
+    border-color: $primary;
+    box-shadow: $focus-ring;
+  }
+}
+
+.campo__control--area {
+  height: auto;
+  padding: 10px 12px;
+  resize: vertical;
+}
+
+/* ------------------------------------------------------- Calendario */
+.calendario {
+  padding: 12px;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+}
+
+.calendario__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.calendario__titulo {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.calendario__nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: $text-muted;
+  cursor: pointer;
+
+  &:hover {
+    background: $sidebar-bg;
+    color: $text;
+  }
+}
+
+.calendario__dias,
+.calendario__rejilla {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.calendario__dias span {
+  text-align: center;
+  font-size: 9.5px;
+  font-weight: 600;
+  color: $text-muted;
+  padding-bottom: 5px;
+}
+
+.calendario__celda {
+  height: 30px;
+  border: 0;
+  border-radius: $radius-sm;
+  background: transparent;
+  font-family: $font-family;
+  font-size: 12px;
+  color: $text;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: $sidebar-bg;
+  }
+}
+
+.calendario__celda--fuera {
+  color: $text-faint;
+  cursor: default;
+}
+
+.calendario__celda--activo {
+  background: $primary;
+  color: $text-invert;
+  font-weight: 700;
+}
+
+/* ----------------------------------------------------------- Franjas */
+.bloque__titulo {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $text;
+}
+
+.slots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.slot {
+  height: 34px;
+  border: 1px solid $border-strong;
+  border-radius: $radius-sm;
+  background: $surface;
+  font-family: $font-family;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $text;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: $primary;
+  }
+}
+
+.slot--ocupado {
+  background: $page-bg;
+  color: $text-faint;
+  cursor: not-allowed;
+}
+
+.slot--activo {
+  background: $primary;
+  border-color: $primary;
+  color: $text-invert;
+}
+
+.cancelar {
+  align-self: flex-start;
+  border: 0;
+  background: transparent;
+  font-family: $font-family;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $danger;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+/* -------------------------------------------------------------- Baja */
+.baja {
+  text-align: center;
+}
+
+.baja__icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: $danger-bg;
+  color: $danger;
+  margin-bottom: 14px;
+}
+
+.baja__texto {
+  font-size: 13px;
+  line-height: 1.6;
+  color: $text-muted;
+}

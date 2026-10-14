@@ -1,0 +1,81 @@
+<div class="barra">
+  @if (antetitulo()) {
+    <span class="antetitulo">{{ antetitulo() }}</span>
+  }
+
+  @if (insignia()) {
+    <span class="insignia">
+      @if (iconoInsignia()) {
+        <ui-icon [nombre]="iconoInsignia()" [tamano]="13" />
+      }
+      {{ insignia() }}
+    </span>
+  }
+
+  @if (placeholder()) {
+    <label class="buscador">
+      <ui-icon nombre="search" [tamano]="16" />
+      <input
+        type="search"
+        [placeholder]="placeholder()"
+        [value]="termino()"
+        (input)="alBuscar($event)"
+        (keydown.enter)="buscar()"
+      />
+    </label>
+  }
+
+  <span class="barra__espacio"></span>
+
+  <ng-content select="[slot=acciones]" />
+
+  <a class="barra__icono" routerLink="/configuracion" title="Ayuda">
+    <ui-icon nombre="helpCircle" [tamano]="17" />
+  </a>
+
+  <button type="button" class="barra__icono" title="Notificaciones">
+    <ui-icon nombre="bell" [tamano]="17" />
+  </button>
+
+  @if (textoEnlace()) {
+    <span class="barra__separador"></span>
+    <span class="barra__enlace">{{ textoEnlace() }}</span>
+  }
+
+  @if (accion(); as boton) {
+    <ui-button
+      [enlace]="true"
+      [destino]="boton.destino"
+      [variante]="boton.variante"
+      icono="plus"
+      class="barra__accion"
+    >
+      {{ boton.texto }}
+    </ui-button>
+  }
+
+  <div class="usuario">
+    <button
+      type="button"
+      class="usuario__boton"
+      [attr.aria-expanded]="menuAbierto()"
+      (click)="menuAbierto.set(!menuAbierto())"
+    >
+      <ui-avatar [iniciales]="iniciales()" [nombre]="nombre()" tamano="sm" />
+      <span class="usuario__datos">
+        <span class="usuario__nombre">{{ nombre() }}</span>
+        <span class="usuario__rol">{{ rolLegible() }}</span>
+      </span>
+      <ui-icon nombre="chevron-down" [tamano]="14" />
+    </button>
+
+    @if (menuAbierto()) {
+      <div class="menu-usuario">
+        <button type="button" class="menu-usuario__opcion" (click)="cerrarSesion()">
+          <ui-icon nombre="logOut" [tamano]="15" />
+          <span>Cerrar sesión</span>
+        </button>
+      </div>
+    }
+  </div>
+</div>

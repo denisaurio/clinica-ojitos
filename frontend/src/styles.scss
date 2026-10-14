@@ -1,0 +1,139 @@
+@use 'variables' as *;
+
+/* ==========================================================================
+   Reset mínimo y estilos base del documento
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: $font-family;
+  font-size: 14px;
+  line-height: 1.5;
+  color: $text;
+  background: $page-bg;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: $text;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: $primary;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+button {
+  font-family: inherit;
+}
+
+/* ==========================================================================
+   Utilidades compartidas por todas las pantallas del prototipo
+   ========================================================================== */
+
+.page {
+  padding: 24px;
+  max-width: 1180px;
+}
+
+.page-title {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.page-subtitle {
+  margin-top: 4px;
+  font-size: 13px;
+  color: $text-muted;
+}
+
+.section-title {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* Etiqueta en versalitas usada en tarjetas del prototipo (NOMBRE COMPLETO, ...) */
+.eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $text-muted;
+}
+
+/* Rejilla de dos columnas usada por formularios y fichas */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 720px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.text-muted {
+  color: $text-muted;
+}
+
+.text-faint {
+  color: $text-faint;
+}
+
+.divider {
+  height: 1px;
+  background: $border;
+  border: 0;
+  margin: 20px 0;
+}
+
+/* Barra de desplazamiento discreta, en línea con el prototipo */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $border-strong;
+  border-radius: 999px;
+  border: 3px solid $page-bg;
+}

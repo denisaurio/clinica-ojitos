@@ -1,0 +1,118 @@
+<div class="page">
+  @if (medico(); as m) {
+    <nav class="miga" aria-label="Ruta de navegación">
+      <a routerLink="/oftalmologos">Doctores</a>
+      <ui-icon nombre="chevron-right" [tamano]="13" />
+      <span>Dra. {{ m.nombres }} {{ m.apellidos }}</span>
+    </nav>
+
+    <header class="cabecera">
+      <div>
+        <h1 class="page-title">{{ nombreCompleto() }}</h1>
+        <p class="page-subtitle">Especialista en {{ m.subespecialidad }}</p>
+      </div>
+
+      <div class="cabecera__acciones">
+        <ui-button variante="contorno" icono="pencil" destino="/oftalmologos/nuevo" [enlace]="true">
+          Editar Perfil
+        </ui-button>
+        <ui-button variante="peligro" icono="userCheck" (click)="desactivar()">
+          Desactivar Perfil
+        </ui-button>
+      </div>
+    </header>
+
+    <div class="rejilla">
+      <div class="columna">
+        <ui-card class="identidad">
+          <ui-avatar [iniciales]="iniciales(m.nombreCompleto)" tamano="xl" />
+          <h2 class="identidad__nombre">{{ m.nombreCompleto }}</h2>
+          <ui-badge [variante]="m.activo ? 'primario' : 'neutro'">
+            {{ m.activo ? 'Activo' : 'Inactivo' }}
+          </ui-badge>
+
+          <hr class="divider" />
+
+          <div class="dato">
+            <ui-icon nombre="mail" [tamano]="16" />
+            <span>
+              <span class="dato__etiqueta">Correo Electrónico</span>
+              <span class="dato__valor">{{ m.email }}</span>
+            </span>
+          </div>
+          <div class="dato">
+            <ui-icon nombre="phone" [tamano]="16" />
+            <span>
+              <span class="dato__etiqueta">Teléfono</span>
+              <span class="dato__valor">{{ m.telefono }}</span>
+            </span>
+          </div>
+          <div class="dato">
+            <ui-icon nombre="badgeCheck" [tamano]="16" />
+            <span>
+              <span class="dato__etiqueta">Número de Colegiado</span>
+              <span class="dato__valor">{{ m.numeroColegiatura }}</span>
+            </span>
+          </div>
+        </ui-card>
+
+        <ui-card titulo="Horario de Consulta" class="horario">
+          @for (franja of horario; track franja) {
+            <p class="horario__franja">{{ franja }}</p>
+          }
+        </ui-card>
+      </div>
+
+      <div class="principal">
+        <div class="metricas">
+          <ui-card class="metrica">
+            <span class="metrica__icono"><ui-icon nombre="users" [tamano]="20" /></span>
+            <p class="metrica__valor">
+              {{ metricas()?.pacientesAtendidos?.toLocaleString('es-ES') ?? '—' }}
+            </p>
+            <p class="metrica__etiqueta">Pacientes Atendidos</p>
+          </ui-card>
+
+          <ui-card class="metrica">
+            <span class="metrica__icono"><ui-icon nombre="calendar" [tamano]="20" /></span>
+            <p class="metrica__valor">{{ metricas()?.citasSemana ?? '—' }}</p>
+            <p class="metrica__etiqueta">Citas esta semana</p>
+          </ui-card>
+
+          <ui-card class="metrica">
+            <span class="metrica__icono"><ui-icon nombre="star" [tamano]="20" /></span>
+            <p class="metrica__valor">{{ metricas()?.valoracionMedia ?? '—' }}</p>
+            <p class="metrica__etiqueta">Valoración Media</p>
+          </ui-card>
+        </div>
+
+        <ui-card titulo="Próximas Citas" class="citas">
+          <ng-container slot="accion">
+            <ui-button variante="enlace" tamano="sm">Ver todas</ui-button>
+          </ng-container>
+
+          <ui-table [columnas]="columnas">
+            @for (cita of proximas(); track cita.id) {
+              <tr>
+                <td class="paciente">{{ cita.pacienteNombre }}</td>
+                <td>{{ cita.fecha }}<br />{{ cita.horaInicio }}</td>
+                <td>{{ cita.tipoConsulta }}</td>
+                <td>
+                  <ui-badge [variante]="cita.estadoCita === 'CONFIRMADA' ? 'success' : 'warning'">
+                    {{ cita.estadoCita === 'CONFIRMADA' ? 'Confirmada' : 'Pendiente' }}
+                  </ui-badge>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" class="vacio">No hay citas próximas registradas.</td>
+              </tr>
+            }
+          </ui-table>
+        </ui-card>
+      </div>
+    </div>
+  } @else {
+    <ui-skeleton [lineas]="8" alto="18px" padding="20px 0" />
+  }
+</div>

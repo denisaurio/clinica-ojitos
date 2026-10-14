@@ -1,0 +1,71 @@
+@use 'variables' as *;
+
+:host {
+  display: block;
+}
+
+.paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 20px;
+  border-top: 1px solid $border;
+}
+
+.paginacion__resumen {
+  font-size: 12.5px;
+  color: $text-muted;
+}
+
+.paginacion__controles {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.paginacion__flecha,
+.paginacion__pagina {
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+  background: $surface;
+  color: $text-muted;
+  font-family: $font-family;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background $transition, border-color $transition;
+
+  &:hover:not(:disabled) {
+    background: $sidebar-bg;
+    border-color: $border-strong;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: $focus-ring;
+  }
+}
+
+.paginacion__pagina--activa {
+  background: $primary;
+  border-color: $primary;
+  color: $text-invert;
+}
+
+.paginacion__puntos {
+  padding: 0 4px;
+  color: $text-faint;
+  font-size: 13px;
+}

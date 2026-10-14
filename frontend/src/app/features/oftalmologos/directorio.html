@@ -1,0 +1,87 @@
+<div class="page">
+  <h1 class="page-title">Directorio de Oftalmólogos</h1>
+  <p class="page-subtitle">Administre el equipo médico de la clínica y sus subespecialidades.</p>
+
+  <ui-card class="tabla">
+    @if (visibles().length > 0) {
+      <ui-table [columnas]="columnas">
+        @for (medico of visibles(); track medico.id) {
+          <tr>
+            <td>
+              <span class="celda-medico">
+                <ui-avatar [iniciales]="iniciales(medico.nombreCompleto)" tamano="md" />
+                <span>
+                  <span class="celda-medico__nombre">{{ medico.nombreCompleto }}</span>
+                  <span class="celda-medico__correo">{{ medico.email }}</span>
+                </span>
+              </span>
+            </td>
+            <td>{{ medico.numeroColegiatura }}</td>
+            <td>
+              <span class="celda-sub">
+                <ui-icon nombre="eye" [tamano]="14" />
+                {{ medico.subespecialidad }}
+              </span>
+            </td>
+            <td>
+              <ui-badge [variante]="medico.activo ? 'success' : 'neutro'">
+                {{ medico.activo ? 'Activo' : 'Inactivo' }}
+              </ui-badge>
+            </td>
+            <td class="acciones">
+              <button
+                type="button"
+                class="menu-btn"
+                aria-label="Acciones"
+                (click)="alternarMenu(medico.id)"
+              >
+                <ui-icon nombre="more-vertical" [tamano]="17" />
+              </button>
+
+              @if (menuAbierto() === medico.id) {
+                <div class="menu">
+                  <button type="button" class="menu__opcion" (click)="irA('/oftalmologos/perfil/' + medico.id)">
+                    <ui-icon nombre="user" [tamano]="14" /> Ver perfil
+                  </button>
+                  <button type="button" class="menu__opcion" (click)="irA('/oftalmologos/horarios/' + medico.id)">
+                    <ui-icon nombre="calendar" [tamano]="14" /> Configurar horarios
+                  </button>
+                  <button type="button" class="menu__opcion" (click)="irA('/oftalmologos/nuevo')">
+                    <ui-icon nombre="pencil" [tamano]="14" /> Editar
+                  </button>
+                  @if (medico.activo) {
+                    <button
+                      type="button"
+                      class="menu__opcion menu__opcion--peligro"
+                      (click)="desactivar(medico)"
+                    >
+                      <ui-icon nombre="userCheck" [tamano]="14" /> Desactivar
+                    </button>
+                  }
+                </div>
+              }
+            </td>
+          </tr>
+        }
+      </ui-table>
+
+      <div slot="pie">
+        <ui-pagination
+          [pagina]="pagina()"
+          [totalPaginas]="totalPaginas()"
+          [totalElementos]="medicos().length"
+          [tamanoPagina]="tamanoPagina"
+          (paginaCambia)="cambiarPagina($event)"
+        />
+      </div>
+    } @else {
+      <ui-empty-state
+        icono="search"
+        titulo="No se encontraron oftalmólogos"
+        descripcion="No hay médicos que coincidan con su búsqueda actual."
+      >
+        <ui-button variante="contorno" (click)="buscador.setValue('')">Limpiar búsqueda</ui-button>
+      </ui-empty-state>
+    }
+  </ui-card>
+</div>

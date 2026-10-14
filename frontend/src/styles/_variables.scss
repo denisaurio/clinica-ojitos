@@ -1,0 +1,59 @@
+// ============================================================================
+// Clínica Ojitos — Design System tokens
+// Única fuente de verdad de color, tipografía y geometría.
+// Los componentes NUNCA declaran hexadecimales propios: siempre consumen estos
+// tokens. Cualquier valor nuevo debe añadirse aquí primero.
+// ============================================================================
+
+// ---------------------------------------------------------------- Brand
+$primary: #1b3a5f;
+$primary-hover: #24496f;
+$primary-light: #2b4c7e;
+$sidebar-bg: #f1f5f9;
+$page-bg: #f8fafc;
+$surface: #ffffff;
+
+// ---------------------------------------------------------------- Text
+$text: #0f172a;
+$text-muted: #64748b;
+$text-faint: #94a3b8;
+$text-invert: #ffffff;
+
+// ---------------------------------------------------------------- Lines
+$border: #e2e8f0;
+$border-strong: #cbd5e1;
+
+// ---------------------------------------------------------------- Semantic
+$danger: #dc2626;
+$danger-bg: #fee2e2;
+$danger-border: #fca5a5;
+$success: #16a34a;
+$success-bg: #dcfce7;
+$warning: #d97706;
+$warning-bg: #fef3c7;
+$info: #1e40af;
+$info-bg: #dbeafe;
+
+// ---------------------------------------------------------------- Geometry
+$radius: 10px;
+$radius-sm: 6px;
+$radius-lg: 14px;
+
+// ---------------------------------------------------------------- Sidebar
+$sidebar-w: 200px;
+$sidebar-w-ext: 178px;
+$topbar-h: 44px;
+
+// ---------------------------------------------------------------- Typography
+$font-family: Inter, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+// ---------------------------------------------------------------- Elevación
+$shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+$shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+$shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.14);
+
+// ---------------------------------------------------------------- Focus ring
+$focus-ring: 0 0 0 3px rgba(27, 58, 95, 0.15);
+
+// ---------------------------------------------------------------- Transiciones
+$transition: 0.15s ease;

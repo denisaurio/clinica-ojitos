@@ -1,0 +1,67 @@
+@use 'variables' as *;
+
+.encabezado {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.filtros {
+  margin-bottom: 20px;
+}
+
+.filtros__fila {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.filtros__buscador {
+  flex: 1;
+  min-width: 0;
+}
+
+.tabla__carga {
+  padding: 8px 0;
+}
+
+/* La paginación sustituye al slot `pie` de ui-table. */
+.tabla__pie {
+  border-top: 1px solid $border;
+}
+
+/* --------------------------------------------------------------- Tabla */
+.fila {
+  cursor: pointer;
+}
+
+.celda-paciente {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.celda-paciente__nombre {
+  font-weight: 600;
+}
+
+.celda-contacto {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.35;
+}
+
+.celda-contacto__correo {
+  font-size: 12px;
+  color: $text-muted;
+}
+
+@media (max-width: 720px) {
+  .filtros__fila {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

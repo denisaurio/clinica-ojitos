@@ -1,0 +1,91 @@
+<div class="page">
+  <h1 class="page-title">Registro de Nuevo Oftalmólogo</h1>
+  <p class="page-subtitle">
+    Ingrese los datos personales y las credenciales profesionales del médico para
+    incorporarlo al sistema.
+  </p>
+
+  @if (error()) {
+    <ui-alert tipo="danger" class="aviso">{{ error() }}</ui-alert>
+  }
+
+  <form [formGroup]="formulario" (ngSubmit)="guardar()" novalidate class="tarjeta">
+    <ui-card titulo="Datos Personales" icono="user" [sinPadding]="true">
+      <div class="formulario">
+        <div class="grid-2">
+          <ui-input
+            formControlName="nombres"
+            etiqueta="Nombres"
+            placeholder="ej. María"
+            [requerido]="true"
+            [error]="errorDe('nombres', 'Los nombres son obligatorios.')"
+          />
+          <ui-input
+            formControlName="apellidos"
+            etiqueta="Apellidos"
+            placeholder="ej. Gonzalez"
+            [requerido]="true"
+            [error]="errorDe('apellidos', 'Los apellidos son obligatorios.')"
+          />
+        </div>
+
+        <ui-input
+          formControlName="email"
+          etiqueta="Correo Electrónico"
+          placeholder="doctor@clinica.com"
+          tipo="email"
+          icono="mail"
+          [requerido]="true"
+          [error]="errorDe('email', 'El correo no tiene un formato válido.')"
+        />
+
+        <ui-input
+          formControlName="telefono"
+          etiqueta="Teléfono de Contacto"
+          placeholder="+51 800 123 456"
+          icono="phone"
+          [requerido]="true"
+          [error]="errorDe('telefono', 'El teléfono es obligatorio.')"
+        />
+      </div>
+    </ui-card>
+
+    <ui-card titulo="Credenciales Profesionales" icono="badgeCheck" [sinPadding]="true">
+      <div class="formulario">
+        <ui-input
+          formControlName="numeroColegiatura"
+          etiqueta="Número de Colegiatura"
+          placeholder="CMP-89421"
+          [requerido]="true"
+          [error]="errorColegiatura()"
+        />
+
+        <ui-select
+          formControlName="subespecialidad"
+          etiqueta="Subespecialidad"
+          placeholder="Seleccione un área de especialidad"
+          [opciones]="subespecialidades()"
+          [requerido]="true"
+          [error]="errorDe('subespecialidad', 'Seleccione una subespecialidad.')"
+        />
+
+        <ui-select
+          formControlName="sede"
+          etiqueta="Sede"
+          placeholder="Clínica Principal (Centre)"
+          [opciones]="[
+            { valor: 'Clínica Principal (Centre)', etiqueta: 'Clínica Principal (Centre)' },
+            { valor: 'Clínica Norte', etiqueta: 'Clínica Norte' }
+          ]"
+        />
+      </div>
+    </ui-card>
+
+    <div class="acciones">
+      <ui-button variante="contorno" tipo="button" destino="/oftalmologos" [enlace]="true">Cancelar</ui-button>
+      <ui-button variante="primario" tipo="submit" icono="save" [deshabilitado]="guardando()">
+        Guardar Médico
+      </ui-button>
+    </div>
+  </form>
+</div>

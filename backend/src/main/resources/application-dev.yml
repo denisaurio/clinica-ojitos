@@ -1,0 +1,30 @@
+# =============================================================================
+#  Perfil de desarrollo local
+#  Uso:  mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+#       SPRING_PROFILES_ACTIVE=dev mvnw spring-boot:run
+# =============================================================================
+
+spring:
+  jpa:
+    hibernate:
+      # En desarrollo se permite a Hibernate crear tablas faltantes a partir de
+      # las entidades. En producción se usa `validate` (ver application.yml).
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  datasource:
+    hikari:
+      maximum-pool-size: 5
+
+logging:
+  level:
+    com.clinicaojitos: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.springframework.web: INFO
+
+app:
+  jwt:
+    expiration-minutes: 480

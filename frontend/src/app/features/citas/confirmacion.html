@@ -1,0 +1,80 @@
+<div class="confirmacion">
+  <article class="comprobante">
+    <header class="comprobante__exito">
+      <span class="comprobante__icono">
+        <ui-icon nombre="check" [tamano]="26" [grosor]="3" />
+      </span>
+      <h1 class="comprobante__titulo">¡Cita confirmada exitosamente!</h1>
+      <p class="comprobante__texto">La consulta oftalmológica ha sido programada.</p>
+    </header>
+
+    <div class="comprobante__cuerpo">
+      <div class="fichas">
+        <section class="ficha">
+          <span class="ficha__icono ficha__icono--paciente">
+            <ui-icon nombre="user" [tamano]="16" />
+          </span>
+          <div>
+            <p class="eyebrow">Paciente</p>
+            <p class="ficha__valor">{{ paciente()?.nombreCompleto ?? '—' }}</p>
+            <p class="ficha__detalle">
+              Historia Clínica: #{{ paciente()?.documento ?? '—' }}
+            </p>
+          </div>
+        </section>
+
+        <section class="ficha">
+          <span class="ficha__icono ficha__icono--medico">
+            <ui-icon nombre="stethoscope" [tamano]="16" />
+          </span>
+          <div>
+            <p class="eyebrow">Especialista</p>
+            <p class="ficha__valor">{{ medico()?.nombreCompleto ?? '—' }}</p>
+            <p class="ficha__detalle">{{ medico()?.subespecialidad ?? '—' }}</p>
+          </div>
+        </section>
+      </div>
+
+      <section class="ficha ficha--ancha">
+        <div class="ficha__dato">
+          <span class="ficha__icono ficha__icono--fecha">
+            <ui-icon nombre="calendar" [tamano]="16" />
+          </span>
+          <div>
+            <p class="eyebrow">Fecha</p>
+            <p class="ficha__valor">{{ fechaLegible }}</p>
+          </div>
+        </div>
+        <div class="ficha__separador"></div>
+        <div class="ficha__dato">
+          <span class="ficha__icono ficha__icono--fecha">
+            <ui-icon nombre="clock" [tamano]="16" />
+          </span>
+          <div>
+            <p class="eyebrow">Hora</p>
+            <p class="ficha__valor">{{ horaLegible }}</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="aviso">
+        <span class="aviso__icono">
+          <ui-icon nombre="mail" [tamano]="18" />
+        </span>
+        <p class="aviso__texto">
+          Se ha enviado un recordatorio por WhatsApp y correo electrónico al paciente
+          con las indicaciones pre-consulta.
+        </p>
+      </div>
+    </div>
+
+    <footer class="comprobante__pie">
+      <ui-button variante="contorno" icono="print" (click)="imprimir()">
+        Imprimir Comprobante
+      </ui-button>
+      <ui-button variante="primario" icono="arrow-left" destino="/citas/agenda" [enlace]="true">
+        Regresar al Calendario
+      </ui-button>
+    </footer>
+  </article>
+</div>

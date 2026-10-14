@@ -1,0 +1,106 @@
+<div class="page">
+  <h1 class="page-title">Registro de Procedimiento Quirúrgico</h1>
+  <p class="page-subtitle">
+    Documente los detalles completos de la intervención quirúrgica. Todos los campos
+    marcados con un asterisco (*) son obligatorios para el cumplimiento del protocolo clínico.
+  </p>
+
+  @if (error()) {
+    <ui-alert tipo="danger" class="aviso">{{ error() }}</ui-alert>
+  }
+
+  <form [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
+    <ui-card titulo="Información del Paciente" icono="user" class="bloque">
+      <div class="bloque__grid">
+        <ui-input
+          formControlName="pacienteId"
+          etiqueta="ID / Nombre del Paciente"
+          placeholder="Buscar o ingresar datos del paciente..."
+          icono="search"
+          [requerido]="true"
+          [error]="errorDe('pacienteId', 'Indique el paciente.')"
+        />
+        <ui-input
+          formControlName="diagnosticoPreoperatorio"
+          etiqueta="Diagnóstico Preoperatorio"
+          placeholder="ej. Catarata, OD"
+          [requerido]="true"
+          [error]="errorDe('diagnosticoPreoperatorio', 'El diagnóstico preoperatorio es obligatorio.')"
+        />
+      </div>
+    </ui-card>
+
+    <ui-card titulo="Detalles del Procedimiento" icono="scissors" class="bloque">
+      <div class="bloque__grid">
+        <ui-select
+          formControlName="tipoCirugia"
+          etiqueta="Tipo de Cirugía"
+          placeholder="Seleccione el tipo de procedimiento..."
+          [opciones]="tiposCirugia"
+          icono="scissors"
+          [requerido]="true"
+          [error]="errorDe('tipoCirugia', 'Seleccione el tipo de cirugía.')"
+        />
+        <ui-input
+          formControlName="fecha"
+          etiqueta="Fecha del Procedimiento"
+          tipo="date"
+          [requerido]="true"
+          [error]="errorDe('fecha', 'Indique la fecha del procedimiento.')"
+        />
+      </div>
+
+      <div class="bloque__fila">
+        <div class="lateralidad">
+          <p class="lateralidad__etiqueta">Lateralidad</p>
+          <div class="lateralidad__opciones">
+            <label class="radio" [class.radio--activa]="c.lateralidad.value === 'OD'">
+              <input type="radio" formControlName="lateralidad" value="OD" />
+              <span>Ojo Derecho (OD)</span>
+            </label>
+            <label class="radio" [class.radio--activa]="c.lateralidad.value === 'OI'">
+              <input type="radio" formControlName="lateralidad" value="OI" />
+              <span>Ojo Izquierdo (OI)</span>
+            </label>
+            <label class="radio" [class.radio--activa]="c.lateralidad.value === 'AO'">
+              <input type="radio" formControlName="lateralidad" value="AO" />
+              <span>Ambos Ojos (AO)</span>
+            </label>
+          </div>
+        </div>
+
+        <ui-select
+          formControlName="tipoAnestesia"
+          etiqueta="Tipo de Anestesia"
+          [opciones]="anestesias"
+          [requerido]="true"
+        />
+      </div>
+    </ui-card>
+
+    <ui-card titulo="Observaciones / Notas Quirúrgicas" icono="clipboardList" class="bloque">
+      <label class="area">
+        <span class="area__etiqueta">Reporte Operatorio y Complicaciones</span>
+        <textarea
+          class="area__campo"
+          rows="7"
+          formControlName="reporteOperatorio"
+          placeholder="Detalle los pasos quirúrgicos, cualquier complicación presentada y el estado postoperatorio inmediato..."
+        ></textarea>
+        <span class="area__ayuda">
+          Incluya detalles específicos de la sutura o dimensiones de injerto, según corresponda.
+        </span>
+        @if (errorDe('reporteOperatorio', '')) {
+          <span class="area__error">El reporte operatorio es obligatorio.</span>
+        }
+      </label>
+    </ui-card>
+
+    <div class="acciones">
+      <ui-button variante="contorno" tipo="button" destino="/dashboard" [enlace]="true">Cancelar</ui-button>
+      <ui-button variante="primario" tipo="submit" icono="save" [deshabilitado]="guardando()">
+        Guardar Registro
+      </ui-button>
+    </div>
+  </form>
+</div>

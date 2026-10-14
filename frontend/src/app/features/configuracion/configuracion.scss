@@ -1,0 +1,48 @@
+@use 'variables' as *;
+
+.configuracion__rejilla {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 20px;
+  align-items: start;
+}
+
+.datos {
+  margin: 0;
+}
+
+.datos__fila {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid $border;
+  font-size: 13px;
+}
+
+.datos__fila:last-child {
+  border-bottom: 0;
+}
+
+dt {
+  color: $text-muted;
+}
+
+dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.configuracion__texto {
+  font-size: 13px;
+  line-height: 1.6;
+  color: $text-muted;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 880px) {
+  .configuracion__rejilla {
+    grid-template-columns: 1fr;
+  }
+}

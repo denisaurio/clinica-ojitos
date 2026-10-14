@@ -1,0 +1,58 @@
+﻿<div class="marca">
+  <span class="marca__logo">
+    <ui-icon nombre="eye" [tamano]="17" />
+  </span>
+  <span class="marca__texto">
+    <span class="marca__titulo">{{ marca().titulo }}</span>
+    <span class="marca__subtitulo">{{ marca().subtitulo }}</span>
+  </span>
+</div>
+
+@if (variante() === 'clinico' || variante() === 'operativo') {
+  <div class="accion">
+    <ui-button
+      [enlace]="true"
+      destino="/citas/reservar"
+      variante="primario"
+      icono="plus"
+      class="accion__enlace"
+    >
+      Nueva Cita
+    </ui-button>
+  </div>
+}
+
+<nav class="menu" aria-label="Navegación principal">
+  @for (entrada of entradas(); track entrada.ruta) {
+    <a
+      class="menu__enlace"
+      [routerLink]="entrada.ruta"
+      routerLinkActive="activo"
+      [routerLinkActiveOptions]="{ exact: entrada.exacta ?? false }"
+    >
+      <ui-icon [nombre]="entrada.icono" [tamano]="16" />
+      <span>{{ entrada.etiqueta }}</span>
+    </a>
+  }
+</nav>
+
+<div class="pie">
+  <a class="pie__enlace" routerLink="/configuracion">
+    <ui-icon nombre="settings" [tamano]="16" />
+    <span>Configuración</span>
+  </a>
+  <button type="button" class="pie__enlace" (click)="cerrarSesion()">
+    <ui-icon nombre="logOut" [tamano]="16" />
+    <span>Cerrar sesión</span>
+  </button>
+</div>
+
+@if (variante() === 'gestion') {
+  <div class="usuario">
+    <ui-avatar [iniciales]="iniciales()" [nombre]="nombre()" tamano="sm" />
+    <span class="usuario__datos">
+      <span class="usuario__nombre">{{ nombre() }}</span>
+      <span class="usuario__rol">{{ rolLegible() }}</span>
+    </span>
+  </div>
+}

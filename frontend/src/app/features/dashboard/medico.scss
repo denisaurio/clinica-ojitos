@@ -1,0 +1,168 @@
+@use 'variables' as *;
+
+.rejilla {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr;
+  gap: 20px;
+  margin-top: 24px;
+  align-items: start;
+}
+
+.columna {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ------------------------------------------------------------- Agenda */
+.citas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cita {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: $page-bg;
+  border: 1px solid $border;
+  border-left: 3px solid $primary;
+  border-radius: $radius-sm;
+}
+
+.cita__hora {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 54px;
+  height: 44px;
+  padding: 0 8px;
+  background: $primary;
+  color: $text-invert;
+  border-radius: $radius-sm;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.1;
+
+  small {
+    font-size: 9.5px;
+    font-weight: 500;
+    opacity: 0.8;
+  }
+}
+
+.cita__cuerpo {
+  flex: 1;
+  min-width: 0;
+}
+
+.cita__paciente {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.cita__motivo {
+  display: block;
+  font-size: 12px;
+  color: $text-muted;
+}
+
+.cita__etiquetas {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.citas__vacio {
+  padding: 24px;
+  text-align: center;
+  font-size: 13px;
+  color: $text-muted;
+}
+
+/* --------------------------------------------------------- Pendientes */
+.pendientes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pendiente {
+  display: flex;
+  gap: 12px;
+}
+
+.pendiente__icono {
+  color: $primary;
+  margin-top: 2px;
+}
+
+.pendiente__titulo {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pendiente__detalle {
+  display: block;
+  font-size: 12px;
+  color: $text-muted;
+  line-height: 1.45;
+}
+
+/* ----------------------------------------------------------- Recientes */
+.recientes__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reciente {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+  text-decoration: none;
+  transition: border-color $transition;
+
+  &:hover {
+    border-color: $border-strong;
+    text-decoration: none;
+  }
+}
+
+.reciente__datos {
+  min-width: 0;
+}
+
+.reciente__nombre {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $text;
+}
+
+.reciente__hora {
+  display: block;
+  font-size: 11px;
+  color: $text-muted;
+}
+
+@media (max-width: 1000px) {
+  .rejilla {
+    grid-template-columns: 1fr;
+  }
+}

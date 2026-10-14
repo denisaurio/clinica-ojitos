@@ -1,0 +1,244 @@
+@use 'variables' as *;
+
+:host {
+  display: block;
+  background: $page-bg;
+  min-height: 100%;
+}
+
+.consulta {
+  min-height: 100vh;
+}
+
+.consulta__cabecera {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 20px;
+  background: $surface;
+  border-bottom: 1px solid $border;
+}
+
+.consulta__titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.consulta__titulo h1 {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.consulta__titulo p {
+  font-size: 12px;
+  color: $text-muted;
+}
+
+.consulta__acciones {
+  display: flex;
+  gap: 10px;
+}
+
+.consulta__cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 22px 20px 40px;
+}
+
+/* ------------------------------------------------------------ Ojos */
+.ojos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.ojo {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px;
+  background: $page-bg;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+}
+
+.ojo__titulo {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: $text-muted;
+}
+
+/* --------------------------------------------------------- Bloques */
+.bloques {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.area {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.area--ancho {
+  width: 100%;
+}
+
+.area__etiqueta {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.area__campo {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid $border-strong;
+  border-radius: $radius-sm;
+  background: $surface;
+  font-family: $font-family;
+  font-size: 13px;
+  color: $text;
+  resize: vertical;
+  outline: none;
+  transition: border-color $transition, box-shadow $transition;
+
+  &:focus {
+    border-color: $primary;
+    box-shadow: $focus-ring;
+  }
+}
+
+.area__campo--alta {
+  min-height: 120px;
+}
+
+.soap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  padding-top: 4px;
+}
+
+/* ------------------------------------------------------ Zona de archivos */
+.zona-soltar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 32px 20px;
+  border: 2px dashed $border-strong;
+  border-radius: $radius;
+  background: $surface;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color $transition, background $transition;
+
+  &:hover {
+    border-color: $primary;
+    background: $page-bg;
+  }
+}
+
+.zona-soltar__nube {
+  color: $primary;
+  margin-bottom: 4px;
+}
+
+.zona-soltar__titulo {
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.zona-soltar__texto {
+  font-size: 12.5px;
+  color: $text-muted;
+}
+
+.zona-soltar__boton {
+  margin-top: 6px;
+  padding: 5px 12px;
+  background: $primary;
+  color: $text-invert;
+  border-radius: $radius-sm;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.adjuntos {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 18px 0 0;
+  padding: 0;
+}
+
+.adjunto {
+  position: relative;
+  width: 110px;
+  padding: 12px 8px;
+  background: $page-bg;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+  text-align: center;
+}
+
+.adjunto__vista {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 58px;
+  color: $text-muted;
+}
+
+.adjunto__nombre {
+  display: block;
+  margin-top: 8px;
+  font-size: 11px;
+  color: $text-muted;
+  word-break: break-all;
+}
+
+.adjunto__quitar {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 4px;
+  background: $border;
+  color: $text-muted;
+  cursor: pointer;
+
+  &:hover {
+    background: $danger-bg;
+    color: $danger;
+  }
+}
+
+.consulta__pie {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+@media (max-width: 760px) {
+  .ojos,
+  .soap {
+    grid-template-columns: 1fr;
+  }
+}

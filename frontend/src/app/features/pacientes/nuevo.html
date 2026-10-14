@@ -1,0 +1,167 @@
+<div class="page">
+  <h1 class="page-title">Registrar Nuevo Paciente</h1>
+  <p class="page-subtitle">Complete los datos para ingresar un nuevo paciente al sistema.</p>
+
+  <form [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
+    <ui-stepper [pasos]="pasos()" />
+
+  @if (error()) {
+    <ui-alert tipo="danger" class="aviso-error">{{ error() }}</ui-alert>
+  }
+
+  @switch (paso()) {
+    @case (1) {
+      <ui-card class="formulario">
+        <div class="grid-2">
+          <ui-input
+            formControlName="nombres"
+            etiqueta="Nombres"
+            placeholder="Ej. Juan Carlos"
+            [requerido]="true"
+            [error]="errorDe('nombres', 'Los nombres son obligatorios.')"
+          />
+          <ui-input
+            formControlName="apellidos"
+            etiqueta="Apellidos"
+            placeholder="Ej. Pérez Gómez"
+            [requerido]="true"
+            [error]="errorDe('apellidos', 'Los apellidos son obligatorios.')"
+          />
+        </div>
+
+        <ui-input
+          formControlName="documento"
+          etiqueta="DNI / Documento de identidad"
+          placeholder="Ej. 45678912C"
+          [requerido]="true"
+          [error]="errorDocumento()"
+          class="ancho"
+        />
+
+        <div class="grid-2">
+          <ui-input
+            formControlName="fechaNacimiento"
+            etiqueta="Fecha de Nacimiento"
+            tipo="date"
+            [requerido]="true"
+            [ayuda]="edad() !== null ? 'Edad: ' + edad() + ' años' : ''"
+            [error]="errorDe('fechaNacimiento', 'Indique la fecha de nacimiento.')"
+          />
+          <ui-input
+            formControlName="telefono"
+            etiqueta="Teléfono de Contacto"
+            placeholder="+51 999 999 999"
+            [requerido]="true"
+            [error]="errorDe('telefono', 'El teléfono es obligatorio.')"
+          />
+        </div>
+
+        <ui-select
+          formControlName="seguro"
+          etiqueta="Seguro Médico (Opcional)"
+          placeholder="Seleccione una opción"
+          [opciones]="seguros()"
+          class="ancho"
+        />
+
+        <div class="grid-2">
+          <ui-input
+            formControlName="email"
+            etiqueta="Correo Electrónico (Opcional)"
+            tipo="email"
+            placeholder="paciente@email.com"
+            [error]="errorDe('email', 'El correo no tiene un formato válido.')"
+          />
+          <ui-input formControlName="direccion" etiqueta="Dirección (Opcional)" />
+        </div>
+      </ui-card>
+    }
+
+    @case (2) {
+      <ui-card class="formulario">
+        <ui-select
+          formControlName="grupoSanguineo"
+          etiqueta="Grupo Sanguíneo"
+          placeholder="Seleccione una opción"
+          [opciones]="gruposSanguineos"
+          class="ancho"
+        />
+
+        <label class="area">
+          <span class="area__etiqueta">Antecedentes Oculares</span>
+          <textarea
+            class="area__campo"
+            rows="4"
+            formControlName="antecedentesOculares"
+            placeholder="Glaucoma, cataratas, cirugías previas, antecedentes familiares…"
+          ></textarea>
+        </label>
+
+        <label class="area">
+          <span class="area__etiqueta">Alergias</span>
+          <textarea
+            class="area__campo"
+            rows="3"
+            formControlName="alergias"
+            placeholder="Penicilina, látex, Midríaticos…"
+          ></textarea>
+          <span class="area__ayuda">
+            Las alergias se muestran en portada de la ficha clínica para el personal
+            que trata al paciente.
+          </span>
+        </label>
+      </ui-card>
+    }
+
+    @case (3) {
+      <ui-card titulo="Revise los datos antes de guardar" icono="userCheck">
+        <div class="resumen">
+          <ui-avatar [iniciales]="inicial()" [nombre]="nombreCompleto()" tamano="lg" />
+          <div class="resumen__datos">
+            <p class="resumen__nombre">{{ nombreCompleto() }}</p>
+            <p class="resumen__linea">Documento: {{ c.documento.value }}</p>
+            <p class="resumen__linea">Teléfono: {{ c.telefono.value }}</p>
+            @if (c.email.value) {
+              <p class="resumen__linea">Correo: {{ c.email.value }}</p>
+            }
+            @if (c.seguro.value) {
+              <p class="resumen__linea">Seguro: {{ c.seguro.value }}</p>
+            }
+          </div>
+        </div>
+
+        @if (c.alergias.value) {
+          <ui-alert tipo="warning" titulo="Alergias registradas">
+            {{ c.alergias.value }}
+          </ui-alert>
+        }
+      </ui-card>
+    }
+  }
+
+  <div class="acciones">
+    @if (paso() > 1) {
+      <ui-button variante="contorno" tipo="button" (click)="anterior()">
+        <ui-icon nombre="arrow-left" [tamano]="15" />
+        Anterior
+      </ui-button>
+    }
+
+    @if (paso() < 3) {
+      <ui-button variante="primario" tipo="button" (click)="siguiente()">
+        Siguiente
+        <ui-icon nombre="arrow-right" [tamano]="15" />
+      </ui-button>
+    } @else {
+      <ui-button
+        variante="primario"
+        tipo="submit"
+        icono="check"
+        [deshabilitado]="guardando()"
+      >
+        Guardar Paciente
+      </ui-button>
+    }
+  </div>
+  </form>
+</div>

@@ -1,0 +1,142 @@
+@use 'variables' as *;
+
+.encabezado {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.rejilla {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 20px;
+  margin-top: 24px;
+  align-items: start;
+}
+
+.columna {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* -------------------------------------------------------------- Tabla */
+.hora {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.paciente {
+  font-weight: 600;
+}
+
+.doctor {
+  white-space: nowrap;
+}
+
+.tabla-card__pie {
+  display: block;
+  padding: 12px 20px;
+  border-top: 1px solid $border;
+  text-align: center;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $primary;
+  text-decoration: none;
+
+  &:hover {
+    background: $page-bg;
+    text-decoration: none;
+  }
+}
+
+/* ---------------------------------------------------------- Médicos */
+.medicos {
+  position: relative;
+  overflow: hidden;
+}
+
+.medicos__lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.medico {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+}
+
+.medico__datos {
+  flex: 1;
+  min-width: 0;
+}
+
+.medico__nombre {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.medico__sub {
+  display: block;
+  font-size: 11.5px;
+  color: $text-muted;
+}
+
+.medico__estado {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+/* ----------------------------------------------------------- Avisos */
+.avisos {
+  padding: 18px 20px 20px;
+  background: $primary;
+  color: $text-invert;
+  border-radius: $radius;
+  box-shadow: $shadow-sm;
+}
+
+.avisos__titulo {
+  font-size: 17px;
+  font-weight: 700;
+  color: $text-invert;
+}
+
+.avisos__lista {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.aviso {
+  display: flex;
+  gap: 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.aviso ui-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+@media (max-width: 1000px) {
+  .rejilla {
+    grid-template-columns: 1fr;
+  }
+}

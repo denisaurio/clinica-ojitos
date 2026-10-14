@@ -1,0 +1,68 @@
+<div class="leyenda">
+  <span class="leyenda__titulo">Avance Presión Intraocular (PIO)</span>
+  <span class="leyenda__serie">
+    <i class="punto punto--od"></i>
+    OD (Right)
+  </span>
+  <span class="leyenda__serie">
+    <i class="punto punto--oi"></i>
+    OS (Left)
+  </span>
+</div>
+
+<svg
+  class="grafico"
+  [attr.viewBox]="'0 0 ' + ancho + ' ' + alto"
+  preserveAspectRatio="xMidYMid meet"
+  role="img"
+  aria-label="Evolución de la presión intraocular por ojo"
+>
+  <defs>
+    <linearGradient id="pio-od-area" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="currentColor" stop-opacity="0.18" />
+      <stop offset="100%" stop-color="currentColor" stop-opacity="0.02" />
+    </linearGradient>
+  </defs>
+
+  <!-- Rejilla y eje vertical -->
+  @for (valor of ejeY(); track valor) {
+    <g>
+      <line
+        [attr.x1]="margenes.izquierda"
+        [attr.x2]="ancho - margenes.derecha"
+        [attr.y1]="yDe(valor)"
+        [attr.y2]="yDe(valor)"
+        class="rejilla"
+      />
+      <text [attr.x]="margenes.izquierda - 8" [attr.y]="yDe(valor) + 4" class="etiqueta-y">
+        {{ valor }} mmHg
+      </text>
+    </g>
+  }
+
+  <!-- Área bajo la serie OD -->
+  <path [attr.d]="series()[0].area" fill="url(#pio-od-area)" class="area" />
+
+  <!-- Serie OS (punteada) -->
+  <path [attr.d]="series()[1].d" class="linea linea--oi" />
+
+  <!-- Serie OD (continua) -->
+  <path [attr.d]="series()[0].d" class="linea linea--od" />
+
+  @for (serie of series(); track serie.clave) {
+    @for (punto of serie.puntos; track $index) {
+      <circle
+        [attr.cx]="punto.x"
+        [attr.cy]="punto.y"
+        r="3.2"
+        [class.marcador]="serie.clave === 'pioOd'"
+        [class.marcador--hueco]="serie.clave === 'pioOi'"
+      />
+    }
+  }
+
+  <!-- Etiquetas de mes -->
+  @for (etiqueta of etiquetasX(); track $index) {
+    <text [attr.x]="xDe($index)" [attr.y]="alto - 12" class="etiqueta-x">{{ etiqueta }}</text>
+  }
+</svg>

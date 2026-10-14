@@ -1,0 +1,186 @@
+@use 'variables' as *;
+
+:host {
+  display: block;
+}
+
+.barra {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: $topbar-h;
+  min-height: $topbar-h;
+  padding: 0 16px;
+  background: $surface;
+  border-bottom: 1px solid $border;
+}
+
+.barra__espacio {
+  flex: 1;
+}
+
+/* ------------------------------------------------------------- Insignia */
+.insignia {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: $sidebar-bg;
+  border: 1px solid $border;
+  font-size: 12px;
+  font-weight: 600;
+  color: $primary;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------ Buscador */
+.buscador {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 300px;
+  height: 30px;
+  padding: 0 12px;
+  background: $sidebar-bg;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: $text-muted;
+  transition: border-color $transition, background $transition;
+
+  &:focus-within {
+    background: $surface;
+    border-color: $border-strong;
+  }
+}
+
+.buscador input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-family: $font-family;
+  font-size: 13px;
+  color: $text;
+
+  &::placeholder {
+    color: $text-faint;
+  }
+}
+
+/* ---------------------------------------------------------- Iconos sueltos */
+.barra__separador {
+  width: 1px;
+  height: 20px;
+  background: $border;
+}
+
+.barra__enlace {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $primary;
+}
+
+.barra__accion {
+  flex-shrink: 0;
+}
+
+.antetitulo {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: $primary;
+}
+
+.barra__icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: $text-muted;
+  cursor: pointer;
+  transition: background $transition, color $transition;
+
+  &:hover {
+    background: $sidebar-bg;
+    color: $text;
+  }
+}
+
+/* -------------------------------------------------------------- Usuario */
+.usuario {
+  position: relative;
+}
+
+.usuario__boton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 6px 3px 3px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-family: $font-family;
+  color: $text;
+  cursor: pointer;
+  transition: background $transition;
+
+  &:hover {
+    background: $sidebar-bg;
+  }
+}
+
+.usuario__datos {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+
+.usuario__nombre {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.usuario__rol {
+  font-size: 10.5px;
+  color: $text-muted;
+}
+
+.menu-usuario {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 30;
+  min-width: 180px;
+  padding: 6px;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius;
+  box-shadow: $shadow-md;
+}
+
+.menu-usuario__opcion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: $radius-sm;
+  background: transparent;
+  font-family: $font-family;
+  font-size: 13px;
+  color: $text;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: $sidebar-bg;
+  }
+}

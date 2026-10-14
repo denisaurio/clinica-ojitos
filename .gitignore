@@ -1,0 +1,68 @@
+# ==========================================================================
+#  Clínica Oftalmológica Ojitos — archivos que no se versionan
+# ==========================================================================
+
+# --- Java / Maven ---------------------------------------------------------
+target/
+*.class
+*.jar
+*.war
+.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.properties
+.mvn/timing.properties
+.flattened-pom.xml
+
+# --- Node / Angular -------------------------------------------------------
+node_modules/
+dist/
+.angular/
+tmp/
+out-tsc/
+npm-debug.log*
+yarn-error.log*
+
+# --- Archivos subidos por los usuarios (RF2.4) -----------------------------
+backend/src/main/resources/static/uploads/
+uploads/
+*.pdf
+*.jpg
+*.jpeg
+*.png
+!frontend/public/**/*
+!frontend/src/assets/**
+
+# --- Secretos: nunca se versionan credenciales (RNF-01) -------------------
+.env
+.env.*
+!.env.example
+application-local.yml
+application-prod.yml
+*.pem
+*.key
+secrets/
+!**/package-lock.json
+
+# --- IDE / sistema operativo ---------------------------------------------
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.project
+.classpath
+.settings/
+.DS_Store
+Thumbs.db
+desktop.ini
+*.lnk
+
+# --- Herramientas internas del proyecto -----------------------------------
+_tools/
+frontend/fix-*.cjs
+frontend/*.log
+
+# --- Registros ------------------------------------------------------------
+*.log
+logs/

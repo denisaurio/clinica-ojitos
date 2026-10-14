@@ -1,0 +1,198 @@
+<div class="page">
+  <h1 class="page-title">Reservar Nueva Cita</h1>
+  <p class="page-subtitle">Programe una consulta con nuestros especialistas en oftalmología.</p>
+
+  <ui-card class="tarjeta" [sinPadding]="true">
+    <div class="tarjeta__stepper">
+      <ui-stepper [pasos]="pasos()" />
+    </div>
+
+    @if (error()) {
+      <div class="tarjeta__aviso">
+        <ui-alert tipo="danger">{{ error() }}</ui-alert>
+      </div>
+    }
+
+    <form [formGroup]="formulario" (ngSubmit)="confirmar()" novalidate>
+      @switch (paso()) {
+        @case (1) {
+          <div class="detalles">
+            <div class="detalles__izquierda">
+              <h2 class="detalles__titulo">
+                <ui-icon nombre="stethoscope" [tamano]="18" />
+                Seleccionar Especialista
+              </h2>
+
+              <ui-select
+                formControlName="oftalmologoId"
+                placeholder="Elija un oftalmólogo..."
+                [opciones]="medicos()"
+                [requerido]="true"
+                (valorCambia)="cargarDisponibilidad(c.fecha.value)"
+              />
+
+              <h2 class="detalles__titulo">
+                <ui-icon nombre="calendar" [tamano]="18" />
+                Seleccionar Fecha
+              </h2>
+
+              <div class="calendario">
+                <header class="calendario__cabecera">
+                  <button type="button" class="calendario__nav" (click)="mesAnterior()">
+                    <ui-icon nombre="chevron-left" [tamano]="16" />
+                  </button>
+                  <span class="calendario__titulo">{{ tituloMes() }}</span>
+                  <button type="button" class="calendario__nav" (click)="mesSiguiente()">
+                    <ui-icon nombre="chevron-right" [tamano]="16" />
+                  </button>
+                </header>
+
+                <div class="calendario__dias">
+                  @for (dia of diasSemana; track dia) {
+                    <span class="calendario__dia-semana">{{ dia }}</span>
+                  }
+                </div>
+
+                <div class="calendario__rejilla">
+                  @for (dia of calendario(); track dia.iso) {
+                    <button
+                      type="button"
+                      class="calendario__dia"
+                      [class.calendario__dia--fuera]="!dia.delMes"
+                      [class.calendario__dia--activo]="dia.seleccionado"
+                      [disabled]="!dia.delMes"
+                      (click)="seleccionarDia(dia)"
+                    >
+                      {{ dia.numero }}
+                    </button>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <aside class="horarios">
+              <h2 class="detalles__titulo">
+                <ui-icon nombre="clock" [tamano]="18" />
+                Horarios Disponibles
+              </h2>
+              <p class="horarios__nota">
+                Mostrando disponibilidad para el
+                {{ c.fecha.value | date: 'd \'de\' MMMM \'de\' y' : 'es-ES' : 'UTC' }}
+              </p>
+
+              <p class="horarios__franja">Mañana</p>
+              <div class="horarios__rejilla">
+                @for (slot of manana(); track slot.horaInicio) {
+                  <button
+                    type="button"
+                    class="slot"
+                    [class.slot--libre]="slot.estado === 'FREE'"
+                    [class.slot--ocupado]="slot.estado === 'BOOKED'"
+                    [class.slot--activo]="seleccionada(slot.horaInicio)"
+                    (click)="seleccionarSlot(slot)"
+                  >
+                    <span>{{ horaLegible(slot.horaInicio) }}</span>
+                    @if (slot.estado === 'BOOKED') {
+                      <small>Reservado</small>
+                    }
+                  </button>
+                }
+              </div>
+
+              <p class="horarios__franja">Tarde</p>
+              <div class="horarios__rejilla">
+                @for (slot of tarde(); track slot.horaInicio) {
+                  <button
+                    type="button"
+                    class="slot"
+                    [class.slot--libre]="slot.estado === 'FREE'"
+                    [class.slot--ocupado]="slot.estado === 'BOOKED'"
+                    [class.slot--activo]="seleccionada(slot.horaInicio)"
+                    (click)="seleccionarSlot(slot)"
+                  >
+                    <span>{{ horaLegible(slot.horaInicio) }}</span>
+                    @if (slot.estado === 'BOOKED') {
+                      <small>Reservado</small>
+                    }
+                  </button>
+                }
+              </div>
+            </aside>
+          </div>
+        }
+
+        @case (2) {
+          <div class="datos">
+            <h2 class="detalles__titulo">
+              <ui-icon nombre="user" [tamano]="18" />
+              Datos del Paciente
+            </h2>
+
+            <div class="grid-2">
+              <ui-select
+                formControlName="pacienteId"
+                etiqueta="Paciente"
+                placeholder="Seleccione un paciente"
+                [opciones]="pacientesOpciones()"
+                [requerido]="true"
+              />
+              <ui-input formControlName="tipoConsulta" etiqueta="Tipo de Consulta" [requerido]="true" />
+            </div>
+
+            <ui-input formControlName="motivo" etiqueta="Motivo de la Consulta (Opcional)" />
+          </div>
+        }
+
+        @case (3) {
+          <div class="datos">
+            <h2 class="detalles__titulo">
+              <ui-icon nombre="checkCircle" [tamano]="18" />
+              Resumen de la cita
+            </h2>
+
+            <dl class="resumen">
+              <div class="resumen__fila">
+                <dt>Especialista</dt>
+                <dd>{{ nombreMedico() }}</dd>
+              </div>
+              <div class="resumen__fila">
+                <dt>Paciente</dt>
+                <dd>{{ nombrePaciente() }}</dd>
+              </div>
+              <div class="resumen__fila">
+                <dt>Fecha</dt>
+                <dd>{{ c.fecha.value }}</dd>
+              </div>
+              <div class="resumen__fila">
+                <dt>Hora</dt>
+                <dd>{{ c.horaInicio.value }}</dd>
+              </div>
+            </dl>
+          </div>
+        }
+      }
+
+      <footer class="tarjeta__pie">
+        @if (paso() > 1) {
+          <ui-button variante="contorno" tipo="button" (click)="paso.set(paso() - 1)">
+            Atrás
+          </ui-button>
+        }
+        <ui-button variante="fantasma" tipo="button" destino="/citas/agenda" [enlace]="true">
+          Cancelar
+        </ui-button>
+
+        <span class="tarjeta__hueco"></span>
+
+        @if (paso() < 3) {
+          <ui-button variante="primario" tipo="button" (click)="siguiente()">
+            Continuar
+            <ui-icon nombre="arrow-right" [tamano]="15" />
+          </ui-button>
+        } @else {
+          <ui-button variante="primario" tipo="submit" icono="check">Confirmar Cita</ui-button>
+        }
+      </footer>
+    </form>
+  </ui-card>
+</div>

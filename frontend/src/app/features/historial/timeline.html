@@ -1,0 +1,101 @@
+<div class="page historial">
+  @if (paciente(); as p) {
+    <div class="resumen">
+      <ui-avatar class="resumen__avatar" [iniciales]="iniciales(p.nombreCompleto)" tamano="lg" />
+      <div class="resumen__datos">
+        <h1 class="resumen__nombre">{{ p.nombreCompleto }}</h1>
+        <p class="resumen__linea">
+          <ui-badge variante="primario">ID: {{ p.documento }}</ui-badge>
+          <span class="resumen__edad">{{ p.edad }} años</span>
+        </p>
+        <p class="resumen__linea resumen__sangre">
+          <i class="sangre"></i>
+          Sangre: {{ p.grupoSanguineo || '—' }}
+        </p>
+      </div>
+      <div class="resumen__acciones">
+        <ui-button variante="contorno" icono="pencil">Editar datos</ui-button>
+        <ui-button
+          variante="primario"
+          icono="plus"
+          [destino]="'/historial/nueva-consulta?id=' + p.id"
+          [enlace]="true"
+        >
+          Nueva consulta
+        </ui-button>
+      </div>
+    </div>
+
+    <div class="seccion">
+      <div class="seccion__cabecera">
+        <div>
+          <h2 class="section-title">Historial de Consultas</h2>
+          <p class="page-subtitle">Registro cronológico de visitas y diagnósticos del paciente.</p>
+        </div>
+        <div class="orden">
+          <span>Ordenar: Más recientes primero</span>
+          <ui-icon nombre="filter" [tamano]="14" />
+        </div>
+      </div>
+
+      <div class="linea-tiempo">
+        @for (consulta of resultado()?.content ?? []; track consulta.id; let i = $index) {
+          <article class="hito">
+            <span class="hito__marca" [class.hito__marca--activo]="consulta.esUltima"></span>
+            <div class="hito__tarjeta">
+              <header class="hito__cabecera">
+                <div class="hito__fecha">
+                  @if (consulta.esUltima) {
+                    <ui-badge variante="primario">Última</ui-badge>
+                  }
+                  <span>{{ fechaIso(consulta) }} · {{ consulta.hora }}</span>
+                </div>
+                <ui-badge variante="neutro" icono="stethoscope">
+                  {{ consulta.oftalmologoNombre }}
+                </ui-badge>
+              </header>
+
+              <h3 class="hito__titulo">{{ consulta.diagnosticoPrincipal }}</h3>
+
+              <p class="hito__notas">{{ consulta.notasSubjectivo }}</p>
+
+              @if (consulta.archivos.length > 0) {
+                <p class="hito__archivo">
+                  <ui-icon nombre="fileText" [tamano]="14" />
+                  {{ consulta.archivos[0].nombre }}
+                </p>
+              }
+
+              <footer class="hito__pie">
+                <ui-button variante="enlace" tamano="sm" icono="eye">Ver informe completo</ui-button>
+                <ui-button variante="fantasma" tamano="sm" icono="print">Imprimir</ui-button>
+              </footer>
+            </div>
+          </article>
+        }
+
+        <!-- Tercera tarjeta en carga: el prototipo la muestra como esqueleto. -->
+        <article class="hito hito--carga">
+          <span class="hito__marca hito__marca--carga"></span>
+          <div class="hito__tarjeta">
+            <ui-skeleton [lineas]="5" alto="13px" padding="18px 20px" />
+          </div>
+        </article>
+      </div>
+
+      @if (resultado(); as datos) {
+        <div class="pie-lista">
+          <ui-pagination
+            [pagina]="datos.number"
+            [totalPaginas]="datos.totalPages"
+            [totalElementos]="datos.totalElements"
+            [tamanoPagina]="datos.size"
+            (paginaCambia)="cambiarPagina($event)"
+          />
+        </div>
+      }
+    </div>
+  } @else {
+    <ui-skeleton [lineas]="6" alto="18px" padding="20px 0" />
+  }
+</div>

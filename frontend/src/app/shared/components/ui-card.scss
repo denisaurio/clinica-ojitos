@@ -1,0 +1,69 @@
+@use 'variables' as *;
+
+:host {
+  display: block;
+}
+
+.card {
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius;
+  box-shadow: $shadow-sm;
+}
+
+.card--plano {
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.card__cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px 0;
+}
+
+.card__titulos {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.card__icono {
+  color: $primary;
+}
+
+.card__titulo {
+  font-size: 16px;
+  font-weight: 700;
+  color: $text;
+}
+
+.card__subtitulo {
+  width: 100%;
+  font-size: 12.5px;
+  color: $text-muted;
+}
+
+.card__accion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.card__cuerpo {
+  padding: 18px 20px 20px;
+}
+
+.card__cuerpo--sin {
+  padding: 0;
+}

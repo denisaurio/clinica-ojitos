@@ -1,0 +1,196 @@
+@use 'variables' as *;
+
+.portal {
+  max-width: 900px;
+}
+
+.portal__saludo {
+  margin-bottom: 22px;
+}
+
+.portal__titulo {
+  font-size: 26px;
+  font-weight: 700;
+  color: $primary;
+}
+
+.portal__subtitulo {
+  font-size: 13px;
+  color: $text-muted;
+}
+
+.rejilla {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.columna {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ------------------------------------------------------------ Citas */
+.citas__lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cita {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: $page-bg;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+}
+
+.cita__fecha {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  border-radius: $radius-sm;
+  background: $primary;
+  color: $text-invert;
+  flex-shrink: 0;
+  line-height: 1.15;
+}
+
+.cita__mes {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.cita__dia {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.cita__cuerpo {
+  flex: 1;
+  min-width: 0;
+}
+
+.cita__titulo {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.cita__hora,
+.cita__medico {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: $text-muted;
+}
+
+.citas__pie {
+  display: none;
+}
+
+.citas__programar {
+  width: 100%;
+  margin-top: 18px;
+}
+
+/* -------------------------------------------------------- Historial */
+.historial {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.diagnostico {
+  padding: 12px 0;
+  border-bottom: 1px solid $border;
+}
+
+.diagnostico:first-child {
+  padding-top: 0;
+}
+
+.diagnostico__cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.diagnostico__nombre {
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.diagnostico__ojo {
+  font-size: 12.5px;
+  color: $text-muted;
+  margin-top: 2px;
+}
+
+.diagnostico__fecha {
+  font-size: 11.5px;
+  color: $text-faint;
+}
+
+.historial__enlace {
+  margin-top: 14px;
+}
+
+/* -------------------------------------------------------- Mensajería */
+.mensaje {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  background: $primary;
+  color: $text-invert;
+  border-radius: $radius;
+  box-shadow: $shadow-sm;
+  cursor: pointer;
+}
+
+.mensaje__icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  flex-shrink: 0;
+}
+
+.mensaje__titulo {
+  font-size: 14px;
+  font-weight: 700;
+  color: $text-invert;
+}
+
+.mensaje__texto {
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.mensaje__flecha {
+  margin-left: auto;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+@media (max-width: 900px) {
+  .rejilla {
+    grid-template-columns: 1fr;
+  }
+}

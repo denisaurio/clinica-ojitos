@@ -1,0 +1,87 @@
+<div class="page">
+  <header class="encabezado">
+    <div>
+      <h1 class="page-title">{{ medicoNombre() }} - Horario</h1>
+      <p class="page-subtitle">
+        Configure los bloques de disponibilidad semanal.<br />
+        Arrastre para seleccionar múltiples turnos.
+      </p>
+    </div>
+
+    <div class="encabezado__acciones">
+      <ui-select
+        class="encabezado__sede"
+        placeholder="Sede: Clínica Principal (Centre)"
+        [opciones]="sedes"
+      />
+      <ui-button variante="primario" icono="save" [deshabilitado]="guardando()" (click)="guardar()">
+        Guardar Horario
+      </ui-button>
+    </div>
+  </header>
+
+  <div class="rejilla">
+    <div class="lateral">
+      <ui-card titulo="Leyenda" icono="info" class="leyenda">
+        <ul class="leyenda__lista">
+          <li class="leyenda__item">
+            <i class="muestra muestra--disponible"></i>
+            <span>Disponible para Citas</span>
+          </li>
+          <li class="leyenda__item">
+            <i class="muestra muestra--no"></i>
+            <span>No Disponible</span>
+          </li>
+          <li class="leyenda__item">
+            <i class="muestra muestra--quirurgico"></i>
+            <span>Bloque Quirúrgico (Específico de Sede)</span>
+          </li>
+        </ul>
+      </ui-card>
+
+      <ui-card titulo="Resumen Semanal" class="resumen">
+        <p class="resumen__linea">
+          Total de Horas Clínicas:<strong>{{ totalHoras() }} hrs</strong>
+        </p>
+        <div class="resumen__barra">
+          <span class="resumen__relleno" [style.width.%]="acotar(totalHoras() * 6)"></span>
+        </div>
+
+        <p class="resumen__linea resumen__linea--separada">
+          Bloques Quirúrgicos: <strong>{{ horasQuirurgicas() }} hrs</strong>
+        </p>
+        <div class="resumen__barra">
+          <span class="resumen__relleno resumen__relleno--quirurgico" [style.width.%]="acotar(horasQuirurgicas() * 8)"></span>
+        </div>
+      </ui-card>
+    </div>
+
+    <ui-card class="matriz" [sinPadding]="true">
+      <div class="matriz__rejilla">
+        <div class="matriz__esquina"></div>
+        @for (dia of dias; track dia) {
+          <div class="matriz__dia">{{ dia }}</div>
+        }
+
+        @for (fila of horas; track fila; let indiceFila = $index) {
+          <div class="matriz__hora">{{ fila }}</div>
+
+          @for (dia of dias; track dia + $index) {
+            <div
+              class="matriz__celda"
+              [class.matriz__celda--libre]="disponible(dia, indiceFila)"
+              [class.matriz__celda--quirurgica]="quirurgico(dia, indiceFila)"
+              [class.matriz__celda--arrastrando]="arrastreActivo()"
+              draggable="true"
+              (dragstart)="alArrastrarInicio()"
+              (dragend)="alArrastrarFin()"
+              (dragover)="$event.preventDefault()"
+              (drop)="alSoltar(dia, indiceFila)"
+              (click)="alternar(dia, indiceFila)"
+            ></div>
+          }
+        }
+      </div>
+    </ui-card>
+  </div>
+</div>

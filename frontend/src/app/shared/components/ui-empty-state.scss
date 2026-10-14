@@ -1,0 +1,43 @@
+@use 'variables' as *;
+
+.vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 48px 24px 44px;
+}
+
+.vacio__circulo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: $sidebar-bg;
+  color: $text-faint;
+  margin-bottom: 18px;
+}
+
+.vacio__titulo {
+  font-size: 16px;
+  font-weight: 600;
+  color: $text;
+}
+
+.vacio__descripcion {
+  margin-top: 6px;
+  max-width: 420px;
+  font-size: 13px;
+  color: $text-muted;
+  line-height: 1.55;
+}
+
+.vacio__accion {
+  margin-top: 18px;
+
+  &:empty {
+    display: none;
+  }
+}

@@ -1,0 +1,87 @@
+<div class="page portal">
+  @if (datos(); as d) {
+    <header class="portal__saludo">
+      <h1 class="portal__titulo">Hola, {{ d.nombre }}</h1>
+      <p class="portal__subtitulo">Bienvenida a tu portal de salud visual.</p>
+    </header>
+
+    <div class="rejilla">
+      <ui-card titulo="Mis Próximas Citas" icono="calendar" class="citas">
+        <ul class="citas__lista">
+          @for (cita of d.citas; track cita.id) {
+            <li class="cita">
+              <span class="cita__fecha">
+                <span class="cita__mes">{{ mes[$index] }}</span>
+                <span class="cita__dia">{{ diaDe($index) }}</span>
+              </span>
+              <span class="cita__cuerpo">
+                <span class="cita__titulo">{{ cita.motivo }}</span>
+                <span class="cita__hora">
+                  <ui-icon nombre="clock" [tamano]="12" />
+                  {{ cita.horaInicio }}
+                </span>
+                <span class="cita__medico">
+                  <ui-icon nombre="user" [tamano]="12" />
+                  Dr. Carlos Mendoza
+                </span>
+              </span>
+              <ui-badge [variante]="variante(cita.estado)">{{ etiqueta(cita.estado) }}</ui-badge>
+            </li>
+          }
+        </ul>
+
+        <ng-container slot="accion">
+          <ui-button variante="enlace" tamano="sm">Ver todas</ui-button>
+        </ng-container>
+
+        <ui-button
+          [enlace]="true"
+          destino="/citas/reservar"
+          variante="primario"
+          icono="plus"
+          class="citas__programar"
+        >
+          Programar Nueva Cita
+        </ui-button>
+      </ui-card>
+
+      <div class="columna">
+        <ui-card titulo="Mi Historial Clínico" icono="fileText">
+          <ul class="historial">
+            @for (diagnostico of d.diagnosticos; track diagnostico.nombre) {
+              <li class="diagnostico">
+                <div class="diagnostico__cabeza">
+                  <span class="diagnostico__nombre">{{ diagnostico.nombre }}</span>
+                  <ui-badge variante="info">{{ diagnostico.estado }}</ui-badge>
+                </div>
+                <p class="diagnostico__ojo">{{ diagnostico.ojo }}</p>
+                <p class="diagnostico__fecha">
+                  Última actualización: {{ diagnostico.ultimaActualizacion }}
+                </p>
+              </li>
+            }
+          </ul>
+
+          <ui-button variante="enlace" tamano="sm" class="historial__enlace">
+            Ver historial completo →
+          </ui-button>
+        </ui-card>
+
+        <div class="mensaje">
+          <span class="mensaje__icono">
+            <ui-icon nombre="shield" [tamano]="20" />
+          </span>
+          <div>
+            <p class="mensaje__titulo">Mensajería Segura</p>
+            <p class="mensaje__texto">
+              Comuníquese con nuestro equipo médico o resuelva dudas administrativas.
+            </p>
+          </div>
+          <ui-icon class="mensaje__flecha" nombre="chevron-right" [tamano]="16" />
+        </div>
+      </div>
+    </div>
+  } @else {
+    <ui-skeleton [lineas]="6" alto="18px" padding="20px 0" />
+  }
+</div>

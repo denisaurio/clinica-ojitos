@@ -1,0 +1,146 @@
+@use 'variables' as *;
+
+.paciente {
+  margin-top: 22px;
+}
+
+.paciente__fila {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.paciente__datos {
+  flex: 1;
+  min-width: 0;
+}
+
+.paciente__fila > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.paciente__nombre {
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.paciente__id {
+  font-size: 12px;
+  color: $text-muted;
+}
+
+.bloque__etiqueta {
+  margin: 24px 0 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------- Tipos */
+.tipos {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  padding: 4px;
+  background: $page-bg;
+  border: 1px solid $border;
+  border-radius: $radius;
+}
+
+.tipo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 36px;
+  border: 0;
+  border-radius: $radius-sm;
+  background: transparent;
+  font-family: $font-family;
+  font-size: 13px;
+  font-weight: 600;
+  color: $text-muted;
+  cursor: pointer;
+  transition: background $transition, color $transition;
+
+  &:hover {
+    color: $text;
+  }
+}
+
+.tipo--activo {
+  background: $surface;
+  color: $primary;
+  box-shadow: $shadow-sm;
+}
+
+.aviso {
+  margin-top: 18px;
+}
+
+/* -------------------------------------------------------- Medicamento */
+.medicamento {
+  margin-top: 20px;
+}
+
+.medicamento__campos {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.medicamento__fila {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.medicamento__fila--2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.medicamento__ancho {
+  width: 100%;
+}
+
+.medicamento__acciones {
+  padding-top: 4px;
+}
+
+.agregar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-family: $font-family;
+  font-size: 13px;
+  font-weight: 600;
+  color: $primary;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+/* --------------------------------------------------------------- Pie */
+.pie {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px solid $border;
+}
+
+@media (max-width: 760px) {
+  .medicamento__fila--2 {
+    grid-template-columns: 1fr;
+  }
+
+  .tipos {
+    grid-template-columns: 1fr 1fr;
+  }
+}

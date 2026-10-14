@@ -1,0 +1,184 @@
+@use 'variables' as *;
+
+.encabezado {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.encabezado__acciones {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.encabezado__sede {
+  width: 240px;
+}
+
+.rejilla {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 20px;
+  margin-top: 24px;
+  align-items: start;
+}
+
+.lateral {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ------------------------------------------------------------ Leyenda */
+.leyenda__lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.leyenda__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  color: $text;
+}
+
+.muestra {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.muestra--disponible {
+  background: $primary;
+}
+
+.muestra--no {
+  background: $sidebar-bg;
+  border: 1px solid $border;
+}
+
+.muestra--quirurgico {
+  background: $primary-light;
+}
+
+/* ------------------------------------------------------------ Resumen */
+.resumen__linea {
+  font-size: 12.5px;
+  color: $text;
+
+  strong {
+    color: $primary;
+  }
+}
+
+.resumen__linea--separada {
+  margin-top: 18px;
+}
+
+.resumen__barra {
+  height: 8px;
+  margin-top: 8px;
+  background: $sidebar-bg;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.resumen__relleno {
+  display: block;
+  height: 100%;
+  background: $primary;
+  border-radius: 999px;
+}
+
+.resumen__relleno--quirurgico {
+  background: $primary-light;
+}
+
+/* ------------------------------------------------------------ Matriz */
+.matriz {
+  overflow-x: auto;
+}
+
+.matriz__rejilla {
+  display: grid;
+  grid-template-columns: 72px repeat(5, 1fr);
+  min-width: 620px;
+}
+
+.matriz__esquina {
+  border-bottom: 1px solid $border;
+  border-right: 1px solid $border;
+}
+
+.matriz__dia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid $border;
+  border-right: 1px solid $border;
+  color: $text-muted;
+}
+
+.matriz__hora {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 56px;
+  font-size: 11.5px;
+  color: $text-muted;
+  border-bottom: 1px solid $border;
+  border-right: 1px solid $border;
+}
+
+.matriz__celda {
+  height: 56px;
+  border-bottom: 1px solid $border;
+  border-right: 1px solid $border;
+  background: $surface;
+  cursor: pointer;
+  transition: background $transition;
+
+  &:hover {
+    background: $sidebar-bg;
+  }
+}
+
+.matriz__celda--libre {
+  background: $primary;
+  border-color: $primary;
+
+  &:hover {
+    background: $primary-hover;
+  }
+}
+
+.matriz__celda--quirurgica {
+  background: $primary-light;
+}
+
+.matriz__celda--arrastrando {
+  box-shadow: inset 0 0 0 2px $primary-light;
+}
+
+@media (max-width: 1040px) {
+  .rejilla {
+    grid-template-columns: 1fr;
+  }
+
+  .lateral {
+    flex-direction: row;
+  }
+}

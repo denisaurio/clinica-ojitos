@@ -1,0 +1,83 @@
+<div class="page">
+  <h1 class="page-title">Resumen del Administrador</h1>
+  <p class="page-subtitle">Métricas de la clínica y registros de seguridad en tiempo real.</p>
+
+  @if (datos(); as d) {
+    <div class="metricas">
+      <ui-card class="metrica">
+        <div class="metrica__cabeza">
+          <span class="metrica__icono">
+            <ui-icon nombre="users" [tamano]="19" />
+          </span>
+          <ui-badge variante="info">+12%</ui-badge>
+        </div>
+        <p class="metrica__etiqueta">Total de Pacientes</p>
+        <p class="metrica__valor">{{ d.totalPacientes.toLocaleString('es-ES') }}</p>
+      </ui-card>
+
+      <ui-card class="metrica">
+        <div class="metrica__cabeza">
+          <span class="metrica__icono">
+            <ui-icon nombre="calendar" [tamano]="19" />
+          </span>
+          <ui-badge variante="neutro">Hoy</ui-badge>
+        </div>
+        <p class="metrica__etiqueta">Citas</p>
+        <p class="metrica__valor">{{ d.citasHoy }}</p>
+      </ui-card>
+
+      <ui-card class="metrica">
+        <div class="metrica__cabeza">
+          <span class="metrica__icono">
+            <ui-icon nombre="briefcase" [tamano]="19" />
+          </span>
+          <ui-badge variante="neutro">Activos</ui-badge>
+        </div>
+        <p class="metrica__etiqueta">Oftalmólogos</p>
+        <p class="metrica__valor">{{ d.oftalmologosActivos }}</p>
+      </ui-card>
+    </div>
+
+    <div class="paneles">
+      <ui-card titulo="Tendencia de Volumen de Pacientes" class="volumen">
+        <app-grafico-volumen [datos]="d.volumenPacientes" />
+      </ui-card>
+
+      <ui-card titulo="Intentos de Acceso" class="accesos">
+        <ng-container slot="accion">
+          <ui-button variante="enlace" tamano="sm">Ver Todos →</ui-button>
+        </ng-container>
+
+        <ul class="accesos__lista">
+          @for (intento of d.intentosAcceso; track intento.usuario) {
+            <li class="acceso">
+              <span
+                class="acceso__icono"
+                [class.acceso__icono--fallo]="intento.resultado === 'FALLIDO'"
+              >
+                <ui-icon
+                  [nombre]="intento.resultado === 'FALLIDO' ? 'alertTriangle' : 'user'"
+                  [tamano]="15"
+                />
+              </span>
+              <span class="acceso__datos">
+                <span class="acceso__usuario">{{ intento.usuario }}</span>
+                <span class="acceso__ip">IP: {{ intento.ip }}</span>
+              </span>
+              <span class="acceso__resultado">
+                <ui-badge
+                  [variante]="intento.resultado === 'EXITOSO' ? 'success' : 'danger'"
+                >
+                  {{ intento.resultado === 'EXITOSO' ? 'Exitoso' : 'Fallido' }}
+                </ui-badge>
+                <span class="acceso__hora">{{ intento.hora }}</span>
+              </span>
+            </li>
+          }
+        </ul>
+      </ui-card>
+    </div>
+  } @else {
+    <ui-skeleton [lineas]="6" alto="18px" padding="20px 0" />
+  }
+</div>

@@ -1,0 +1,233 @@
+@use 'variables' as *;
+
+.volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $text-muted;
+  text-decoration: none;
+
+  &:hover {
+    color: $primary;
+    text-decoration: none;
+  }
+}
+
+.rejilla {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 20px;
+  margin-top: 24px;
+  align-items: start;
+}
+
+/* ------------------------------------------------------------- Ficha */
+.ficha {
+  text-align: center;
+}
+
+.ficha__nombre {
+  margin-top: 10px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.ficha__edad {
+  font-size: 12.5px;
+  color: $text-muted;
+}
+
+.ficha__etiqueta {
+  font-size: 12px;
+  font-weight: 600;
+  color: $text-muted;
+  text-align: left;
+}
+
+.ficha__valor {
+  margin-top: 2px;
+  font-size: 13.5px;
+  text-align: left;
+  line-height: 1.5;
+}
+
+/* --------------------------------------------------------- Controles */
+.anadir {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-family: $font-family;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $primary;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.linea {
+  display: flex;
+  justify-content: space-between;
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 24px 0 0;
+}
+
+.hito {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.hito__marca {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: $text-invert;
+  z-index: 1;
+}
+
+.hito__marca--primario {
+  background: $primary;
+}
+
+.hito__marca--success {
+  background: $success;
+}
+
+.hito__marca--warning {
+  background: $warning;
+}
+
+.hito__marca--neutro {
+  background: $surface;
+  border: 2px solid $border-strong;
+  color: $text-muted;
+}
+
+.hito__linea {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: $border;
+  z-index: 0;
+}
+
+.hito__estado {
+  margin-top: 12px;
+}
+
+.hito__titulo {
+  margin-top: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.hito__fecha {
+  font-size: 11.5px;
+  color: $text-muted;
+}
+
+/* ------------------------------------------------------------- Notas */
+.notas {
+  margin-top: 20px;
+}
+
+.notas__texto {
+  padding: 18px 20px;
+  background: $page-bg;
+  border-radius: $radius-sm;
+  font-size: 13px;
+  line-height: 1.7;
+  color: $text;
+}
+
+.notas__firma {
+  margin-top: 10px;
+  text-align: right;
+  font-size: 11.5px;
+  color: $text-muted;
+}
+
+/* ------------------------------------------------------ Cita control */
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.control__paciente {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: $page-bg;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+}
+
+.control__nombre {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.control__detalle {
+  font-size: 12px;
+  color: $text-muted;
+}
+
+.control__etiqueta {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.control__franjas {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: -8px;
+}
+
+.franja {
+  height: 36px;
+  border: 1px solid $border-strong;
+  border-radius: $radius-sm;
+  background: $surface;
+  font-family: $font-family;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $text;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: $primary;
+  }
+}
+
+.franja--ocupada {
+  background: $page-bg;
+  color: $text-faint;
+  cursor: not-allowed;
+}
+
+@media (max-width: 940px) {
+  .rejilla {
+    grid-template-columns: 1fr;
+  }
+}

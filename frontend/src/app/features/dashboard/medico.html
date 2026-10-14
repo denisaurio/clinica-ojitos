@@ -1,0 +1,74 @@
+<div class="page">
+  <h1 class="page-title">Resumen de Hoy</h1>
+  <p class="page-subtitle">{{ datos()?.fecha ?? 'Cargando agenda…' }}</p>
+
+  @if (datos(); as d) {
+    <div class="rejilla">
+      <ui-card titulo="Agenda del Día" icono="list" class="agenda">
+        <ng-container slot="accion">
+          <ui-button
+            [enlace]="true"
+            destino="/citas/agenda"
+            variante="enlace"
+            tamano="sm"
+            icono="calendar"
+          >
+            Ver Calendario
+          </ui-button>
+        </ng-container>
+
+        <ul class="citas">
+          @for (cita of d.citasHoy; track cita.id) {
+            <li class="cita">
+              <span class="cita__hora">
+                {{ cita.horaInicio }}<small>{{ meridiano(cita.horaInicio) }}</small>
+              </span>
+              <span class="cita__cuerpo">
+                <span class="cita__paciente">{{ cita.pacienteNombre }}</span>
+                <span class="cita__motivo">{{ cita.motivo }}</span>
+              </span>
+              <span class="cita__etiquetas">
+                <ui-badge variante="neutro">{{ cita.sala }}</ui-badge>
+                <ui-badge [variante]="variante(cita.estado)">{{ etiqueta(cita.estado) }}</ui-badge>
+              </span>
+            </li>
+          } @empty {
+            <li class="citas__vacio">No hay citas programadas para hoy.</li>
+          }
+        </ul>
+      </ui-card>
+
+      <div class="columna">
+        <ui-card titulo="Pendientes" icono="clipboardList">
+          <ul class="pendientes">
+            @for (tarea of d.pendientes; track tarea.id) {
+              <li class="pendiente">
+                <ui-icon class="pendiente__icono" [nombre]="tarea.icono" [tamano]="17" />
+                <span>
+                  <span class="pendiente__titulo">{{ tarea.titulo }}</span>
+                  <span class="pendiente__detalle">{{ tarea.detalle }}</span>
+                </span>
+              </li>
+            }
+          </ul>
+        </ui-card>
+
+        <ui-card titulo="Historiales Recientes" icono="refresh" class="recientes">
+          <div class="recientes__lista">
+            @for (historial of d.historialesRecientes; track historial.id) {
+              <a class="reciente" routerLink="/historial/paciente/5">
+                <ui-avatar [iniciales]="historial.iniciales" tamano="md" />
+                <span class="reciente__datos">
+                  <span class="reciente__nombre">{{ historial.pacienteNombre }}</span>
+                  <span class="reciente__hora">{{ historial.hora }}</span>
+                </span>
+              </a>
+            }
+          </div>
+        </ui-card>
+      </div>
+    </div>
+  } @else {
+    <ui-skeleton [lineas]="6" alto="18px" padding="20px 0" />
+  }
+</div>

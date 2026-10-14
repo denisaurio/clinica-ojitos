@@ -1,0 +1,122 @@
+@use 'variables' as *;
+
+.metricas {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.metrica__cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.metrica__icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: $info-bg;
+  color: $primary;
+}
+
+.metrica__etiqueta {
+  margin-top: 16px;
+  font-size: 12.5px;
+  color: $text-muted;
+}
+
+.metrica__valor {
+  margin-top: 4px;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: $text;
+}
+
+.paneles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 24px;
+  align-items: start;
+}
+
+/* ---------------------------------------------------------- Accesos */
+.accesos__lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.acceso {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid $border;
+}
+
+.acceso:last-child {
+  border-bottom: 0;
+}
+
+.acceso__icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: $sidebar-bg;
+  color: $text-muted;
+  flex-shrink: 0;
+}
+
+.acceso__icono--fallo {
+  background: $danger-bg;
+  color: $danger;
+}
+
+.acceso__datos {
+  flex: 1;
+  min-width: 0;
+}
+
+.acceso__usuario {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.acceso__ip {
+  display: block;
+  font-size: 11.5px;
+  color: $text-muted;
+}
+
+.acceso__resultado {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.acceso__hora {
+  font-size: 11px;
+  color: $text-faint;
+}
+
+@media (max-width: 1000px) {
+  .metricas,
+  .paneles {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,53 @@
+﻿<div class="recuperar">
+  <div class="recuperar__tarjeta">
+    <div class="recuperar__marca">
+      <h1 class="recuperar__titulo">Ojitos</h1>
+      <p class="recuperar__subtitulo">Gestión Clínica</p>
+    </div>
+
+    <div class="recuperar__cuerpo">
+      <h2 class="recuperar__encabezado">Recuperación de Contraseña</h2>
+      <p class="recuperar__texto">
+        Ingrese el correo electrónico o nombre de usuario asociado a su cuenta y le
+        enviaremos las instrucciones para restablecer su contraseña.
+      </p>
+
+      @if (enviado()) {
+        <ui-alert tipo="success" titulo="Solicitud registrada">
+          {{ enviado() }}
+        </ui-alert>
+      } @else if (error()) {
+        <ui-alert tipo="danger">{{ error() }}</ui-alert>
+      }
+
+      <form [formGroup]="formulario" (ngSubmit)="enviar()" novalidate>
+        <ui-input
+          formControlName="email"
+          etiqueta="Correo electrónico o Usuario"
+          placeholder="e.g., patient@ejemplo.com"
+          icono="mail"
+          tipo="email"
+          [error]="emailControl.invalid && emailControl.touched ? 'Ingrese un correo válido.' : ''"
+        />
+
+        <ui-button
+          tipo="submit"
+          variante="primario"
+          class="recuperar__enviar"
+          [deshabilitado]="enviando()"
+        >
+          Enviar Instrucciones
+        </ui-button>
+      </form>
+
+      <ui-button
+        [enlace]="true"
+        destino="/login"
+        variante="contorno"
+        class="recuperar__volver"
+      >
+        Volver al Inicio de Sesión
+      </ui-button>
+    </div>
+  </div>
+</div>

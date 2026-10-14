@@ -1,0 +1,93 @@
+<div class="acceso">
+  <span class="acceso__mancha acceso__mancha--una"></span>
+  <span class="acceso__mancha acceso__mancha--dos"></span>
+  <span class="acceso__mancha acceso__mancha--tres"></span>
+
+  <div class="acceso__tarjeta">
+    <div class="acceso__marca">
+      <span class="acceso__logo">
+        <ui-icon nombre="eye" [tamano]="22" />
+      </span>
+      <h1 class="acceso__titulo">Ojitos</h1>
+      <p class="acceso__subtitulo">Acceso al Portal Clínico</p>
+    </div>
+
+    @if (error()) {
+      <div class="fallo" [class.fallo--servidor]="servidorCaido()">
+        <div class="fallo__cabecera">
+          <ui-icon [nombre]="servidorCaido() ? 'server' : 'alertCircle'" [tamano]="16" />
+          <span class="fallo__titulo">
+            {{ servidorCaido() ? 'Servidor no disponible' : 'Credenciales inválidas' }}
+          </span>
+        </div>
+        <p class="fallo__texto">{{ error() }}</p>
+
+        @if (!servidorCaido()) {
+          <div class="fallo__intento">
+            <span>{{ bloqueado() ? 'Cuenta bloqueada' : 'Intento fallido' }}</span>
+            <strong>{{ intentos() }} de {{ maxIntentos }}</strong>
+          </div>
+
+          <div class="fallo__barra">
+            <span class="fallo__relleno" [style.width.%]="progresoIntentos()"></span>
+          </div>
+        }
+      </div>
+    }
+
+    <form [formGroup]="formulario" (ngSubmit)="entrar()" novalidate>
+      <ui-input
+        formControlName="username"
+        etiqueta="Usuario Clínico"
+        placeholder="dr.rodriguez"
+        icono="user"
+      />
+
+      <div class="acceso__contrasena">
+        <ui-input
+          formControlName="password"
+          etiqueta="Contraseña"
+          [tipo]="passwordVisible ? 'text' : 'password'"
+          icono="lock"
+          [error]="
+            passwordControl.invalid && passwordControl.touched
+              ? 'La contraseña es obligatoria.'
+              : ''
+          "
+        />
+        <button
+          type="button"
+          class="acceso__ver"
+          (click)="alternarVisibilidad()"
+          [attr.aria-label]="passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+        >
+          <ui-icon [nombre]="passwordVisible ? 'eye' : 'eye-off'" [tamano]="15" />
+        </button>
+      </div>
+
+      <a class="acceso__enlace" routerLink="/recuperar-clave">¿Olvidaste tu contraseña?</a>
+
+      <ui-button
+        tipo="submit"
+        class="acceso__enviar"
+        variante="primario"
+        [deshabilitado]="submitting() || bloqueado()"
+      >
+        {{ bloqueado() ? 'Cuenta bloqueada temporalmente' : 'Iniciar Sesión' }}
+        <ui-icon nombre="logIn" [tamano]="15" />
+      </ui-button>
+    </form>
+
+    <div class="acceso__separador"></div>
+
+    <p class="acceso__ayuda">
+      <ui-icon nombre="helpCircle" [tamano]="13" />
+      ¿Necesitas ayuda técnica?
+      <a href="mailto:soporte@ojitos.com">Contactar Soporte IT</a>
+    </p>
+
+    <p class="acceso__demo">
+      Administrador: <b>admin</b> / <b>admin123</b> · Demo: <b>recepcion</b> · <b>paciente</b>
+    </p>
+  </div>
+</div>

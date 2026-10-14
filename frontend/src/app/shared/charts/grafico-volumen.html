@@ -1,0 +1,18 @@
+<div class="lienzo">
+  @for (barra of barras(); track barra.etiqueta) {
+    <div class="columna">
+      @if (barra.destacado) {
+        <span class="columna__peak">Peak</span>
+      }
+      <div class="columna__pista">
+        <div
+          class="columna__barra"
+          [class.columna__barra--peak]="barra.destacado"
+          [style.height.%]="barra.altura"
+          [attr.title]="barra.total + ' pacientes'"
+        ></div>
+      </div>
+      <span class="columna__etiqueta">{{ barra.etiqueta }}</span>
+    </div>
+  }
+</div>

@@ -1,0 +1,53 @@
+@use 'variables' as *;
+
+:host {
+  display: block;
+}
+
+.tabla-envoltorio {
+  overflow-x: auto;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.tabla thead th {
+  padding: 11px 20px;
+  background: $sidebar-bg;
+  border-bottom: 1px solid $border;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $text-muted;
+  white-space: nowrap;
+}
+
+.tabla tbody td {
+  padding: 13px 20px;
+  border-bottom: 1px solid $border;
+  color: $text;
+  vertical-align: middle;
+}
+
+.tabla tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.tabla tbody tr {
+  transition: background $transition;
+
+  &:hover {
+    background: $page-bg;
+  }
+}
+
+/* Zona de acciones: siempre pegada a la derecha. */
+.tabla tbody td:last-child {
+  text-align: right;
+  white-space: nowrap;
+}

@@ -1,0 +1,57 @@
+@use 'variables' as *;
+
+:host {
+  display: block;
+}
+
+.lienzo {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 210px;
+  padding: 18px 16px 0;
+  background: $page-bg;
+  border-radius: $radius-sm;
+}
+
+.columna {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  min-width: 0;
+}
+
+.columna__peak {
+  font-size: 10px;
+  font-weight: 600;
+  color: $text-muted;
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
+
+.columna__pista {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.columna__barra {
+  width: 100%;
+  background: $primary-light;
+  border-radius: 2px 2px 0 0;
+  transition: height 0.25s ease;
+}
+
+.columna__barra--peak {
+  background: $primary;
+}
+
+.columna__etiqueta {
+  margin-top: 8px;
+  font-size: 10.5px;
+  color: $text-muted;
+  white-space: nowrap;
+}

@@ -1,0 +1,135 @@
+<div class="page">
+  <a class="volver" routerLink="/pacientes">
+    <ui-icon nombre="arrow-left" [tamano]="15" />
+    Volver a Lista de Pacientes
+  </a>
+
+  <h1 class="page-title">Seguimiento del Paciente</h1>
+  <p class="page-subtitle">{{ nombrePaciente() }} - ID: 89456-A</p>
+
+  <div class="rejilla">
+    <ui-card class="ficha">
+      <ui-avatar [iniciales]="'MG'" tamano="lg" />
+      <h2 class="ficha__nombre">{{ nombrePaciente() }}</h2>
+      <p class="ficha__edad">♀ 62 años</p>
+
+      <hr class="divider" />
+
+      <p class="ficha__etiqueta">Diagnóstico Principal</p>
+      <p class="ficha__valor">Glaucoma de Ángulo Abierto (Ojo Izquierdo)</p>
+
+      <hr class="divider" />
+
+      <p class="ficha__etiqueta">Tratamiento Actual</p>
+      <p class="ficha__valor">Latanoprost 0.005% - 1 gota nocturna</p>
+
+      <hr class="divider" />
+
+      <p class="ficha__etiqueta">Fecha de Inicio</p>
+      <p class="ficha__valor">15 de Marzo, 2024</p>
+    </ui-card>
+
+    <ui-card titulo="Controles Programados" class="controles">
+      <ng-container slot="accion">
+        <button type="button" class="anadir" (click)="modalAbierto.set(true)">
+          <ui-icon nombre="plus" [tamano]="14" />
+          Añadir Control
+        </button>
+      </ng-container>
+
+      <ol class="linea">
+        @for (hito of hitos(); track hito.id; let i = $index) {
+          <li class="hito">
+            <span
+              class="hito__marca"
+              [class]="'hito__marca hito__marca--' + variantes[hito.estado]"
+            >
+              <ui-icon [nombre]="iconos[hito.estado]" [tamano]="15" />
+            </span>
+            @if (i < hitos().length - 1) {
+              <span class="hito__linea"></span>
+            }
+            <ui-badge [variante]="variantes[hito.estado]" class="hito__estado">
+              {{ etiquetas[hito.estado] }}
+            </ui-badge>
+            <p class="hito__titulo">{{ hito.etiqueta }}</p>
+            <p class="hito__fecha">{{ hito.fecha }}</p>
+          </li>
+        }
+      </ol>
+    </ui-card>
+  </div>
+
+  <ui-card titulo="Notas Clínicas del Último Control" class="notas">
+    <div class="notas__texto">
+      <p>
+        Paciente reporta buena tolerancia a las gotas nocturnas. No hay enrojecimiento
+        ni molestia significativa. La Presión Intraocular (PIO) se mantiene estable en
+        16 mmHg en el ojo izquierdo. Se recomienda continuar con el mismo tratamiento
+        hasta la próxima revisión.
+      </p>
+      <p class="notas__firma">Dr. Clinic - 15 Jun 2024, 10:30 AM</p>
+    </div>
+  </ui-card>
+</div>
+
+<!-- ------------------------------------------------- Cita de control -->
+<ui-modal [abierto]="modalAbierto()" titulo="Programar Cita de Control" icono="calendar" (cerrar)="modalAbierto.set(false)">
+  <form [formGroup]="formularioControl" class="control" novalidate>
+    <section class="control__paciente">
+      <ui-avatar [iniciales]="'JG'" tamano="md" />
+      <div>
+        <p class="eyebrow">Paciente</p>
+        <p class="control__nombre">Juan González</p>
+        <p class="control__detalle">Tratamiento: Glaucoma - Control Mensual</p>
+      </div>
+    </section>
+
+    <ui-input
+      formControlName="fecha"
+      etiqueta="Fecha de la Cita"
+      tipo="date"
+      icono="calendar"
+      [requerido]="true"
+      [error]="formularioControl.controls.fecha.invalid && formularioControl.controls.fecha.touched ? 'Indique la fecha.' : ''"
+    />
+
+    <p class="control__etiqueta">Horario Disponible</p>
+    <div class="control__franjas">
+      @for (slot of slots(); track slot.hora) {
+        <button
+          type="button"
+          class="franja"
+          [class.franja--libre]="slot.libre"
+          [class.franja--ocupada]="!slot.libre"
+          [disabled]="!slot.libre"
+          (click)="formularioControl.controls.horaInicio.setValue(slot.hora)"
+        >
+          {{ slot.hora }}
+        </button>
+      }
+    </div>
+
+    <ui-select
+      formControlName="oftalmologoId"
+      etiqueta="Médico Asignado"
+      placeholder="Dr. Clinic (Oftalmólogo Principal)"
+      icono="calendar"
+      [opciones]="medicos()"
+      [requerido]="true"
+    />
+
+    <ui-input
+      formControlName="notas"
+      etiqueta="Notas Adicionales (Opcional)"
+      placeholder="Indicar si se requiere preparación especial..."
+    />
+  </form>
+
+  <ng-container slot="pie">
+    <ui-button variante="contorno" (click)="modalAbierto.set(false)">Cancelar</ui-button>
+    <ui-button variante="primario" icono="checkCircle" (click)="confirmarControl()">
+      Confirmar Cita
+    </ui-button>
+  </ng-container>
+</ui-modal>

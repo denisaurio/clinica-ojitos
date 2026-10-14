@@ -1,0 +1,123 @@
+@use 'variables' as *;
+
+.velo {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.45);
+  animation: aparecer 0.14s ease-out;
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: calc(100vh - 48px);
+  background: $surface;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg;
+  overflow: hidden;
+  animation: subir 0.16s ease-out;
+}
+
+.modal--sm {
+  max-width: 380px;
+}
+
+.modal--md {
+  max-width: 520px;
+}
+
+.modal--lg {
+  max-width: 720px;
+}
+
+.modal--peligro {
+  border-top: 3px solid $danger;
+}
+
+.modal__cabecera {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 22px 16px;
+  border-bottom: 1px solid $border;
+}
+
+.modal__icono {
+  color: $primary;
+}
+
+.modal__titulo {
+  font-size: 17px;
+  font-weight: 700;
+  flex: 1;
+  min-width: 0;
+}
+
+.modal__cerrar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: $text-muted;
+  cursor: pointer;
+  transition: background $transition;
+
+  &:hover {
+    background: $sidebar-bg;
+    color: $text;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: $focus-ring;
+  }
+}
+
+.modal__cuerpo {
+  padding: 20px 22px;
+  overflow-y: auto;
+}
+
+.modal__pie {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 22px;
+  border-top: 1px solid $border;
+  background: $page-bg;
+
+  &:empty {
+    display: none;
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes subir {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

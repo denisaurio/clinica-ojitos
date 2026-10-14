@@ -1,0 +1,127 @@
+<ui-modal [abierto]="true" titulo="Reprogramar Cita" icono="calendar" tamano="md">
+  <form [formGroup]="formulario" (ngSubmit)="confirmar()" novalidate class="reprogramar">
+    @if (cita(); as c) {
+      <section class="actual">
+        <span class="actual__icono">
+          <ui-icon nombre="calendar" [tamano]="18" />
+        </span>
+        <div>
+          <p class="eyebrow">Cita Actual</p>
+          <p class="actual__tipo">{{ c.tipoConsulta }}</p>
+          <p class="actual__fecha">{{ c.fecha }} a las {{ horaLegible(c.horaInicio) }}</p>
+          <p class="actual__medico">{{ c.oftalmologoNombre }}</p>
+        </div>
+      </section>
+    }
+
+    <label class="campo">
+      <span class="campo__etiqueta">Nueva Fecha</span>
+      <input
+        class="campo__control"
+        type="date"
+        formControlName="fecha"
+        (change)="cambiarFecha($any($event.target).value)"
+      />
+    </label>
+
+    <div class="calendario">
+      <header class="calendario__cabecera">
+        <button type="button" class="calendario__nav" (click)="mesAnterior()">
+          <ui-icon nombre="chevron-left" [tamano]="15" />
+        </button>
+        <span class="calendario__titulo">{{ tituloMes() }}</span>
+        <button type="button" class="calendario__nav" (click)="mesSiguiente()">
+          <ui-icon nombre="chevron-right" [tamano]="15" />
+        </button>
+      </header>
+
+      <div class="calendario__dias">
+        @for (dia of diasSemana; track dia) {
+          <span>{{ dia }}</span>
+        }
+      </div>
+
+      <div class="calendario__rejilla">
+        @for (dia of calendario(); track dia.iso) {
+          <button
+            type="button"
+            class="calendario__celda"
+            [class.calendario__celda--fuera]="!dia.delMes"
+            [class.calendario__celda--activo]="dia.seleccionado"
+            [disabled]="!dia.delMes"
+            (click)="seleccionarDia(dia)"
+          >
+            {{ dia.numero }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <p class="bloque__titulo">
+      Horarios Disponibles para el {{ formulario.controls.fecha.value }}
+    </p>
+
+    <div class="slots">
+      @for (slot of slots(); track slot.horaInicio) {
+        <button
+          type="button"
+          class="slot"
+          [class.slot--libre]="slot.estado === 'FREE'"
+          [class.slot--ocupado]="slot.estado === 'BOOKED'"
+          [class.slot--activo]="seleccionada(slot.horaInicio)"
+          (click)="seleccionarSlot(slot)"
+        >
+          {{ horaLegible(slot.horaInicio) }}
+        </button>
+      }
+    </div>
+
+    <label class="campo">
+      <span class="campo__etiqueta">Nota (Opcional)</span>
+      <textarea
+        class="campo__control campo__control--area"
+        rows="3"
+        formControlName="notaInterna"
+        placeholder="Motivo de la reprogramación..."
+      ></textarea>
+    </label>
+
+    <button type="button" class="cancelar" (click)="confirmarCancelacion.set(true)">
+      Cancelar esta cita
+    </button>
+  </form>
+
+  <ng-container slot="pie">
+    <ui-button variante="contorno" (click)="confirmarCancelacion.set(false)">
+      Conservar Original
+    </ui-button>
+    <ui-button variante="primario" [deshabilitado]="guardando()" (click)="confirmar()">
+      Confirmar Reprogramación
+    </ui-button>
+  </ng-container>
+</ui-modal>
+
+<!-- Confirmación de baja: diálogo superpuesto, como en el prototipo. -->
+<ui-modal
+  [abierto]="confirmarCancelacion()"
+  titulo="¿Cancelar Cita?"
+  tamano="sm"
+  variante="peligro"
+  (cerrar)="confirmarCancelacion.set(false)"
+>
+  <div class="baja">
+    <span class="baja__icono">
+      <ui-icon nombre="alertTriangle" [tamano]="24" />
+    </span>
+    <p class="baja__texto">
+      ¿Está seguro de que desea cancelar el examen
+      <b>ocular integral</b> de Sarah Jenkins del 24 de oct? Esta acción no se puede
+      deshacer.
+    </p>
+  </div>
+
+  <ng-container slot="pie">
+    <ui-button variante="contorno" (click)="confirmarCancelacion.set(false)">Regresar</ui-button>
+    <ui-button variante="peligro" (click)="confirmarBaja()">Confirmar Cancelación</ui-button>
+  </ng-container>
+</ui-modal>

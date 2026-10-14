@@ -1,0 +1,25 @@
+@use 'variables' as *;
+
+:host {
+  display: block;
+  height: 100vh;
+}
+
+.shell {
+  display: flex;
+  height: 100%;
+  min-height: 100vh;
+  background: $page-bg;
+}
+
+.shell__contenido {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.shell__principal {
+  flex: 1;
+  overflow-y: auto;
+}

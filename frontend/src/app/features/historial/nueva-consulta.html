@@ -1,0 +1,184 @@
+<div class="consulta">
+  <header class="consulta__cabecera">
+    <div class="consulta__titulo">
+      <ui-button variante="fantasma" icono="arrow-left" (click)="cancelar()" />
+      <div>
+        <h1>Nueva Consulta</h1>
+        <p>Paciente: {{ pacienteNombre() }} (ID: {{ pacienteId() }})</p>
+      </div>
+    </div>
+
+    <div class="consulta__acciones">
+      <ui-button variante="contorno" (click)="cancelar()">Cancelar</ui-button>
+      <ui-button variante="primario" [deshabilitado]="guardando()" (click)="guardar()">
+        Guardar Consulta
+      </ui-button>
+    </div>
+  </header>
+
+  <form [formGroup]="formulario" (ngSubmit)="guardar()" novalidate class="consulta__cuerpo">
+    @if (error()) {
+      <ui-alert tipo="danger">{{ error() }}</ui-alert>
+    }
+
+    <!-- ------------------------------------------------- Evaluación visual -->
+    <ui-card titulo="Evaluación Visual" icono="eye">
+      <div class="ojos">
+        <section class="ojo">
+          <p class="ojo__titulo">OJO DERECHO (OD)</p>
+
+          <ui-select
+            formControlName="agudezaOd"
+            etiqueta="Agudeza Visual (Snellen)"
+            placeholder="Seleccionar agudeza..."
+            [opciones]="agudezas"
+          />
+
+          <ui-input
+            formControlName="pioOd"
+            etiqueta="Presión Intraocular (mmHg)"
+            tipo="number"
+            placeholder="ej. 15"
+            [error]="errorDe('pioOd', 'La PIO debe estar entre 10 y 40 mmHg.')"
+          />
+        </section>
+
+        <section class="ojo">
+          <p class="ojo__titulo">OJO IZQUIERDO (OI)</p>
+
+          <ui-select
+            formControlName="agudezaOi"
+            etiqueta="Agudeza Visual (Snellen)"
+            placeholder="Seleccionar agudeza..."
+            [opciones]="agudezas"
+          />
+
+          <ui-input
+            formControlName="pioOi"
+            etiqueta="Presión Intraocular (mmHg)"
+            tipo="number"
+            placeholder="ej. 15"
+            [error]="errorDe('pioOi', 'La PIO debe estar entre 10 y 40 mmHg.')"
+          />
+        </section>
+      </div>
+    </ui-card>
+
+    <!-- ------------------------------------------------ Diagnóstico y SOAP -->
+    <ui-card titulo="Diagnóstico y Notas Clínicas" icono="clipboardList">
+      <div class="bloques">
+        <ui-select
+          formControlName="tipoConsulta"
+          etiqueta="Tipo de Consulta"
+          placeholder="Seleccione el tipo de consulta"
+          [opciones]="tiposConsulta()"
+          [requerido]="true"
+          [error]="errorDe('tipoConsulta', 'Seleccione un tipo de consulta.')"
+        />
+
+        <ui-input
+          formControlName="motivo"
+          etiqueta="Motivo de Consulta"
+          placeholder="Motivo de consulta submitted"
+          [requerido]="true"
+          [error]="errorDe('motivo', 'El motivo de consulta es obligatorio.')"
+        />
+
+        <ui-input
+          formControlName="diagnosticoPrincipal"
+          etiqueta="Diagnóstico Principal"
+          placeholder="Ingrese código CIE-10 o diagnóstico descriptivo"
+          [requerido]="true"
+          [error]="errorDe('diagnosticoPrincipal', 'El diagnóstico principal es obligatorio.')"
+        />
+
+        <ui-input
+          formControlName="pupilas"
+          etiqueta="Pupilas"
+          placeholder="Isocóricas, reactivas..."
+        />
+        <ui-input
+          formControlName="biomicroscopia"
+          etiqueta="Biomicroscopía"
+          placeholder="Córnea, cámara anterior, iris..."
+        />
+        <ui-input
+          formControlName="fondoOjo"
+          etiqueta="Fondo de Ojo"
+          placeholder="Papila, mácula, vasos..."
+        />
+
+        <label class="area area--ancho">
+          <span class="area__etiqueta">Notas Clínicas Detalladas</span>
+          <textarea
+            class="area__campo area__campo--alta"
+            rows="6"
+            readonly
+            [value]="resumenSoap()"
+            placeholder="Documente motivo de consulta subjetivo, hallazgos objetivos, evaluación y plan (método SOAP)..."
+          ></textarea>
+        </label>
+
+        <div class="soap">
+          <label class="area">
+            <span class="area__etiqueta">S — Subjetivo</span>
+            <textarea class="area__campo" rows="3" formControlName="notasSubjectivo"></textarea>
+          </label>
+          <label class="area">
+            <span class="area__etiqueta">O — Objetivo</span>
+            <textarea class="area__campo" rows="3" formControlName="notasObjetivo"></textarea>
+          </label>
+          <label class="area">
+            <span class="area__etiqueta">E — Evaluación</span>
+            <textarea class="area__campo" rows="3" formControlName="notasEvaluacion"></textarea>
+          </label>
+          <label class="area">
+            <span class="area__etiqueta">P — Plan</span>
+            <textarea class="area__campo" rows="3" formControlName="notasPlan"></textarea>
+          </label>
+        </div>
+      </div>
+    </ui-card>
+
+    <!-- -------------------------------------------------- Exámenes -->
+    <ui-card titulo="Resultados de Exámenes e Imágenes" icono="fileText">
+      <label class="zona-soltar">
+        <ui-icon class="zona-soltar__nube" nombre="upload" [tamano]="26" />
+        <span class="zona-soltar__titulo">Arrastre y suelte archivos aquí</span>
+        <span class="zona-soltar__texto">
+          o haga clic para examinar (OCT, Fotos de fondo de ojo, PDFs)
+        </span>
+        <span class="zona-soltar__boton">Seleccionar archivos</span>
+        <input type="file" multiple hidden (change)="alElegirArchivos($event)" />
+      </label>
+
+      @if (archivos().length > 0) {
+        <ul class="adjuntos">
+          @for (archivo of archivos(); track archivo.nombre; let i = $index) {
+            <li class="adjunto">
+              <span class="adjunto__vista">
+                <ui-icon nombre="fileText" [tamano]="18" />
+              </span>
+              <span class="adjunto__nombre">{{ archivo.nombre }}</span>
+              <button
+                type="button"
+                class="adjunto__quitar"
+                aria-label="Quitar archivo"
+                (click)="quitarArchivo(i)"
+              >
+                <ui-icon nombre="x" [tamano]="14" />
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </ui-card>
+
+    <div class="consulta__pie">
+      <ui-button variante="contorno" tipo="button" (click)="cancelar()">Cancelar</ui-button>
+      <ui-button variante="primario" tipo="submit" icono="save" [deshabilitado]="guardando()">
+        Guardar Consulta
+      </ui-button>
+    </div>
+  </form>
+</div>

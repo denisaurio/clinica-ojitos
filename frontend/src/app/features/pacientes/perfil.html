@@ -1,0 +1,113 @@
+<div class="page">
+  @if (paciente(); as p) {
+    <header class="cabecera">
+      <div class="cabecera__persona">
+        <ui-avatar class="cabecera__avatar" [iniciales]="iniciales(p.nombreCompleto)" tamano="xl" />
+        <div>
+          <h1 class="cabecera__nombre">{{ p.nombreCompleto }}</h1>
+          <div class="cabecera__meta">
+            <ui-badge variante="primario" icono="hash">ID: {{ p.documento }}</ui-badge>
+            <span class="cabecera__edad">{{ p.edad }} años</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cabecera__acciones">
+        <ui-button
+          variante="contorno"
+          icono="fileText"
+          [destino]="'/historial/paciente/' + p.id"
+          [enlace]="true"
+        >
+          Ver historial médico
+        </ui-button>
+        <ui-button variante="primario" icono="calendar" destino="/citas/reservar" [enlace]="true">
+          Programar cita
+        </ui-button>
+      </div>
+    </header>
+
+    <div class="rejilla">
+      <ui-card titulo="Información Personal" class="datos">
+        <dl class="datos__lista">
+          <div class="datos__bloque">
+            <dt class="eyebrow">Nombre Completo</dt>
+            <dd>{{ p.nombreCompleto }}</dd>
+          </div>
+          <div class="datos__bloque">
+            <dt class="eyebrow">DNI</dt>
+            <dd>{{ p.documento }}</dd>
+          </div>
+          <div class="datos__bloque">
+            <dt class="eyebrow">Teléfono</dt>
+            <dd>{{ p.telefono }}</dd>
+          </div>
+          <div class="datos__bloque">
+            <dt class="eyebrow">Correo</dt>
+            <dd>{{ p.email || '—' }}</dd>
+          </div>
+          <div class="datos__bloque">
+            <dt class="eyebrow">Seguro</dt>
+            <dd>{{ p.seguro || 'Particular' }}</dd>
+          </div>
+        </dl>
+      </ui-card>
+
+      <div class="columna">
+        <ui-card titulo="Antecedentes Clínicos" class="antecedentes">
+          <ng-container slot="accion">
+            <ui-icon nombre="eye" [tamano]="17" />
+          </ng-container>
+
+          <div class="antecedentes__rejilla">
+            <div class="antecedentes__bloque">
+              <p class="eyebrow">Historial Ocular</p>
+              <ul class="antecedentes__lista">
+                @for (linea of lineas(p.antecedentesOculares); track linea) {
+                  <li>{{ linea }}</li>
+                } @empty {
+                  <li class="text-faint">Sin antecedentes registrados.</li>
+                }
+              </ul>
+            </div>
+
+            <div class="antecedentes__bloque antecedentes__bloque--alerta">
+              <p class="antecedentes__alergias">
+                <ui-icon nombre="alertTriangle" [tamano]="15" />
+                Alergias
+              </p>
+              <ul class="antecedentes__lista">
+                @for (linea of lineas(p.alergias); track linea) {
+                  <li>{{ linea }}</li>
+                } @empty {
+                  <li class="text-faint">Sin alergias registradas.</li>
+                }
+              </ul>
+            </div>
+          </div>
+        </ui-card>
+
+        <ui-card titulo="Actividad Reciente" class="actividad">
+          <ul class="actividad__lista">
+            @for (registro of actividad(); track registro.fecha) {
+              <li class="actividad__item">
+                <span class="actividad__icono">
+                  <ui-icon [nombre]="iconosActividad[registro.tipo]" [tamano]="16" />
+                </span>
+                <span class="actividad__datos">
+                  <span class="actividad__titulo">{{ registro.titulo }}</span>
+                  <span class="actividad__detalle">{{ registro.detalle }}</span>
+                </span>
+                <span class="actividad__fecha">{{ registro.fecha }}</span>
+              </li>
+            } @empty {
+              <li class="actividad__vacio">Sin actividad registrada todavía.</li>
+            }
+          </ul>
+        </ui-card>
+      </div>
+    </div>
+  } @else {
+    <ui-skeleton [lineas]="6" alto="18px" padding="20px 0" />
+  }
+</div>

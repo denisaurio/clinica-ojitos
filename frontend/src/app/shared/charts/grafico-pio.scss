@@ -1,0 +1,100 @@
+@use 'variables' as *;
+
+:host {
+  display: block;
+}
+
+.leyenda {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.leyenda__titulo {
+  font-size: 16px;
+  font-weight: 700;
+  color: $text;
+}
+
+.leyenda__serie {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: $text-muted;
+}
+
+.punto {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.punto--od {
+  background: $primary;
+}
+
+.punto--oi {
+  background: $primary-light;
+}
+
+.grafico {
+  display: block;
+  width: 100%;
+  height: auto;
+  color: $primary;
+}
+
+.rejilla {
+  stroke: $border;
+  stroke-width: 1;
+}
+
+.etiqueta-y {
+  fill: $text-faint;
+  font-size: 10px;
+  text-anchor: end;
+  font-family: $font-family;
+}
+
+.etiqueta-x {
+  fill: $text-muted;
+  font-size: 11px;
+  text-anchor: middle;
+  font-family: $font-family;
+}
+
+.linea {
+  fill: none;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.linea--od {
+  stroke: $primary;
+}
+
+.linea--oi {
+  stroke: $primary-light;
+  stroke-dasharray: 5 4;
+}
+
+.area {
+  color: $primary;
+}
+
+.marcador {
+  fill: $surface;
+  stroke: $primary;
+  stroke-width: 2.2;
+}
+
+.marcador--hueco {
+  fill: $surface;
+  stroke: $primary-light;
+  stroke-width: 2.2;
+}

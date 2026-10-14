@@ -1,0 +1,68 @@
+<div class="agenda">
+  <header class="agenda__cabecera">
+    <div>
+      <h1 class="page-title">Agenda Semanal</h1>
+      <p class="page-subtitle">{{ rangoFechas() }}</p>
+    </div>
+
+    <div class="agenda__controles">
+      <ui-select
+        class="agenda__medico"
+        placeholder="Seleccione médico"
+        [opciones]="medicos()"
+        (valorCambia)="cambiarMedico($event)"
+      />
+      <ui-button variante="primario" icono="plus" destino="/citas/reservar" [enlace]="true">
+        Nueva Cita
+      </ui-button>
+    </div>
+  </header>
+
+  <div class="rejilla">
+    <!-- Columna de horas -->
+    <div class="rejilla__horas">
+      <div class="rejilla__hueco"></div>
+      @for (hora of horas; track hora) {
+        <div class="rejilla__hora" [style.height.px]="altoHora">
+          {{ etiquetaHora(hora) }}
+        </div>
+      }
+    </div>
+
+    <!-- Columnas por día -->
+    @for (dia of dias(); track dia.fecha) {
+      <div class="rejilla__dia">
+        <header class="dia__cabecera">
+          <span class="dia__etiqueta">{{ dia.etiqueta }}</span>
+          <span class="dia__numero">{{ dia.numero }}</span>
+        </header>
+
+        <div class="dia__cuerpo" [style.height.px]="horas.length * altoHora">
+          @for (hora of horas; track hora) {
+            <div class="dia__fila" [style.height.px]="altoHora"></div>
+          }
+
+          <!-- Pausa para almuerzo: bloque único sobre todo el ancho -->
+          @if (dia.etiqueta === 'MIÉ') {
+            <div class="almuerzo" [style.top.px]="(12 - 8) * altoHora" [style.height.px]="altoHora">
+              Pausa para Almuerzo
+            </div>
+          }
+
+          @for (evento of dia.eventos; track evento.id) {
+            <a
+              class="evento"
+              [class.evento--cancelada]="evento.estadoCita === 'CANCELADA'"
+              [style.top.px]="desplazamiento(evento)"
+              [style.height.px]="altura(evento)"
+              [routerLink]="['/citas/reprogramar', evento.id]"
+            >
+              <span class="evento__titulo">{{ evento.titulo }}</span>
+              <span class="evento__detalle">{{ evento.detalle }}</span>
+            </a>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

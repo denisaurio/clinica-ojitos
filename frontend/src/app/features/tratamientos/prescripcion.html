@@ -1,0 +1,132 @@
+<div class="page">
+  <h1 class="page-title">Prescripción de Tratamiento</h1>
+  <p class="page-subtitle">
+    Seleccione el tipo de tratamiento y complete los detalles para el paciente.
+  </p>
+
+  <ui-card class="paciente" [sinPadding]="false">
+    <div class="paciente__fila">
+      <ui-avatar [iniciales]="'JP'" tamano="md" />
+      <div>
+        <p class="paciente__nombre">{{ nombrePaciente() }}</p>
+        <p class="paciente__id">ID: 849201 • 52 años</p>
+      </div>
+      <ui-badge variante="primario" icono="clock">Consulta Activa</ui-badge>
+    </div>
+  </ui-card>
+
+  <p class="bloque__etiqueta">Tipo de Tratamiento</p>
+  <div class="tipos" role="tablist">
+    @for (opcion of tipos; track opcion.valor) {
+      <button
+        type="button"
+        role="tab"
+        class="tipo"
+        [class.tipo--activo]="tipo() === opcion.valor"
+        [attr.aria-selected]="tipo() === opcion.valor"
+        (click)="cambiarTipo(opcion.valor)"
+      >
+        <ui-icon [nombre]="opcion.icono" [tamano]="15" />
+        <span>{{ opcion.etiqueta }}</span>
+      </button>
+    }
+  </div>
+
+  @if (error()) {
+    <ui-alert tipo="danger" class="aviso">{{ error() }}</ui-alert>
+  }
+
+  @for (fila of filas(); track $index; let indice = $index) {
+    <ui-card
+      [titulo]="filas().length > 1 ? 'Detalle ' + (indice + 1) : 'Detalles de ' + tipoActual()"
+      icono="fileText"
+      class="medicamento"
+    >
+      <ng-container slot="accion">
+        @if (filas().length > 1) {
+          <ui-button variante="fantasma" tamano="sm" icono="trash" (click)="quitarFila(indice)" />
+        }
+      </ng-container>
+
+      <div [formGroup]="fila" class="medicamento__campos">
+        <div class="medicamento__fila">
+          <ui-input
+            formControlName="medicamento"
+            etiqueta="Nombre del Medicamento"
+            placeholder="Ej. Latanoprost 0,005%"
+            icono="search"
+            [listaId]="'farmacos-' + indice"
+            [requerido]="true"
+            [error]="fila.controls.medicamento.invalid && fila.controls.medicamento.touched ? 'Indique el medicamento.' : ''"
+          />
+
+          @if (tipo() === 'MEDICACION') {
+            <datalist [id]="'farmacos-' + indice">
+              @for (farmaco of farmacos; track farmaco) {
+                <option [value]="farmaco"></option>
+              }
+            </datalist>
+          }
+        </div>
+
+        <div class="medicamento__fila medicamento__fila--2">
+          <ui-input
+            formControlName="dosis"
+            etiqueta="Dosis / Aplicación"
+            placeholder="Ej. 1 gota, Ojo Derecho (OD)"
+            [requerido]="true"
+            [error]="fila.controls.dosis.invalid && fila.controls.dosis.touched ? 'Indique la dosis.' : ''"
+          />
+          <ui-select
+            formControlName="frecuencia"
+            etiqueta="Frecuencia"
+            placeholder="Seleccione frecuencia"
+            [opciones]="frecuencias"
+            [requerido]="true"
+            [error]="fila.controls.frecuencia.invalid && fila.controls.frecuencia.touched ? 'Indique la frecuencia.' : ''"
+          />
+        </div>
+
+        <div class="medicamento__fila medicamento__fila--2">
+          <ui-input
+            formControlName="duracionCantidad"
+            etiqueta="Duración"
+            placeholder="Ej. 30"
+            icono="calendar"
+            [requerido]="true"
+            [error]="fila.controls.duracionCantidad.invalid && fila.controls.duracionCantidad.touched ? 'Indique la duración.' : ''"
+          />
+          <ui-select
+            formControlName="duracionUnidad"
+            etiqueta="Unidad"
+            placeholder="Días"
+            [opciones]="duraciones"
+          />
+        </div>
+
+        <ui-input
+          formControlName="instrucciones"
+          etiqueta="Instrucciones Adicionales"
+          placeholder="Notas para el paciente..."
+          class="medicamento__ancho"
+        />
+
+        @if (indice < filas().length - 1) {
+          <div class="medicamento__acciones">
+            <button type="button" class="agregar" (click)="agregarFila()">
+              <ui-icon nombre="plus" [tamano]="14" />
+              Agregar otro medicamento
+            </button>
+          </div>
+        }
+      </div>
+    </ui-card>
+  }
+
+  <div class="pie">
+    <ui-button variante="contorno" destino="/dashboard" [enlace]="true">Cancelar</ui-button>
+    <ui-button variante="primario" icono="save" [deshabilitado]="guardando()" (click)="guardar()">
+      Guardar Prescripción
+    </ui-button>
+  </div>
+</div>
