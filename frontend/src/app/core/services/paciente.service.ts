@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, map, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 
 import { environment } from '../../../environments/environment';
@@ -47,30 +47,51 @@ export class PacienteService {
       .set('buscar', buscar)
       .set('page', page)
       .set('size', size);
-    return this.http.get<PageResponse<Paciente>>(this.base, { params });
+    return this.http
+      .get<PageResponse<PacienteResumenApi>>(this.base, { params })
+      .pipe(
+        map((p) => ({
+          ...p,
+          content: (p.content ?? []).map((x) => this.aPacienteDesdeResumen(x)),
+        }))
+      );
   }
 
+  /**
+   * Ficha completa. El backend envuelve la respuesta en un `Detalle` con los
+   * contadores de cabecera y la actividad reciente; aquí se desenvuelve para
+   * devolver solo el paciente, como espera la pantalla.
+   */
   obtener(id: number): Observable<Paciente> {
     if (environment.useMockApi) {
       return of(this.demo.pacientes.find((p) => p.id === id) ?? this.demo.pacientes[0]).pipe(
         delay(100)
       );
     }
-    return this.http.get<Paciente>(`${this.base}/${id}`);
+    return this.http.get<PacienteApi | PacienteDetalleApi>(`${this.base}/${id}`).pipe(
+      map((r) => {
+        const p = 'paciente' in r ? r.paciente : r;
+        return this.aPaciente(p);
+      })
+    );
   }
 
   crear(peticion: PacienteRequest): Observable<Paciente> {
     if (environment.useMockApi) {
       return of(this.construir(peticion, this.demo.pacientes.length + 1)).pipe(delay(150));
     }
-    return this.http.post<Paciente>(this.base, peticion);
+    return this.http
+      .post<PacienteApi>(this.base, this.aPeticion(peticion))
+      .pipe(map((r) => this.aPaciente(r)));
   }
 
   actualizar(id: number, peticion: PacienteRequest): Observable<Paciente> {
     if (environment.useMockApi) {
       return of(this.construir(peticion, id)).pipe(delay(150));
     }
-    return this.http.put<Paciente>(`${this.base}/${id}`, peticion);
+    return this.http
+      .put<PacienteApi>(`${this.base}/${id}`, this.aPeticion(peticion))
+      .pipe(map((r) => this.aPaciente(r)));
   }
 
   /** Baja lógica: el historial clínico nunca se borra (AGENTS.md §3.1). */
@@ -96,7 +117,86 @@ export class PacienteService {
     if (environment.useMockApi) {
       return of(this.demo.actividadReciente[id] ?? []).pipe(delay(100));
     }
-    return this.http.get<ActividadReciente[]>(`${this.base}/${id}/actividad-reciente`);
+    return this.http
+      .get<ActividadApi[]>(`${this.base}/${id}/actividad-reciente`)
+      .pipe(
+        map((lista) =>
+          (lista ?? []).map((a) => ({
+            tipo: this.tipoDeActividad(a.tipo ?? 'Consulta'),
+            titulo: a.descripcion ?? a.tipo ?? '',
+            detalle: a.profesional ?? '',
+            fecha: a.fecha ? this.fechaCorta(a.fecha) : '',
+          }))
+        )
+      );
+  }
+
+  private tipoDeActividad(tipo: string): ActividadReciente['tipo'] {
+    const t = tipo.toLowerCase();
+    if (t.includes('examen')) return 'EXAMEN';
+    if (t.includes('cita')) return 'CITA';
+    if (t.includes('tratamiento')) return 'TRATAMIENTO';
+    return 'CONSULTA';
+  }
+
+  // --------------------------------------------------------- Adaptadores
+  //
+  // El backend llama `tipoSeguro` y `historialOcular`; las pantallas leen
+  // `seguro` y `antecedentesOculares`. La traducción vive aquí para que
+  // renombrar un campo en la API no obligue a tocar todas las plantillas.
+
+  private aPaciente(p: PacienteApi): Paciente {
+    return {
+      id: p.id,
+      nombres: p.nombres ?? '',
+      apellidos: p.apellidos ?? '',
+      nombreCompleto: p.nombreCompleto ?? `${p.nombres ?? ''} ${p.apellidos ?? ''}`.trim(),
+      documento: p.documento ?? '',
+      fechaNacimiento: p.fechaNacimiento ?? '',
+      edad: p.edad ?? 0,
+      telefono: p.telefono ?? '',
+      email: p.email ?? '',
+      direccion: p.direccion ?? '',
+      seguro: p.tipoSeguro ?? 'Particular',
+      grupoSanguineo: p.grupoSanguineo ?? '',
+      antecedentesOculares: p.historialOcular ?? '',
+      alergias: p.alergias ?? '',
+      activo: p.activo ?? true,
+      fechaRegistro: p.fechaRegistro ? this.fechaCorta(p.fechaRegistro) : '',
+    };
+  }
+
+  /** La fila del listado solo trae un resumen: se completa con campos vacíos. */
+  private aPacienteDesdeResumen(r: PacienteResumenApi): Paciente {
+    return {
+      ...this.aPaciente(r as PacienteApi),
+      telefono: r.telefono ?? '',
+      email: r.email ?? '',
+      seguro: r.seguro ?? 'Particular',
+    };
+  }
+
+  /** Envía los nombres que espera el backend. */
+  private aPeticion(p: PacienteRequest) {
+    return {
+      nombres: p.nombres,
+      apellidos: p.apellidos,
+      documento: p.documento,
+      fechaNacimiento: p.fechaNacimiento || null,
+
+      telefono: p.telefono || null,
+      email: p.email || null,
+      direccion: p.direccion || null,
+      tipoSeguro: p.seguro || null,
+      grupoSanguineo: p.grupoSanguineo || null,
+      historialOcular: p.antecedentesOculares || null,
+      alergias: p.alergias || null,
+      activo: true,
+    };
+  }
+
+  private fechaCorta(iso: string): string {
+    return iso.length >= 10 ? iso.slice(0, 10) : iso;
   }
 
   private construir(peticion: PacienteRequest, id: number): Paciente {
@@ -133,4 +233,55 @@ export class PacienteService {
     }
     return edad;
   }
+}
+// ------------------------- Formas reales de la respuesta del backend -------
+
+/** Fila del listado (`PacienteDto.Resumen`). */
+interface PacienteResumenApi {
+  id: number;
+  nombreCompleto: string;
+  iniciales?: string;
+  documento: string;
+  edad?: number;
+  telefono?: string;
+  email?: string;
+  seguro?: string;
+  activo?: boolean;
+}
+
+/** Ficha completa (`PacienteDto.Response`). */
+interface PacienteApi {
+  id: number;
+  nombres?: string;
+  apellidos?: string;
+  nombreCompleto?: string;
+  documento?: string;
+  fechaNacimiento?: string;
+  edad?: number;
+  telefono?: string;
+  email?: string;
+  direccion?: string;
+  tipoSeguro?: string;
+  grupoSanguineo?: string;
+  historialOcular?: string;
+  alergias?: string;
+  activo?: boolean;
+  fechaRegistro?: string;
+}
+
+/** `GET /pacientes/{id}` devuelve este envoltorio, no el paciente suelto. */
+interface PacienteDetalleApi {
+  paciente: PacienteApi;
+  totalConsultas: number;
+  totalCitas: number;
+  tratamientosActivos: number;
+  actividadReciente: ActividadApi[];
+}
+
+interface ActividadApi {
+  id: number;
+  tipo?: string;
+  descripcion?: string;
+  profesional?: string;
+  fecha?: string;
 }

@@ -24,15 +24,25 @@ const MENUS: Record<'clinico' | 'gestion' | 'operativo', EntradaMenu[]> = {
     { etiqueta: 'Cirugías', ruta: '/cirugias/registro', icono: 'scissors' },
     { etiqueta: 'Agenda', ruta: '/citas/agenda', icono: 'calendar' },
   ],
+  /**
+   * Módulos de la clínica (pantallas 24, 26, 38). El administrador entra aquí
+   * desde el listado de pacientes, así que el acceso a su panel tiene que estar
+   * también en este menú: si solo viviera en el de los paneles, al navegar a
+   * pacientes se perdería el camino de vuelta.
+   */
   gestion: [
+    { etiqueta: 'Resumen del Administrador', ruta: '/dashboard/admin', icono: 'grid', exacta: true },
     { etiqueta: 'Doctores', ruta: '/oftalmologos', icono: 'briefcase', exacta: true },
     { etiqueta: 'Pacientes', ruta: '/pacientes', icono: 'users', exacta: true },
     { etiqueta: 'Citas', ruta: '/citas/agenda', icono: 'calendar' },
     { etiqueta: 'Historial Médico', ruta: '/historial', icono: 'fileText' },
   ],
+  /**
+   * Paneles (pantallas 44, 45, 46). Cada entrada apunta a su ruta concreta y
+   * no a `/dashboard`, que redirige por rol: así el enlace se mantiene
+   * resaltado al navegar.
+   */
   operativo: [
-    // Apunta a la ruta concreta, no a `/dashboard`: así el enlace se queda
-    // resaltado al navegar y nunca depende de la redirección por rol.
     { etiqueta: 'Resumen del Administrador', ruta: '/dashboard/admin', icono: 'grid', exacta: true },
     { etiqueta: 'Panel del Especialista', ruta: '/dashboard/medico', icono: 'stethoscope' },
     { etiqueta: 'Panel de Recepción', ruta: '/dashboard/recepcion', icono: 'clipboardList' },

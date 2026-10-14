@@ -9,10 +9,10 @@
           <span class="metrica__icono">
             <ui-icon nombre="users" [tamano]="19" />
           </span>
-          <ui-badge variante="info">+12%</ui-badge>
+          <ui-badge variante="info">{{ d.totalPacientes }} pacientes</ui-badge>
         </div>
         <p class="metrica__etiqueta">Total de Pacientes</p>
-        <p class="metrica__valor">{{ d.totalPacientes.toLocaleString('es-ES') }}</p>
+          <p class="metrica__valor">{{ d.totalPacientes.toLocaleString('es-ES') }}</p>
       </ui-card>
 
       <ui-card class="metrica">
@@ -23,7 +23,7 @@
           <ui-badge variante="neutro">Hoy</ui-badge>
         </div>
         <p class="metrica__etiqueta">Citas</p>
-        <p class="metrica__valor">{{ d.citasHoy }}</p>
+          <p class="metrica__valor">{{ d.citasHoy }}</p>
       </ui-card>
 
       <ui-card class="metrica">
@@ -34,7 +34,7 @@
           <ui-badge variante="neutro">Activos</ui-badge>
         </div>
         <p class="metrica__etiqueta">Oftalmólogos</p>
-        <p class="metrica__valor">{{ d.oftalmologosActivos }}</p>
+          <p class="metrica__valor">{{ d.oftalmologosActivos }}</p>
       </ui-card>
     </div>
 

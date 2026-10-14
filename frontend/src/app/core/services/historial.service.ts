@@ -41,7 +41,12 @@ export class HistorialService {
       .set('pacienteId', pacienteId)
       .set('page', page)
       .set('size', size);
-    return this.http.get<PageResponse<Consulta>>(this.base, { params });
+    return this.http.get<PageResponse<ConsultaApi>>(this.base, { params }).pipe(
+      map((p) => ({
+        ...p,
+        content: (p.content ?? []).map((c) => this.aConsulta(c)),
+      }))
+    );
   }
 
   obtener(id: number): Observable<Consulta> {
@@ -49,21 +54,89 @@ export class HistorialService {
       const encontrada = this.todas().find((c) => c.id === id) ?? this.todas()[0];
       return of(encontrada).pipe(delay(80));
     }
-    return this.http.get<Consulta>(`${this.base}/${id}`);
+    return this.http
+      .get<ConsultaApi>(`${this.base}/${id}`)
+      .pipe(map((c) => this.aConsulta(c)));
   }
 
   delPaciente(pacienteId: number): Observable<Consulta[]> {
     if (environment.useMockApi) {
       return of(this.demo.consultasDe(pacienteId)).pipe(delay(120));
     }
-    return this.http.get<Consulta[]>(`${this.base}/paciente/${pacienteId}`);
+    return this.http
+      .get<ConsultaApi[]>(`${this.base}/paciente/${pacienteId}`)
+      .pipe(map((lista) => (lista ?? []).map((c) => this.aConsulta(c))));
+  }
+
+  /**
+   * El backend devuelve `fecha` como ISO completo y los signos vitales con
+   * otros nombres; la línea de tiempo los espera separados en fecha y hora.
+   */
+  private aConsulta(c: ConsultaApi): Consulta {
+    const fechaIso = c.fecha ?? '';
+    return {
+      id: c.id,
+      pacienteId: c.pacienteId,
+      pacienteNombre: c.pacienteNombre ?? '',
+      fecha: this.fechaLarga(fechaIso),
+      hora: this.horaCorta(fechaIso),
+      motivo: c.tipoConsulta ?? '',
+      tipoConsulta: c.tipoConsulta ?? '',
+      diagnosticoPrincipal: c.diagnostico ?? '',
+      agudezaOd: c.agudezaOd ?? '',
+      agudezaOi: c.agudezaOi ?? '',
+      pioOd: c.pioOd ?? 0,
+      pioOi: c.pioOi ?? 0,
+      pupilas: c.pupilas ?? '',
+      biomicroscopia: c.biomicroscopia ?? '',
+      fondoOjo: c.fondoOjo ?? '',
+      notasSubjectivo: c.soapSubjetivo ?? '',
+      notasObjetivo: c.soapObjetivo ?? '',
+      notasEvaluacion: c.soapEvaluacion ?? '',
+      notasPlan: c.soapPlan ?? '',
+      oftalmologoId: c.oftalmologoId ?? 0,
+      oftalmologoNombre: c.oftalmologoNombre ?? '',
+      archivos: [],
+      esUltima: false,
+    };
+  }
+
+  private fechaLarga(iso: string): string {
+    if (!iso) return '';
+    return new Date(iso).toLocaleDateString('es-ES', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }
+
+  private horaCorta(iso: string): string {
+    if (!iso) return '';
+    return new Date(iso).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
   }
 
   crear(peticion: ConsultaRequest): Observable<Consulta> {
     if (environment.useMockApi) {
       return of(this.construir(peticion)).pipe(delay(180));
     }
-    return this.http.post<Consulta>(this.base, peticion);
+    return this.http
+      .post<ConsultaApi>(this.base, {
+        pacienteId: peticion.pacienteId,
+        tipoConsulta: peticion.tipoConsulta,
+        agudezaOd: peticion.agudezaOd || null,
+        agudezaOi: peticion.agudezaOi || null,
+        pioOd: peticion.pioOd || null,
+        pioOi: peticion.pioOi || null,
+        pupilas: peticion.pupilas || null,
+        biomicroscopia: peticion.biomicroscopia || null,
+        fondoOjo: peticion.fondoOjo || null,
+        diagnostico: peticion.diagnosticoPrincipal,
+        soapSubjetivo: peticion.notasSubjectivo || null,
+        soapObjetivo: peticion.notasObjetivo || null,
+        soapEvaluacion: peticion.notasEvaluacion || null,
+        soapPlan: peticion.notasPlan || null,
+      })
+      .pipe(map((r) => this.aConsulta(r)));
   }
 
   /** Serie de presión intraocular usada por el gráfico de evolución. */
@@ -71,7 +144,20 @@ export class HistorialService {
     if (environment.useMockApi) {
       return of(this.demo.evolucionDe(pacienteId)).pipe(delay(150));
     }
-    return this.http.get<PuntoEvolucion[]>(`${this.base}/paciente/${pacienteId}/evolucion`);
+    return this.http
+      .get<EvolucionApi[]>(`${this.base}/paciente/${pacienteId}/evolucion`)
+      .pipe(
+        map((serie) =>
+          (serie ?? []).map((e) => ({
+            fecha: (e.fecha ?? '').slice(0, 10),
+            pioOd: e.pioOd ?? 0,
+            pioOi: e.pioOi ?? 0,
+            agudezaOd: e.agudezaOd ?? '',
+            agudezaOi: e.agudezaOi ?? '',
+            diagnostico: e.diagnostico ?? '',
+          }))
+        )
+      );
   }
 
   registrarExamen(consultaId: number, examen: ExamenRequest): Observable<Consulta> {
@@ -191,4 +277,39 @@ export class HistorialService {
       }
     );
   }
+}
+// ------------------------- Formas reales de la respuesta del backend -------
+
+/** `ConsultaDto.Response`. */
+interface ConsultaApi {
+  id: number;
+  pacienteId: number;
+  pacienteNombre?: string;
+  oftalmologoId?: number;
+  oftalmologoNombre?: string;
+  fecha?: string;
+  tipoConsulta?: string;
+  agudezaOd?: string;
+  agudezaOi?: string;
+  pioOd?: number;
+  pioOi?: number;
+  pupilas?: string;
+  biomicroscopia?: string;
+  fondoOjo?: string;
+  diagnostico?: string;
+  cie10?: string;
+  soapSubjetivo?: string;
+  soapObjetivo?: string;
+  soapEvaluacion?: string;
+  soapPlan?: string;
+}
+
+/** `ConsultaDto.Evolucion`. */
+interface EvolucionApi {
+  fecha?: string;
+  pioOd?: number;
+  pioOi?: number;
+  agudezaOd?: string;
+  agudezaOi?: string;
+  diagnostico?: string;
 }
