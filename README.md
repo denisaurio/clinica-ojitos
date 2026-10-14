@@ -272,8 +272,16 @@ En PowerShell:
 cd backend
 $env:DB_USER = 'root'
 $env:DB_PASSWORD = 'tu_clave'
-mvnw.cmd spring-boot:run
+
+.\mvnw.cmd spring-boot:run
 ```
+
+> **PowerShell no ejecuta comandos de la carpeta actual** salvo que los
+> llames con el prefijo `.\`. Por eso es `.\mvnw.cmd` y no `mvnw.cmd`; en bash
+> y cmd basta con `mvnw` / `mvnw.cmd`.
+>
+> Si ya tienes Maven instalado en el sistema, `mvn spring-boot:run` también
+> funciona y te ahorra un paso.
 
 Espera a ver `Tomcat started on port 8080` (la primera vez tarda ~15 s).
 Comprobación rápida:
@@ -465,6 +473,7 @@ cubre el cruce de horarios, la cancelación y la reprogramación.
 | Síntoma | Causa | Solución |
 |---|---|---|
 | `JAVA_HOME no está definido correctamente` | La variable apunta a una carpeta que no existe | Corrígela en las variables de entorno y abre una terminal nueva |
+| `'mvnw.cmd' no se reconoce` | PowerShell no ejecuta archivos de la carpeta actual | Usa `.\mvnw.cmd`, o simplemente `mvn` |
 | `Access denied for user 'root'` | La clave de MySQL no coincide | Revisa `$env:DB_PASSWORD` |
 | `Unknown database 'clinica_ojitos'` | No se ejecutó `01_esquema.sql` | Vuelve al paso 1 |
 | `El operador '<' está reservado` | Redirección de bash en PowerShell | Usa `mysql -e "source archivo.sql"` |

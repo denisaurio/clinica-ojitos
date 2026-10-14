@@ -19,7 +19,15 @@ export DB_URL=jdbc:mysql://localhost:3306/clinica_ojitos
 export DB_USER=root
 export DB_PASSWORD=tu_clave
 
-mvnw spring-boot:run          # o: mvnw.cmd spring-boot:run   (Windows)
+# bash / Git Bash
+./mvnw spring-boot:run
+
+# PowerShell (Windows): el prefijo .\ es obligatorio, PowerShell no ejecuta
+# archivos de la carpeta actual sin él
+.\mvnw.cmd spring-boot:run
+
+# o simplemente, si ya tienes Maven en el sistema
+mvn spring-boot:run
 ```
 
 Queda disponible en `http://localhost:8080`:
@@ -31,8 +39,8 @@ Queda disponible en `http://localhost:8080`:
 | `/v3/api-docs` | Especificación OpenAPI en JSON |
 
 ```bash
-mvnw test          # 19 pruebas unitarias de la capa de servicio
-mvnw clean test    # compila desde cero y ejecuta las pruebas
+mvnw test              # 19 pruebas unitarias de la capa de servicio
+mvnw clean test        # compila desde cero y ejecuta las pruebas
 ```
 
 > **Requiere `JAVA_HOME` válido.** Si Maven responde *«JAVA_HOME no está
