@@ -692,3 +692,29 @@ SELECT * FROM v_historial_clinico WHERE paciente_id = 4 ORDER BY fecha DESC;
 
 Proyecto académico developed para la asignatura de **Desarrollo de Aplicaciones
 Web** con Java / Spring Boot. Uso educativo.
+
+### Cambiar el rol de un usuario
+
+Abre sql/06_cambiar_rol.sql, edita las dos primeras líneas y ejecútalo:
+
+`sql
+SET @usuario_objetivo = 'recepcion';     -- el username, sin el @
+SET @nuevo_rol       = 'ADMINISTRADOR';  -- el código del rol
+`
+
+`ash
+mysql -u root -p -e "source sql/06_cambiar_rol.sql"
+`
+
+Tres salvaguardas, verificadas una por una:
+
+| Situación | Resultado |
+|---|---|
+| Rol válido | Cambia el rol y reinicia el contador de intentos bloqueados |
+| Rol inexistente | **No cambia nada** — avisa ERROR: el rol "X" no existe |
+| Degradar al **último** administrador | **Se cancela** — avisa que la clínica quedaría sin administrador |
+
+Los códigos son ADMINISTRADOR, OFTALMOLOGO, RECEPCIONISTA y PACIENTE.
+
+> Para crear un rol nuevo solo hace falta insertarlo en la tabla ol; no hay
+> que tocar el esquema, porque los roles son un catálogo (RNF-05).
