@@ -7,8 +7,9 @@ system están escritos a mano para que coincidan con el prototipo.
 La documentación completa del proyecto (instalación, rutas de aprendizaje,
 referencia de la API) está en el [`README.md` raíz](../README.md). La
 descripción carpeta por carpeta está en
-[`docs/ESTRUCTURA.md`](../docs/ESTRUCTURA.md) y el recorrido por pantalla en
-[`docs/FLUJO.md`](../docs/FLUJO.md).
+[`docs/ESTRUCTURA.md`](../docs/ESTRUCTURA.md), el recorrido por pantalla en
+[`docs/FLUJO.md`](../docs/FLUJO.md) y el tutorial de publicación en
+[`docs/DESPLIEGUE.md`](../docs/DESPLIEGUE.md).
 
 ---
 
@@ -21,13 +22,43 @@ npm start          # http://localhost:4200
 
 Requiere el backend en `http://localhost:8080`: `proxy.conf.json` desvía las
 llamadas a `/api` hacia ahí. Si prefieres trabajar sin base de datos, pon
-`useMockApi: true` en `src/environments/environment.ts` y los datos salen de
+`useMockApi: true` en `public/env.js` y los datos salen de
 `core/services/demo-data.service.ts`.
 
 ```bash
-npm run build      # compila a dist/
+npm run build      # compila a dist/frontend/browser
 npm test           # pruebas unitarias
 ```
+
+### Configuración de ejecución
+
+La compilación fija valores por defecto en `src/environments/`, pero el
+contenedor puede sobrescribirlos **sin recompilar** mediante `public/env.js`.
+En Docker, `docker-entrypoint.sh` regenera ese archivo en cada arranque a partir
+de las variables de entorno:
+
+| Variable | Ejemplo | Efecto |
+|---|---|---|
+| `API_URL` | `/api/v1` | Prefijo que usan los servicios Angular |
+| `API_PROXY_TARGET` | `http://clinica-api:8080` | Destino de `/api` en nginx |
+| `APP_NAME` | `Ojitos` | Nombre visible en la interfaz |
+| `APP_TAGLINE` | `Gestión Clínica` | Subtítulo |
+| `PRODUCTION` | `true` | Activa el modo producción de Angular |
+| `USE_MOCK_API` | `false` | `true` sirve datos de demostración |
+
+La plantilla completa, compartida con el backend y MySQL, está en
+[`../.env.example`](../.env.example).
+
+### Docker
+
+```bash
+docker build -t clinica-web .
+docker run --rm -p 8081:80 \
+  -e API_PROXY_TARGET=http://host.docker.internal:8080 \
+  clinica-web
+```
+
+O, desde la raíz, `docker compose up -d --build` levanta los tres servicios.
 
 ### Cuentas
 
@@ -100,10 +131,13 @@ peso que código; además el estilo hereda los mismos tokens del resto.
 
 ## Modo demostración
 
-`src/environments/environment.ts`:
+`public/env.js`:
 
-```ts
-useMockApi: false   // false = API real (por defecto)
+```js
+window.__env = window.__env || {
+  useMockApi: false,   // false = API real (por defecto)
+  // ...
+};
 ```
 
 Con `true`, cada servicio devuelve datos de muestra desde
@@ -111,4 +145,7 @@ Con `true`, cada servicio devuelve datos de muestra desde
 login se resuelve en el navegador. Sirve para explorar la interfaz o preparar
 una demo sin levantar MySQL ni el backend.
 
-`environment.prod.ts` es el que se usa en `ng build`.
+Si `public/env.js` no existe o no define una clave, `runtime-env.ts` usa el
+valor de `environment.ts` (desarrollo) o `environment.prod.ts` (`ng build`).
+En Docker y Coolify basta con cambiar `USE_MOCK_API=true` y reiniciar el
+contenedor.

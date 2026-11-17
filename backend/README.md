@@ -6,8 +6,9 @@ mediante JPA/Hibernate.
 La documentación completa del proyecto (instalación, rutas de aprendizaje,
 referencia de la API) está en el [`README.md` raíz](../README.md). La
 descripción carpeta por carpeta está en
-[`docs/ESTRUCTURA.md`](../docs/ESTRUCTURA.md) y el recorrido por pantalla en
-[`docs/FLUJO.md`](../docs/FLUJO.md).
+[`docs/ESTRUCTURA.md`](../docs/ESTRUCTURA.md), el recorrido por pantalla en
+[`docs/FLUJO.md`](../docs/FLUJO.md) y el tutorial de publicación en
+[`docs/DESPLIEGUE.md`](../docs/DESPLIEGUE.md).
 
 ---
 
@@ -15,9 +16,10 @@ descripción carpeta por carpeta está en
 
 ```bash
 # Variables de entorno: nunca se versionan credenciales
-export DB_URL=jdbc:mysql://localhost:3306/clinica_ojitos
+export DB_URL='jdbc:mysql://localhost:3306/clinica_ojitos?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Lima'
 export DB_USER=root
 export DB_PASSWORD=tu_clave
+export JWT_SECRET="$(openssl rand -base64 48)"
 
 # bash / Git Bash
 ./mvnw spring-boot:run
@@ -39,7 +41,7 @@ Queda disponible en `http://localhost:8080`:
 | `/v3/api-docs` | Especificación OpenAPI en JSON |
 
 ```bash
-mvnw test              # 19 pruebas unitarias de la capa de servicio
+mvnw test              # 25 pruebas unitarias de la capa de servicio
 mvnw clean test        # compila desde cero y ejecuta las pruebas
 ```
 
@@ -146,19 +148,46 @@ el cruce de horarios, la cancelación y la reprogramación.
 
 ## Configuración
 
-Todo se lee de variables de entorno con valores por defecto de desarrollo.
+Todo se lee de variables de entorno con valores por defecto de desarrollo. La
+lista completa, con ejemplos y comentarios, está en
+[`../.env.example`](../.env.example).
 
 | Variable | Por defecto | Para qué |
 |---|---|---|
-| `DB_URL` | `jdbc:mysql://localhost:3306/clinica_ojitos` | Cadena de conexión |
+| `DB_URL` | `jdbc:mysql://localhost:3306/clinica_ojitos?...` | Cadena de conexión |
 | `DB_USER` | `root` | Usuario de MySQL |
 | `DB_PASSWORD` | *(vacío)* | Clave de MySQL |
-| `JWT_SECRET` | clave de desarrollo | Firma de los tokens |
+| `DB_POOL_MAX` / `DB_POOL_MIN` | `10` / `2` | Tamaño del pool HikariCP |
+| `JWT_SECRET` | *(vacío → aleatoria)* | Firma de los tokens (mínimo 32 caracteres) |
 | `JWT_EXPIRATION_MINUTES` | `60` | Vigencia del token |
+| `CORS_ALLOWED_ORIGINS` | *(vacío)* | Orígenes permitidos; vacío en producción |
+| `JPA_DDL_AUTO` | `validate` | Validar el esquema, sin modificarlo |
+| `APP_TIMEZONE` | `America/Lima` | Zona horaria de Hibernate y las fechas |
+| `LOG_LEVEL_*` | `INFO` / `WARN` | Niveles de log por paquete |
+| `MULTIPART_MAX_FILE` | `10MB` | Tamaño máximo por archivo |
 
 Perfiles disponibles: `dev` (en `application-dev.yml`) permite que Hibernate
 cree tablas faltantes; el perfil por defecto usa `ddl-auto: validate`, que
 comprueba el esquema y **no lo modifica**.
 
-> Antes de cualquier despliegue, cambia `JWT_SECRET` por una cadena aleatoria de
-> 256 bits y las contraseñas de todas las cuentas.
+> Antes de cualquier despliegue, define `JWT_SECRET` con al menos 256 bits y
+> cambia las contraseñas de todas las cuentas. Si la variable falta, el backend
+> genera una clave aleatoria por ejecución y los tokens se invalidan al
+> reiniciar.
+
+### Docker
+
+```bash
+docker build -t clinica-api .
+# DB_URL debe apuntar a un MySQL accesible desde el contenedor:
+docker run --rm -p 8080:8080 \
+  -e DB_URL='jdbc:mysql://host.docker.internal:3306/clinica_ojitos?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Lima' \
+  -e DB_USER=root -e DB_PASSWORD=tu_clave \
+  -e JWT_SECRET='una-clave-de-al-menos-32-caracteres' \
+  clinica-api
+```
+
+La imagen es multi-stage: compila con Maven y ejecuta el JAR sobre un JRE
+Alpine. Desde la raíz, `docker compose up -d --build` levanta MySQL, API y web
+en orden, esperando el healthcheck de cada uno. El tutorial de producción con
+Coolify está en [`../docs/DESPLIEGUE.md`](../docs/DESPLIEGUE.md).

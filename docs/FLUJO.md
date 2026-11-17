@@ -92,9 +92,11 @@ contra la API real y solo acepta las cuentas de la base de datos: `admin` con
 `admin123`, y `recepcion`, `paciente`, `dra.rostova`, `dr.mendoza`, `dra.torres`
 con `Ojitos2026*`.
 
-Si pones `useMockApi: true` en `src/environments/environment.ts`, el login pasa
-a resolverse en el navegador contra `demo-data.service.ts`, que acepta **las
-mismas credenciales** para que puedas alternar entre ambos modos sin surprises.
+Si pones `useMockApi: true` en `frontend/public/env.js` (o `USE_MOCK_API=true`
+en el contenedor web), el login pasa a resolverse en el navegador contra
+`demo-data.service.ts`, que acepta **las mismas credenciales** para que puedas
+alternar entre ambos modos sin sorpresas. El detalle de las dos capas de
+configuración está en [`ESTRUCTURA.md`](ESTRUCTURA.md).
 
 > **Un fallo de conexión no cuenta como intento.** Si el backend está apagado,
 > el login muestra «Servidor no disponible» en ámbar y **no** consume ninguno de
@@ -597,3 +599,69 @@ Cerrar sesión (`POST /auth/logout`) es responsabilidad del cliente: el token
 es stateless y expira solo al cumplirse su vigencia. Para invalidarlo de
 inmediato haría falta una lista de revocación en memoria, que no es necesaria
 en el alcance del proyecto.
+
+---
+
+## 12. Configuración y despliegue
+
+Todo el recorrido anterior supone que las tres piezas están configuradas y en
+marcha. Ninguna URL, puerto ni credencial vive en el código: se leen de
+variables de entorno.
+
+| Variable | Quién la usa | Para qué |
+|---|---|---|
+| `DB_URL`, `DB_USER`, `DB_PASSWORD` | API | Conexión JDBC a MySQL |
+| `JWT_SECRET`, `JWT_EXPIRATION_MINUTES` | API | Firma y vigencia del token que devuelve el login |
+| `CORS_ALLOWED_ORIGINS` | API | Orígenes permitidos; **vacío** en producción (mismo dominio) |
+| `JPA_DDL_AUTO` | API | `validate` en producción: no modifica tablas clínicas |
+| `API_URL` | Web | Prefijo de la API que consumen los servicios Angular (`/api/v1`) |
+| `API_PROXY_TARGET` | nginx | A dónde reenvía `/api` (`http://clinica-api:8080`) |
+| `USE_MOCK_API` | Web | `true` sirve datos de demostración sin backend |
+
+La lista completa, con valores de ejemplo, está en
+[`../.env.example`](../.env.example).
+
+En producción solo se publica el dominio del frontend. nginx sirve Angular y
+reenvía `/api` al backend por la red interna de Docker, de modo que el
+navegador nunca habla directamente con Spring ni con MySQL:
+
+```
+https://app.midominio.com  ──►  web (nginx)  ──/api──►  api (8080)  ──JDBC──►  mysql (3306)
+```
+
+Tutorial manual, servicio por servicio, con Shared Variables de Coolify,
+carga de los scripts SQL, respaldos y solución de problemas:
+**[`DESPLIEGUE.md`](DESPLIEGUE.md)**.
+
+---
+
+## 13. Cómo comprobar que el flujo sigue completo
+
+Cada recorrido de este documento tiene su prueba automatizada en `testing/`.
+Si un cambio rompe el flujo, la suite dice **qué módulo** falló y **cuánto**
+tardó, en lugar de obligar a recorrer las pantallas a mano.
+
+```bash
+# Contrato API ↔ frontend, sin red ni base de datos
+TEST_MODE=contract node testing/run.mjs
+
+# Integración real: recorre paciente → cita → consulta → tratamiento → cirugía
+node testing/run.mjs
+```
+
+| Sección de este documento | Prueba en `testing/` |
+|---|---|
+| 2. Ingreso | `modules/auth.test.mjs` |
+| 3. Pacientes | `modules/pacientes.test.mjs` |
+| 4. Historial médico | `modules/historial.test.mjs` |
+| 5. Citas | `modules/citas.test.mjs` |
+| 6. Tratamientos y cirugías | `modules/tratamientos.test.mjs` |
+| 7. Médicos | `modules/oftalmologos.test.mjs` |
+| 8. Los cuatro paneles | `modules/dashboards.test.mjs` |
+| 9. Estados de una cita | `modules/citas.test.mjs` |
+| 10. Endpoints por pantalla | `contract/contrato-api.test.mjs` |
+| 11. Auditoría y seguridad | `modules/seguridad.test.mjs` + `modules/admin.test.mjs` |
+| Recorrido de punta a punta | `relations/flujo-completo.test.mjs` |
+
+Guía de modos, variables e interpretación del informe en
+[`../testing/README.md`](../testing/README.md).

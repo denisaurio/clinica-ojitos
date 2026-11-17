@@ -64,8 +64,9 @@ app:
     # NO se publica ninguna clave en el repositorio. Definela por variable de
     # entorno antes de arrancar, con al menos 32 caracteres:
     #     export JWT_SECRET="$(openssl rand -base64 48)"
-    # Si no se define, la aplicación arranca en modo deshabilitado y lo avisa
-    # por consola; no se firmará ningún token.
+    # Si no se define, se genera una clave aleatoria para esa ejecución y se
+    # avisa por consola: sirve en desarrollo, pero los tokens dejan de ser
+    # válidos al reiniciar el backend.
     secret: ${JWT_SECRET:}
     expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
 

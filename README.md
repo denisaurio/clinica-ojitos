@@ -14,7 +14,8 @@ Docente: Jose Fernando Matos Vera
 | **[`README.md`](README.md)** (este) | Qué hace el sistema, arquitectura, instalación, ruta de aprendizaje, API y fases |
 | **[`docs/ESTRUCTURA.md`](docs/ESTRUCTURA.md)** | Qué contiene **cada carpeta**, cómo funciona y cómo se relaciona con las demás |
 | **[`docs/FLUJO.md`](docs/FLUJO.md)** | Cómo se usa el sistema: recorrido por cada pantalla y qué endpoint usa |
-| **[`docs/interaccion-modulos.pdf`](docs/interaccion-modulos.pdf)** | Diagrama visual: cómo se relacionan los módulos entre sí y cómo se comunican las carpetas de backend y frontend |
+| **[`docs/DESPLIEGUE.md`](docs/DESPLIEGUE.md)** | Tutorial manual: VPS con Coolify, MySQL + API + Web y todas las variables en `.env` |
+| **[`testing/README.md`](testing/README.md)** | Suite de pruebas por módulo: modos, variables, informe en ms y relaciones |
 | **[`backend/README.md`](backend/README.md)** | La API: cómo ejecutarla, su arquitectura en capas y dónde mirar primero |
 | **[`frontend/README.md`](frontend/README.md)** | La interfaz: cómo ejecutarla, su estructura y las reglas del código |
 | **[`AGENTS.md`](AGENTS.md)** | Qué puede y qué no puede hacer un agente de IA en este repositorio |
@@ -125,19 +126,33 @@ clinica-ojitos/
 │
 ├── README.md                     ← Estás aquí
 ├── AGENTS.md                     ← Alcance y reglas para agentes de IA
+├── .env.example                  ← Plantilla completa: copia a .env y cambia secretos
 ├── .gitignore
+├── docker-compose.yml            ← Los 3 servicios para probar en local
 │
 ├── docs/                         ← Documentación de navegación interna
 │   ├── ESTRUCTURA.md             Qué contiene cada carpeta y cómo se relaciona
-│   └── FLUJO.md                  Recorrido por cada pantalla y endpoint usado
+│   ├── FLUJO.md                  Recorrido por cada pantalla y endpoint usado
+│   └── DESPLIEGUE.md             Tutorial manual de Coolify/VPS con 3 servicios
+│
+├── testing/                      ← Fase 11: pruebas por módulo y relaciones
+│   ├── run.mjs                   Runner sin dependencias (Node 18+)
+│   ├── README.md                 Modos, variables y cómo leer el informe
+│   ├── contract/                 Contrato estático API ↔ frontend (offline)
+│   ├── lib/                      Config, HTTP, asserts, mapa de módulos e informe
+│   ├── modules/                  Una prueba por módulo funcional
+│   └── relations/                Flujo clínico de punta a punta
 │
 ├── sql/                          ← Entregable de la Fase 5 (base de datos)
 │   ├── 01_esquema.sql            DDL: tablas, FK, índices, vistas y catálogos
 │   ├── 02_datos_prueba.sql       Datos de demostración (idempotente)
 │   ├── 03_consultas.sql          Consultas de evidencia CRUD y JPQL
-│   └── 04_cuentas_iniciales.sql  Cuenta administrador (RF-06)
+│   ├── 04_cuentas_iniciales.sql  Cuenta administrador (RF-06)
+│   ├── 05_sedes.sql              Sedes y universidades del Perú
+│   └── 06_cambiar_rol.sql        Cambio puntual del rol de una cuenta
 │
 ├── backend/                      ← Spring Boot 3.4 + Java 21
+│   ├── Dockerfile                Imagen multi-stage (Maven → JRE Alpine)
 │   ├── pom.xml
 │   ├── src/main/java/com/clinicaojitos/
 │   │   ├── ClinicaOftalmologicaApplication.java
@@ -156,13 +171,17 @@ clinica-ojitos/
 │   │   └── audit/                Aspecto de auditoría
 │   │
 │   ├── src/main/resources/
-│   │   ├── application.yml       Configuración base
+│   │   ├── application.yml       Configuración base, 100 % por variables de entorno
 │   │   ├── application-dev.yml   Perfil de desarrollo local
 │   │   └── db/                   Scripts SQL y datos iniciales
 │   │
 │   └── src/test/java/            Pruebas unitarias JUnit 5 + Mockito
 │
 └── frontend/                     ← Angular 20
+    ├── Dockerfile                Imagen multi-stage (Node → nginx)
+    ├── docker-entrypoint.sh      Regenera env.js en cada arranque
+    ├── nginx.conf.template       Sirve Angular y proxya /api al backend
+    ├── public/env.js             Configuración de ejecución (sin recompilar)
     ├── package.json
     ├── angular.json
     └── src/app/
@@ -217,6 +236,29 @@ clinica-ojitos/
 > $env:JAVA_HOME = 'C:\ruta\a\tu\jdk-21'
 > ```
 
+### Ruta rápida — Todo con Docker
+
+Todo el sistema se configura desde un único `.env`. No hay contraseñas ni URLs
+escritas en el código.
+
+```powershell
+Copy-Item .env.example .env
+# Edita .env: MYSQL_PASSWORD, MYSQL_ROOT_PASSWORD, DB_PASSWORD y JWT_SECRET
+docker compose up -d --build
+```
+
+| Servicio | URL local |
+|---|---|
+| Web | `http://localhost:8081` |
+| API | `http://localhost:8080/api/v1/estado` |
+| MySQL | `localhost:3306` |
+
+Los scripts de `sql/` se cargan solos la primera vez que arranca el volumen.
+Para reiniciar desde cero (destructivo, solo local): `docker compose down -v`.
+
+Si no tienes Docker, sigue los pasos 1 a 3. Para publicarlo en un VPS, el
+tutorial completo está en **[`docs/DESPLIEGUE.md`](docs/DESPLIEGUE.md)**.
+
 ### Paso 1 — Base de datos
 
 Desde **MySQL Workbench** (lo más cómodo: ves cada resultado en tabla):
@@ -246,9 +288,10 @@ mysql -u root -p -e "source sql/05_sedes.sql"
 > Tampoco sirve `Get-Content archivo | mysql`: PowerShell re-codifica la salida
 > y MySQL rechaza el BOM.
 
-Los cuatro scripts son **idempotentes**: ejecutarlos dos veces no rompe nada.
-`03_consultas.sql` no se ejecuta al instalar; contiene consultas de evidencia
-para la sustentación.
+Los cuatro scripts de instalación son **idempotentes**: ejecutarlos dos veces no
+rompe nada. `03_consultas.sql` no se ejecuta al instalar; contiene consultas de
+evidencia para la sustentación. `06_cambiar_rol.sql` solo se usa cuando hay que
+reasignar el rol de una cuenta concreta.
 
 Esto crea la base `clinica_ojitos`: **24 tablas** (12 de negocio y 12
 catálogos), 3 vistas y datos de demostración con 10 pacientes, 5 oftalmólogos,
@@ -256,27 +299,37 @@ catálogos), 3 vistas y datos de demostración con 10 pacientes, 5 oftalmólogos
 
 ### Paso 2 — Backend
 
+Todas las claves de `application.yml` admiten sobreescritura por variable de
+entorno. Para desarrollo local:
+
 ```bash
 cd backend
-export DB_URL=jdbc:mysql://localhost:3306/clinica_ojitos
+export DB_URL='jdbc:mysql://localhost:3306/clinica_ojitos?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Lima'
 export DB_USER=root
 export DB_PASSWORD=tu_clave
+export JWT_SECRET="$(openssl rand -base64 48)"
 mvnw spring-boot:run
 ```
-
-> Si no defines `JWT_SECRET`, el backend genera una clave aleatoria para esa
-> ejecución y te avisa por consola. Todo funciona, pero los tokens dejan de
-> ser válidos al reiniciar. Para una clave estable: `export JWT_SECRET=...`.
 
 En PowerShell:
 
 ```powershell
 cd backend
+$env:DB_URL = 'jdbc:mysql://localhost:3306/clinica_ojitos?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Lima'
 $env:DB_USER = 'root'
 $env:DB_PASSWORD = 'tu_clave'
+$env:JWT_SECRET = (node -e "console.log(require('crypto').randomBytes(48).toString('base64'))")
 
 .\mvnw.cmd spring-boot:run
 ```
+
+> `.env` lo consumen **Docker Compose y Coolify**, no Spring Boot directamente.
+> Si ejecutas Maven a mano, define las variables en la terminal como arriba.
+> La lista completa está en [`.env.example`](.env.example).
+
+> Si no defines `JWT_SECRET`, el backend genera una clave aleatoria para esa
+> ejecución y te avisa por consola. Todo funciona, pero los tokens dejan de
+> ser válidos al reiniciar. Para una clave estable: `export JWT_SECRET=...`.
 
 > **PowerShell no ejecuta comandos de la carpeta actual** salvo que los
 > llames con el prefijo `.\`. Por eso es `.\mvnw.cmd` y no `mvnw.cmd`; en bash
@@ -309,15 +362,23 @@ La aplicación queda disponible en `http://localhost:4200`.
 `/api` hacia `http://localhost:8080`, así que el backend debe estar arriba.
 
 Si necesitas trabajar **sin base de datos ni backend** —para explorar la
-interfaz o preparar una demo sin levantar MySQL— activa el modo demostración:
+interfaz o preparar una demo sin levantar MySQL— activa el modo demostración en
+la configuración de ejecución:
 
-```
-frontend/src/environments/environment.ts  →  useMockApi: true
+```js
+// frontend/public/env.js
+window.__env = window.__env || {
+  useMockApi: true,
+  // ...
+};
 ```
 
 y reinicia `npm start`. En ese modo los servicios devuelven datos de muestra
 desde `core/services/demo-data.service.ts` y el login se resuelve en el
 navegador. Vuelve a `false` para trabajar contra la API.
+
+En Docker o Coolify no se toca el código: se cambia `USE_MOCK_API=true` en las
+variables de entorno del contenedor web y se reinicia.
 
 ### Cuentas de acceso
 
@@ -509,12 +570,14 @@ son BCrypt y por qué ocultar un botón no es autorizar.
 ### Paso 6 — Ejecuta las pruebas (10 min)
 
 ```bash
-cd backend && mvnw test      # 19 pruebas de la capa de servicio
+cd backend && mvnw test              # 25 pruebas de la capa de servicio
+TEST_MODE=contract node testing/run.mjs   # contrato API ↔ frontend
 ```
 
 Las pruebas son la mejor documentación ejecutable: cada una explica una regla
 de negocio con un ejemplo. `CitaServiceTest` es la más informativa porque
-cubre el cruce de horarios, la cancelación y la reprogramación.
+cubre el cruce de horarios, la cancelación y la reprogramación. La suite de
+`testing/` dice además **qué módulo falla y cuántos ms tarda**.
 
 ---
 
@@ -531,6 +594,24 @@ cubre el cruce de horarios, la cancelación y la reprogramación.
 | El login dice *«Servidor no disponible»* | El backend no está arriba | Levántalo en el paso 2 |
 | El login dice *«intento 1 de 3»* | Credenciales incorrectas de verdad | Usa `admin` / `admin123` |
 | La pantalla queda en blanco al entrar | Falta el backend con `useMockApi: false` | Levanta MySQL y el backend |
+| `/api` responde 502 en Docker | La API no está healthy o `API_PROXY_TARGET` está mal | Revisa los logs de `api` y el alias `clinica-api` |
+
+---
+
+## 4.d Despliegue
+
+El sistema está preparado para publicarse en un VPS con **Coolify** usando tres
+servicios: MySQL 8, API Spring Boot y Web Angular + nginx.
+
+- Toda la configuración vive en [`.env.example`](.env.example): al desplegar se
+  copia a las **Shared Variables** de Coolify y no se toca el código.
+- El único dominio público es el del frontend; su nginx reenvía `/api` al
+  backend por la red interna, así que **no hace falta CORS** en producción.
+- El backend arranca con `JPA_DDL_AUTO=validate`: si falta una migración, falla
+  rápido en lugar de modificar tablas clínicas.
+
+Tutorial paso a paso, comandos de SQL, respaldos y solución de problemas:
+**[`docs/DESPLIEGUE.md`](docs/DESPLIEGUE.md)**.
 
 ---
 
@@ -622,8 +703,8 @@ ambas presentes en el prototipo.
 | **8. Frontend** | **Semanas 11–13** | **Angular, componentes, SASS, rutas, formularios** | **Implementado** |
 | 9. Integración | Semanas 13–15 | Consumo de API, autorización, autenticación, errores | Implementado |
 | 10. Tercer incremento (APF3) | Semana 15 | Sistema web integrado | Implementado |
-| 11. Pruebas y mejora | Semanas 16–17 | Comunicación frontend/backend, depuración | En curso |
-| 12. Despliegue | Semana 18 | Servidores web, nube | Pendiente |
+| **11. Pruebas y mejora** | **Semanas 16–17** | **Comunicación frontend/backend, depuración** | **`testing/` (por módulo + relaciones)** |
+| **12. Despliegue** | **Semana 18** | **Servidores web, nube** | **Dockerfiles + `docker-compose.yml` + Coolify** |
 
 ---
 
@@ -641,11 +722,44 @@ ambas presentes en el prototipo.
 
 ## 9. Pruebas
 
+### 9.1 Suite por módulo (`testing/`)
+
+Comprueba cada módulo de forma independiente, las relaciones entre módulos y el
+contrato entre la API y el frontend. No necesita `npm install`: solo Node 18+.
+
+```bash
+# Contrato estático, sin red ni base de datos
+TEST_MODE=contract node testing/run.mjs
+
+# Contrato + integración (requiere backend y MySQL arriba)
+node testing/run.mjs
+```
+
+En PowerShell:
+
+```powershell
+$env:TEST_MODE = 'contract'
+node testing/run.mjs
+```
+
+El informe muestra **milisegundos por módulo**, pruebas aprobadas / total,
+**fallos en rojo**, omisiones con su motivo y el **mapa de relaciones** entre
+módulos. Código de salida `1` si algo falla. Detalle completo en
+[`testing/README.md`](testing/README.md).
+
+| Grupo | Qué cubre |
+|---|---|
+| `contract` | `.env.example`, configuración Spring, runtime de Angular, DTOs y servicios |
+| Módulos | `estado`, `auth`, `catalogo`, `pacientes`, `oftalmologos`, `historial`, `citas`, `tratamientos`, `dashboards`, `admin`, `seguridad` |
+| Relaciones | Paciente → cita → consulta → tratamiento → cirugía → historial → panel |
+
+### 9.2 Pruebas unitarias
+
 ```bash
 # Backend — pruebas unitarias de la capa de servicio
 cd backend && mvnw test
 
-# Frontend — pruebas unitarias
+# Frontend — pruebas unitarias (requiere Chrome)
 cd frontend && npm test
 ```
 

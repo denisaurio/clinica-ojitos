@@ -13,13 +13,17 @@ proyecto). Este documento es la referencia de navegación interna.
 ```
 clinica-ojitos/
 │
-├── sql/          La base de datos: el modelo completo, en 4 scripts
-├── backend/      La API REST en Spring Boot
-├── frontend/     La interfaz en Angular
+├── sql/             La base de datos: el modelo completo, en 6 scripts
+├── backend/         La API REST en Spring Boot (con Dockerfile)
+├── frontend/        La interfaz en Angular (con Dockerfile + nginx)
+├── testing/         Pruebas por módulo y de relaciones (Node, sin dependencias)
+├── docs/            Navegación interna y tutorial de despliegue
 │
-├── README.md     Qué hace el sistema y cómo se levanta
-├── AGENTS.md     Qué puede y qué no puede hacer un agente aquí
-└── .gitignore    Lo que no se versiona
+├── docker-compose.yml  Los 3 servicios para probar en local
+├── .env.example        Plantilla completa de configuración
+├── README.md           Qué hace el sistema y cómo se levanta
+├── AGENTS.md           Qué puede y qué no puede hacer un agente aquí
+└── .gitignore          Lo que no se versiona
 ```
 
 Las tres carpetas de código son **independientes entre sí**. No se importan
@@ -28,6 +32,8 @@ tipos ni clases de una a otra: se comunican por HTTP.
 ```
 frontend  ──HTTP/JSON + JWT──►  backend  ──JDBC──►  MySQL
 (Angular)                        (Spring)            (sql/)
+    ▲                              ▲
+    └──────── testing/ ────────────┘   (verifica contrato y cada módulo)
 ```
 
 **Por qué los datos viven en `sql/` y no en el backend.** El esquema se crea
@@ -40,7 +46,7 @@ comandos. El backend solo *valida* que el esquema coincida
 
 # 1. `sql/` — La base de datos
 
-Cuatro scripts que se ejecutan **en orden**. Los tres primeros son idempotentes:
+Seis scripts. Los de instalación se ejecutan **en orden** y son idempotentes:
 se pueden volver a ejecutar sin romper nada.
 
 | Script | Qué hace | Cuándo se ejecuta |
@@ -50,18 +56,21 @@ se pueden volver a ejecutar sin romper nada.
 | `03_consultas.sql` | Consultas de evidencia para la sustentación | Para documentar |
 | `04_cuentas_iniciales.sql` | Crea la cuenta `admin` / `admin123` y las de recepción y paciente | Después de los datos |
 | `05_sedes.sql` | Catálogo de 37 sedes: universidades y centros del Perú | Con los anteriores |
+| `06_cambiar_rol.sql` | Reasigna el rol de una cuenta concreta | Solo cuando se necesita |
 
 ```bash
 # En bash o Git Bash:
 mysql -u root -p < sql/01_esquema.sql
 mysql -u root -p < sql/02_datos_prueba.sql
 mysql -u root -p < sql/04_cuentas_iniciales.sql
+mysql -u root -p < sql/05_sedes.sql
 
 # En PowerShell (el de VS Code e IntelliJ) la redirección `<` NO existe.
 # Usa el comando source:
 mysql -u root -p -e "source sql/01_esquema.sql"
 mysql -u root -p -e "source sql/02_datos_prueba.sql"
 mysql -u root -p -e "source sql/04_cuentas_iniciales.sql"
+mysql -u root -p -e "source sql/05_sedes.sql"
 ```
 
 Desde MySQL Workbench también funciona: **File → Open SQL Script** y el botón ⚡.
@@ -120,6 +129,7 @@ inyección de dependencias por constructor.
 
 ```
 backend/
+├── Dockerfile                    Imagen multi-stage (Maven → JRE Alpine)
 ├── pom.xml
 ├── mvnw / mvnw.cmd / .mvn/       Maven Wrapper (no requiere Maven instalado)
 └── src/
@@ -137,10 +147,15 @@ backend/
     │   │   ├── exception/         Excepciones y manejador global
     │   │   └── audit/             Bitácora de auditoría
     │   └── resources/
-    │       ├── application.yml
-    │       └── application-dev.yml
-    └── test/java/...              3 clases de pruebas
+    │       ├── application.yml       Base, todo por variables de entorno
+    │       └── application-dev.yml   Perfil de desarrollo local
+    └── test/java/...              4 clases · 25 pruebas unitarias
 ```
+
+Todas las claves de `application.yml` (`DB_URL`, `JWT_SECRET`, niveles de log,
+tamaños de multipart, etc.) tienen su valor por defecto **o** su variable de
+entorno equivalente. La lista completa está en
+[`../.env.example`](../.env.example). Ningún secreto se versiona.
 
 ## `domain/entity/` — El modelo
 
@@ -298,6 +313,10 @@ confirma su escritura aunque la petición termine con error.
 `DatosIniciales` (verifica que los catálogos estén cargados y avisa por consola
 si falta alguno — es la pista principal cuando el arranque falla).
 
+La zona horaria no está escrita en el código: la propiedad de Hibernate
+`jdbc.time_zone` se llena con `APP_TIMEZONE`. Si `TZ`, `APP_TIMEZONE` y el
+`serverTimezone` del `DB_URL` no coinciden, las citas salen corridas.
+
 ## `audit/` — La bitácora (RNF-01)
 
 `@Auditado` marca un método; `AuditoriaAspecto` intercepta y escribe en la tabla
@@ -314,10 +333,13 @@ los componentes son propios para que coincidan con el prototipo.
 ```
 frontend/
 ├── package.json / angular.json / proxy.conf.json
+├── Dockerfile / nginx.conf.template / docker-entrypoint.sh
+├── public/
+│   └── env.js           Configuración de ejecución (la sobrescribe el contenedor)
 └── src/
     ├── main.ts / index.html / styles.scss
     ├── styles/          Variables SCSS del design system
-    ├── environments/    environment.ts (dev) y environment.prod.ts
+    ├── environments/    Valores por defecto (dev, prod) y runtime-env.ts
     └── app/
         ├── app.config.ts / app.routes.ts / app.ts
         ├── core/        Lo que toca a la API
@@ -353,11 +375,18 @@ $radius:        10px;
 servicios de aquí, y solo los servicios conocen la API. Por eso cambiar de
 backend o de URL es tocar un solo archivo.
 
-`environment.ts` tiene `useMockApi: false`: las pantallas consultan la API real
-y el panel del administrador refleja los conteos vivos de la base de datos. El
-`proxy.conf.json` desvía `/api` a `localhost:8080`. Si necesitas trabajar sin
-backend, pon el flag en `true` y los servicios devolverán datos de
-demostración.
+La configuración tiene dos capas:
+
+| Archivo | Papel |
+|---|---|
+| `src/environments/environment.ts` | Valores **por defecto** al compilar (`apiUrl: '/api/v1'`, `useMockApi: false`) |
+| `src/environments/runtime-env.ts` | Fusiona los valores por defecto con `window.__env` si existe |
+| `public/env.js` | Configuración de **ejecución**; en Docker la regenera el entrypoint desde las variables de entorno |
+
+Así, cambiar `API_URL`, `APP_NAME` o `USE_MOCK_API` en el contenedor **no exige
+recompilar Angular**: se reinicia el servicio y `env.js` se reescribe. El
+`proxy.conf.json` solo aplica a `npm start` y desvía `/api` a
+`localhost:8080`; en producción lo hace nginx con `API_PROXY_TARGET`.
 
 ## `shared/` — Lo reutilizable
 
@@ -419,7 +448,65 @@ paquetes que Angular carga solo cuando se necesitan.
 
 ---
 
-# 4. Cómo se encadenan las tres carpetas
+# 4. `testing/` — Pruebas por módulo y relaciones
+
+Verifica el sistema **módulo por módulo**, sin framework y **sin dependencias
+de npm**: solo Node 18 o superior. Es la herramienta para responder «si la web
+falla, ¿dónde falla?».
+
+```
+testing/
+├── run.mjs                    Runner: orden, contexto compartido, limpieza e informe
+├── README.md                  Guía de uso, variables y lectura del informe
+├── contract/
+│   └── contrato-api.test.mjs  13 comprobaciones estáticas (sin red)
+├── lib/
+│   ├── config.mjs             Lee .env y variables TEST_*
+│   ├── http.mjs               Cliente fetch con JWT y errores tipados
+│   ├── assert.mjs             asegurar, igual, incluye, omitir…
+│   ├── util.mjs               Fechas, documentos TEST y milisegundos
+│   ├── module-map.mjs         Módulos funcionales y sus relaciones
+│   └── report.mjs             Tabla, fallos en rojo y resumen
+├── modules/                   Una prueba por módulo funcional
+│   ├── estado / auth / catalogo
+│   ├── pacientes / oftalmologos / historial
+│   ├── citas / tratamientos / dashboards
+│   └── admin / seguridad
+└── relations/
+    └── flujo-completo.test.mjs  Paciente → cita → consulta → tratamiento → cirugía
+```
+
+Cómo se ejecuta:
+
+```bash
+# Solo contrato: no necesita MySQL ni backend
+TEST_MODE=contract node testing/run.mjs
+
+# Contrato + integración: requiere la API ACTIVA
+node testing/run.mjs
+```
+
+Qué imprime:
+
+| Columna | Significado |
+|---|---|
+| `MÓDULO` | Nombre del módulo funcional |
+| `TIEMPO` | Milisegundos que tardó el módulo completo |
+| `PRUEBAS` | Aprobadas / total (las omitidas cuentan) |
+| `ESTADO` | `OK` verde, `PARCIAL` amarillo, **`FALLOS` rojo** |
+
+Al final muestra el **mapa de relaciones** (`citas → pacientes, oftalmologos,
+catalogo, dashboards`) y el detalle de cada fallo. Código de salida `1` si algo
+falla.
+
+Los datos de prueba llevan el prefijo `TEST`; las citas se cancelan y los
+pacientes se dan de baja lógica al terminar. Con `TEST_WRITES=false` la suite
+solo lee y omite las escrituras. Detalle completo en
+[`../testing/README.md`](../testing/README.md).
+
+---
+
+# 5. Cómo se encadenan las tres carpetas
 
 Un ejemplo completo: **el oftalmólogo registra una consulta**.
 
@@ -454,7 +541,7 @@ lo que permite que dos peticiones simultáneas dupliquen un paciente.
 
 ---
 
-# 5. Dónde tocar según la tarea
+# 6. Dónde tocar según la tarea
 
 | Quiero cambiar… | Voy a… |
 |---|---|
@@ -463,10 +550,14 @@ lo que permite que dos peticiones simultáneas dupliquen un paciente.
 | Un endpoint nuevo | `backend/.../controller/` + `service/` + `repository/` |
 | Una regla de negocio | `backend/.../domain/service/` (y su excepción) |
 | El formato de una respuesta JSON | `backend/.../domain/dto/` |
-| Una tabla o una columna | `sql/04_<nombre>.sql` (nunca editar un script ya ejecutado) |
+| Una tabla o una columna | `sql/07_<nombre>.sql` (nunca editar un script ya ejecutado) |
 | Un dato de demostración | `sql/02_datos_prueba.sql` |
 | El texto de un error | El mensaje dentro de la excepción en `exception/` |
 | La navegación lateral | `frontend/src/app/shared/layout/sidebar.ts` |
+| Una variable de configuración | `.env.example` + `application.yml` + `runtime-env.ts` |
+| Una prueba de módulo | `testing/modules/<módulo>.test.mjs` |
+| El informe de pruebas | `testing/lib/report.mjs` y `module-map.mjs` |
+| El despliegue | `Dockerfile` del servicio, `docker-compose.yml`, `docs/DESPLIEGUE.md` |
 
 Si cambias algo público —un endpoint, una ruta, un token— actualiza el
 `README.md`. Es lo que pide el paso 6 del flujo de trabajo de `AGENTS.md`.
