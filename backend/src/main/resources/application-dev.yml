@@ -9,22 +9,22 @@ spring:
     hibernate:
       # En desarrollo se permite a Hibernate crear tablas faltantes a partir de
       # las entidades. En producción se usa `validate` (ver application.yml).
-      ddl-auto: update
-    show-sql: false
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    show-sql: ${JPA_SHOW_SQL:false}
     properties:
       hibernate:
         format_sql: true
 
   datasource:
     hikari:
-      maximum-pool-size: 5
+      maximum-pool-size: ${DB_POOL_MAX:5}
 
 logging:
   level:
-    com.clinicaojitos: DEBUG
-    org.hibernate.SQL: DEBUG
+    com.clinicaojitos: ${LOG_LEVEL_APP:DEBUG}
+    org.hibernate.SQL: ${LOG_LEVEL_SQL:DEBUG}
     org.springframework.web: INFO
 
 app:
   jwt:
-    expiration-minutes: 480
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:480}

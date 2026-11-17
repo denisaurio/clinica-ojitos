@@ -1,13 +1,19 @@
 # =============================================================================
 #  Clínica Oftalmológica Ojitos — Configuración base del backend
 #  Las credenciales NUNCA se versionan: se leen del entorno.
+#  Todas las claves admiten sobreescritura por variable de entorno para que el
+#  despliegue (Coolify/VPS) se configure al 100 % desde Shared Variables.
 # =============================================================================
+
+server:
+  port: ${SERVER_PORT:8080}
 
 spring:
   application:
     name: clinica-ojitos-backend
     profiles:
-      default: dev
+      # Perfil activo por defecto. En producción: SPRING_PROFILES_ACTIVE=prod.
+      default: ${SPRING_PROFILES_ACTIVE:dev}
 
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/clinica_ojitos?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Lima&createDatabaseIfNotExist=true}
@@ -15,22 +21,22 @@ spring:
     password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
-      maximum-pool-size: 10
-      minimum-idle: 2
-      connection-timeout: 30000
-      pool-name: ClinicaOjitosPool
+      maximum-pool-size: ${DB_POOL_MAX:10}
+      minimum-idle: ${DB_POOL_MIN:2}
+      connection-timeout: ${DB_CONNECTION_TIMEOUT_MS:30000}
+      pool-name: ${DB_POOL_NAME:ClinicaOjitosPool}
 
   jpa:
-    # El esquema lo crea sql/01_esquema.sql. El backend solo valida.
+    # El esquema lo crea sql/01_esquema.sql. En producción, `validate`.
     hibernate:
-      ddl-auto: validate
+      ddl-auto: ${JPA_DDL_AUTO:validate}
     open-in-view: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: false
-        jdbc.time_zone: America/Lima
-    show-sql: false
+        jdbc.time_zone: ${APP_TIMEZONE:America/Lima}
+    show-sql: ${JPA_SHOW_SQL:false}
 
   jackson:
     default-property-inclusion: non_null
@@ -40,8 +46,8 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 25MB
+      max-file-size: ${MULTIPART_MAX_FILE:10MB}
+      max-request-size: ${MULTIPART_MAX_REQUEST:25MB}
 
   mvc:
     throw-exception-if-no-handler-found: true
@@ -63,6 +69,12 @@ app:
     secret: ${JWT_SECRET:}
     expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
 
+  cors:
+    # Orígenes permitidos, separados por coma. En producción con un solo
+    # dominio (nginx del frontend proxya /api) no hace falta abrir CORS.
+    # Ejemplo: https://app.midominio.com,http://localhost:4200
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}
+
 # --- Documentación ----------------------------------------------------------
 springdoc:
   swagger-ui:
@@ -75,9 +87,9 @@ springdoc:
 # --- Logging ----------------------------------------------------------------
 logging:
   level:
-    root: INFO
-    com.clinicaojitos: DEBUG
-    org.springframework.security: WARN
-    org.hibernate.SQL: WARN
+    root: ${LOG_LEVEL_ROOT:INFO}
+    com.clinicaojitos: ${LOG_LEVEL_APP:DEBUG}
+    org.springframework.security: ${LOG_LEVEL_SECURITY:WARN}
+    org.hibernate.SQL: ${LOG_LEVEL_SQL:WARN}
   pattern:
     console: "%d{HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"

@@ -1,3 +1,5 @@
+import { leerRuntimeEnv } from './runtime-env';
+
 /**
  * Entorno de desarrollo.
  *
@@ -9,13 +11,14 @@
  * administrador muestra los conteos vivos de la base de datos.
  * Vuelve a `true` solo si necesitas trabajar sin MySQL ni backend.
  *
- * En `ng build` (configuración `production`) Angular sustituye este fichero por
+ * Los valores reales se leen de `public/env.js` (`window.__env`). En `ng build`
+ * (configuración `production`) Angular sustituye este fichero por
  * `environment.prod.ts`.
  */
-export const environment = {
+export const environment = leerRuntimeEnv({
   production: false,
   useMockApi: false,
   apiUrl: '/api/v1',
   appName: 'Ojitos',
   appTagline: 'Gestión Clínica',
-};
+});
