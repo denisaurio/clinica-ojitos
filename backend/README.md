@@ -41,7 +41,7 @@ Queda disponible en `http://localhost:8080`:
 | `/v3/api-docs` | Especificación OpenAPI en JSON |
 
 ```bash
-mvnw test              # 25 pruebas unitarias de la capa de servicio
+mvnw test              # 53 pruebas JUnit (25 unitarias + 28 de API con H2)
 mvnw clean test        # compila desde cero y ejecuta las pruebas
 ```
 
@@ -138,11 +138,14 @@ intraocular es `DECIMAL(5,2)` —un decimal exacto en mmHg— y Hibernate rechaz
 el arranque si el tipo Java no coincide. El `Mapeador` lo convierte a `Double`
 solo al salir hacia la API.
 
-**5. Las pruebas** — `src/test/java/`
+**5. Las pruebas** — `../testing/backend/java/`
 
 Son la mejor documentación ejecutable: cada prueba explica una regla de
 negocio con un ejemplo. `CitaServiceTest` es la más informativa porque cubre
-el cruce de horarios, la cancelación y la reprogramación.
+el cruce de horarios, la cancelación y la reprogramación. El `pom.xml` apunta
+`testSourceDirectory` a esa carpeta, así que `mvnw test` las descubre sin
+configuración extra. Las de `integracion/` usan Spring + H2 y no necesitan
+MySQL; el detalle está en [`../testing/README.md`](../testing/README.md).
 
 ---
 

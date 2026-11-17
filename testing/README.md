@@ -211,7 +211,9 @@ Docker, y el que debe pasar siempre antes de un commit.
 
 ```
 testing/
-├── run.mjs                         # runner: orden, contexto, limpieza, informe
+├── run.mjs                         # runner HTTP: orden, contexto, limpieza, informe
+├── run-tests.mjs                   # runner Maven: tests Java + build + reporte HTML
+├── modulos.json                    # módulos para run-tests.mjs y sus relaciones
 ├── README.md
 ├── contract/
 │   └── contrato-api.test.mjs       # comprobaciones estáticas offline
@@ -224,8 +226,14 @@ testing/
 │   └── report.mjs                  # tabla, fallos en rojo y resumen
 ├── modules/
 │   └── *.test.mjs                  # una prueba por módulo funcional
-└── relations/
-    └── flujo-completo.test.mjs     # relación punta a punta entre módulos
+├── relations/
+│   └── flujo-completo.test.mjs     # relación punta a punta entre módulos
+└── backend/java/                   # pruebas JUnit de Spring (las ejecuta Maven)
+    └── com/clinicaojitos/
+        ├── domain/service/         # unitarias de la capa de servicio
+        ├── integracion/            # API con Spring + H2, sin MySQL
+        ├── relaciones/             # mapa de dependencias entre servicios
+        └── security/               # JWT: firma, expiración, manipulación
 ```
 
 Cada módulo exporta:
@@ -248,7 +256,55 @@ motivo, no como aprobada.
 
 ---
 
-## 8. Limitaciones conocidas
+## 8. Pruebas JUnit dentro de `testing/backend/java`
+
+La suite HTTP de `run.mjs` comprueba el sistema desde fuera. En paralelo hay
+**53 pruebas JUnit** que se ejecutan dentro de la JVM, sin MySQL:
+
+```bash
+cd backend
+./mvnw test          # 25 unitarias + 28 de integración = 53
+```
+
+| Grupo | Clases | Qué comprueba |
+|---|---|---|
+| `domain/service/` | 4 | Reglas de negocio con Mockito: citas, pacientes, oftalmólogos, aislamiento del paciente |
+| `integracion/` | 9 | La API completa con `MockMvc` y H2: estado, login, catálogos, citas, historial, tratamientos, paneles |
+| `relaciones/` | 1 | Qué servicio depende de qué otro y que no haya ciclos |
+| `security/` | 1 | Firma, expiración y manipulación del JWT |
+
+El `pom.xml` apunta `testSourceDirectory` a `../testing/backend/java`, así que
+las pruebas viven en esta carpeta pero se lanzan con Maven. H2 solo existe en
+el *scope* `test`: la aplicación nunca usa H2 en ejecución.
+
+También hay un segundo runner que ejecuta esos tests por módulo, agrupa los
+resultados y genera un reporte HTML:
+
+```bash
+node testing/run-tests.mjs                  # tests Java + build del frontend
+node testing/run-tests.mjs --modulo citas   # solo un módulo
+node testing/run-tests.mjs --solo-reporte   # relee los XML de Surefire
+```
+
+Genera `testing/reporte/index.html` y `testing/reporte/resultados.json` con
+milisegundos por módulo, estado rojo/verde y posibles causas según
+`testing/modulos.json`.
+
+### Qué runner usar
+
+| Necesitas… | Runner |
+|---|---|
+| Comprobar el contrato sin backend ni MySQL | `node testing/run.mjs` con `TEST_MODE=contract` |
+| Probar la API real de punta a punta | `node testing/run.mjs` |
+| Ejecutar unitarias + integración Java | `node testing/run-tests.mjs` o `mvnw test` |
+| Un reporte HTML por módulo | `node testing/run-tests.mjs` |
+
+Los dos runners son complementarios: `run-tests.mjs` mira dentro de la JVM;
+`run.mjs` mira el sistema desplegado, como lo vería el navegador.
+
+---
+
+## 9. Limitaciones conocidas
 
 - La integración **no se puede ejecutar** sin MySQL y el backend levantados; en
   este repositorio eso se verifica en la máquina de desarrollo o en el VPS.

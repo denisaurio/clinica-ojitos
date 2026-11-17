@@ -1,0 +1,27 @@
+{
+  "_comentario": "Mapa de módulos del sistema. 'depende' = módulos que este necesita para funcionar. Si un módulo sale en rojo, el reporte marca como 'posible causa' a los de los que depende. Mantener sincronizado con MapaDependenciasTest.",
+  "modulos": [
+    { "id": "catalogo",     "nombre": "Catálogos",            "rf": "—",     "depende": [],
+      "tests": ["CatalogoApiTest"] },
+    { "id": "auth",         "nombre": "Autenticación y JWT",  "rf": "RF-06", "depende": [],
+      "tests": ["JwtServiceTest", "AuthApiTest"] },
+    { "id": "pacientes",    "nombre": "Pacientes",            "rf": "RF-01", "depende": ["auth"],
+      "tests": ["PacienteServiceTest", "AutorizacionPacienteServiceTest", "PacientesApiTest"] },
+    { "id": "oftalmologos", "nombre": "Oftalmólogos",         "rf": "RF-05", "depende": ["catalogo", "auth"],
+      "tests": ["OftalmologoServiceTest", "OftalmologosApiTest"] },
+    { "id": "citas",        "nombre": "Citas",                "rf": "RF-03", "depende": ["pacientes", "oftalmologos"],
+      "tests": ["CitaServiceTest", "CitasApiTest"] },
+    { "id": "historial",    "nombre": "Historial clínico",    "rf": "RF-02", "depende": ["auth", "pacientes"],
+      "tests": ["HistorialApiTest"] },
+    { "id": "tratamientos", "nombre": "Tratamientos y cirugías", "rf": "RF-04", "depende": ["auth", "pacientes"],
+      "tests": ["TratamientosApiTest"] },
+    { "id": "dashboard",    "nombre": "Paneles y auditoría",  "rf": "—",     "depende": ["pacientes", "citas", "historial", "tratamientos", "auth"],
+      "tests": ["DashboardApiTest"] },
+    { "id": "relaciones",   "nombre": "Relaciones entre servicios", "rf": "—", "depende": [],
+      "tests": ["MapaDependenciasTest"] }
+  ],
+  "frontend": {
+    "id": "frontend", "nombre": "Frontend Angular (build)", "depende": [],
+    "comando": ["npm", "run", "build", "--", "--configuration", "production"]
+  }
+}

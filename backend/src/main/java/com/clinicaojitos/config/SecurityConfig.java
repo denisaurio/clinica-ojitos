@@ -38,7 +38,11 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final Environment environment;
 
-    /** Rutas públicas: el login, la recuperación de clave y la verificación de estado. */
+    /**
+     * Rutas públicas: el login, la recuperación de clave y la verificación de
+     * estado. Los archivos de exámenes ({@code /uploads/**}) NO son públicos:
+     * exigen sesión, porque pueden contener datos clínicos (RNF-01).
+     */
     private static final String[] PUBLICOS = {
             "/api/v1/auth/login",
             "/api/v1/auth/refresh",
@@ -48,7 +52,6 @@ public class SecurityConfig {
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
-            "/uploads/**",
             "/actuator/health"
     };
 

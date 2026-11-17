@@ -149,8 +149,13 @@ backend/
     │   └── resources/
     │       ├── application.yml       Base, todo por variables de entorno
     │       └── application-dev.yml   Perfil de desarrollo local
-    └── test/java/...              4 clases · 25 pruebas unitarias
+    └── (las pruebas JUnit viven en ../testing/backend/java)
 ```
+
+El `pom.xml` apunta `testSourceDirectory` a `../testing/backend/java`: las
+pruebas están fuera de `backend/` para que todo lo que se ejecuta viva en
+`testing/`. Son **53**: 25 unitarias con Mockito y 28 de integración con
+Spring + H2 (sin MySQL).
 
 Todas las claves de `application.yml` (`DB_URL`, `JWT_SECRET`, niveles de log,
 tamaños de multipart, etc.) tienen su valor por defecto **o** su variable de
@@ -456,7 +461,9 @@ falla, ¿dónde falla?».
 
 ```
 testing/
-├── run.mjs                    Runner: orden, contexto compartido, limpieza e informe
+├── run.mjs                    Runner HTTP: orden, contexto, limpieza e informe
+├── run-tests.mjs              Runner Maven: JUnit + build + reporte HTML
+├── modulos.json               Módulos y relaciones que usa run-tests.mjs
 ├── README.md                  Guía de uso, variables y lectura del informe
 ├── contract/
 │   └── contrato-api.test.mjs  13 comprobaciones estáticas (sin red)
@@ -467,13 +474,19 @@ testing/
 │   ├── util.mjs               Fechas, documentos TEST y milisegundos
 │   ├── module-map.mjs         Módulos funcionales y sus relaciones
 │   └── report.mjs             Tabla, fallos en rojo y resumen
-├── modules/                   Una prueba por módulo funcional
+├── modules/                   Una prueba HTTP por módulo funcional
 │   ├── estado / auth / catalogo
 │   ├── pacientes / oftalmologos / historial
 │   ├── citas / tratamientos / dashboards
 │   └── admin / seguridad
-└── relations/
-    └── flujo-completo.test.mjs  Paciente → cita → consulta → tratamiento → cirugía
+├── relations/
+│   └── flujo-completo.test.mjs  Paciente → cita → consulta → tratamiento → cirugía
+└── backend/java/              Pruebas JUnit que ejecuta Maven (53)
+    └── com/clinicaojitos/
+        ├── domain/service/    Unitarias con Mockito
+        ├── integracion/       API completa con Spring + H2
+        ├── relaciones/        Dependencias entre servicios
+        └── security/          Firma y expiración del JWT
 ```
 
 Cómo se ejecuta:
@@ -482,9 +495,16 @@ Cómo se ejecuta:
 # Solo contrato: no necesita MySQL ni backend
 TEST_MODE=contract node testing/run.mjs
 
-# Contrato + integración: requiere la API ACTIVA
+# Contrato + integración HTTP: requiere la API ACTIVA
 node testing/run.mjs
+
+# Pruebas JUnit (desde la JVM) + build + reporte HTML
+node testing/run-tests.mjs
 ```
+
+Los dos runners son complementarios: `run-tests.mjs` ejecuta las 53 pruebas
+JUnit de `testing/backend/java` con Maven y agrupa el resultado por módulo;
+`run.mjs` prueba el sistema desde fuera, como lo haría el navegador.
 
 Qué imprime:
 
@@ -555,8 +575,9 @@ lo que permite que dos peticiones simultáneas dupliquen un paciente.
 | El texto de un error | El mensaje dentro de la excepción en `exception/` |
 | La navegación lateral | `frontend/src/app/shared/layout/sidebar.ts` |
 | Una variable de configuración | `.env.example` + `application.yml` + `runtime-env.ts` |
-| Una prueba de módulo | `testing/modules/<módulo>.test.mjs` |
-| El informe de pruebas | `testing/lib/report.mjs` y `module-map.mjs` |
+| Una prueba HTTP de módulo | `testing/modules/<módulo>.test.mjs` |
+| Una prueba JUnit de la API | `testing/backend/java/.../integracion/` |
+| El informe de pruebas | `testing/lib/report.mjs`, `module-map.mjs` y `modulos.json` |
 | El despliegue | `Dockerfile` del servicio, `docker-compose.yml`, `docs/DESPLIEGUE.md` |
 
 Si cambias algo público —un endpoint, una ruta, un token— actualiza el

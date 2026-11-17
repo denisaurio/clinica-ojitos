@@ -647,6 +647,9 @@ TEST_MODE=contract node testing/run.mjs
 
 # Integración real: recorre paciente → cita → consulta → tratamiento → cirugía
 node testing/run.mjs
+
+# Pruebas JUnit con H2 + build + reporte HTML (no necesita MySQL)
+node testing/run-tests.mjs
 ```
 
 | Sección de este documento | Prueba en `testing/` |

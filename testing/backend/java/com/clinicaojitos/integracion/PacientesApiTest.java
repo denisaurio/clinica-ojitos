@@ -1,0 +1,27 @@
+package com.clinicaojitos.integracion;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.security.test.context.support.WithMockUser;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+/** Módulo PACIENTES (RF-01) — API protegida por Spring Security + roles. */
+@DisplayName("API PACIENTES (RF-01)")
+class PacientesApiTest extends BaseIntegracionTest {
+
+    @Test
+    @DisplayName("Sin token: 401")
+    void sinToken() throws Exception {
+        mvc.perform(get("/api/v1/pacientes")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(roles = "PACIENTE")
+    @DisplayName("Un PACIENTE no puede listar pacientes: 403")
+    void pacienteNoLista() throws Exception {
+        mvc.perform(get("/api/v1/pacientes")).andExpect(status().isForbidden());
+    }
+}

@@ -136,12 +136,15 @@ clinica-ojitos/
 │   └── DESPLIEGUE.md             Tutorial manual de Coolify/VPS con 3 servicios
 │
 ├── testing/                      ← Fase 11: pruebas por módulo y relaciones
-│   ├── run.mjs                   Runner sin dependencias (Node 18+)
+│   ├── run.mjs                   Runner HTTP sin dependencias (Node 18+)
+│   ├── run-tests.mjs             Runner Maven: JUnit + build + reporte HTML
+│   ├── modulos.json              Mapa de módulos para run-tests.mjs
 │   ├── README.md                 Modos, variables y cómo leer el informe
 │   ├── contract/                 Contrato estático API ↔ frontend (offline)
 │   ├── lib/                      Config, HTTP, asserts, mapa de módulos e informe
 │   ├── modules/                  Una prueba por módulo funcional
-│   └── relations/                Flujo clínico de punta a punta
+│   ├── relations/                Flujo clínico de punta a punta
+│   └── backend/java/             Pruebas JUnit: unitarias, API con H2 y relaciones
 │
 ├── sql/                          ← Entregable de la Fase 5 (base de datos)
 │   ├── 01_esquema.sql            DDL: tablas, FK, índices, vistas y catálogos
@@ -175,7 +178,7 @@ clinica-ojitos/
 │   │   ├── application-dev.yml   Perfil de desarrollo local
 │   │   └── db/                   Scripts SQL y datos iniciales
 │   │
-│   └── src/test/java/            Pruebas unitarias JUnit 5 + Mockito
+│   └── (las pruebas JUnit viven en testing/backend/java)
 │
 └── frontend/                     ← Angular 20
     ├── Dockerfile                Imagen multi-stage (Node → nginx)
@@ -570,7 +573,7 @@ son BCrypt y por qué ocultar un botón no es autorizar.
 ### Paso 6 — Ejecuta las pruebas (10 min)
 
 ```bash
-cd backend && mvnw test              # 25 pruebas de la capa de servicio
+cd backend && mvnw test              # 53 pruebas JUnit (25 unitarias + 28 de API)
 TEST_MODE=contract node testing/run.mjs   # contrato API ↔ frontend
 ```
 
@@ -752,20 +755,26 @@ módulos. Código de salida `1` si algo falla. Detalle completo en
 | `contract` | `.env.example`, configuración Spring, runtime de Angular, DTOs y servicios |
 | Módulos | `estado`, `auth`, `catalogo`, `pacientes`, `oftalmologos`, `historial`, `citas`, `tratamientos`, `dashboards`, `admin`, `seguridad` |
 | Relaciones | Paciente → cita → consulta → tratamiento → cirugía → historial → panel |
+| JUnit | 25 unitarias + 28 de API con H2 (ver 9.2) |
 
-### 9.2 Pruebas unitarias
+### 9.2 Pruebas JUnit (en `testing/backend/java`)
 
 ```bash
-# Backend — pruebas unitarias de la capa de servicio
+# Backend — 25 unitarias + 28 de integración con H2 = 53
 cd backend && mvnw test
+
+# Reporte por módulo en HTML, agrupando esos mismos tests
+node testing/run-tests.mjs
 
 # Frontend — pruebas unitarias (requiere Chrome)
 cd frontend && npm test
 ```
 
-Las pruebas del backend cubren el camino feliz y las validaciones de negocio de
-cada requisito: duplicidad de documento, cruce de horario, unicidad de
-colegiatura, cancelación y reprogramación de citas.
+Las pruebas cubren el camino feliz y las validaciones de negocio de cada
+requisito: duplicidad de documento, cruce de horario, unicidad de colegiatura,
+cancelación y reprogramación de citas. Las de `integracion/` levantan la API
+completa con Spring y **H2 en memoria**, así que no necesitan MySQL; el
+`pom.xml` apunta a `testing/backend/java` para que todas vivan en esta carpeta.
 
 ---
 
