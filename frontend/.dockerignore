@@ -1,0 +1,14 @@
+# Dependencias y artefactos: se regeneran dentro de la imagen.
+node_modules/
+dist/
+.angular/
+tmp/
+out-tsc/
+
+# Historial y basura del sistema.
+.git/
+.gitignore
+.idea/
+.vscode/
+*.log
+npm-debug.log*

@@ -1,0 +1,20 @@
+# El JAR se compila dentro de la imagen.
+target/
+.mvn/timing.properties
+
+# Secretos y configuración local: nunca entran en la imagen.
+.env
+.env.*
+application-local.yml
+application-prod.yml
+*.pem
+*.key
+secrets/
+
+# Historial y basura del sistema.
+.git/
+.gitignore
+.idea/
+.vscode/
+*.log
+logs/

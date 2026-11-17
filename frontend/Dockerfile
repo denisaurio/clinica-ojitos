@@ -1,0 +1,49 @@
+# =============================================================================
+#  Clínica Oftalmológica Ojitos — imagen del frontend (Angular 20 + nginx)
+# =============================================================================
+#  Construcción:
+#      docker build -t clinica-ojitos-web ./frontend
+#  Ejecución:
+#      docker run --env-file .env -p 8081:80 clinica-ojitos-web
+# =============================================================================
+
+# --- Etapa 1: compilar Angular ------------------------------------------------
+FROM node:22-alpine AS build
+
+WORKDIR /app
+
+# Primero los manifiestos: la capa de npm se reutiliza si no cambian.
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+
+COPY . .
+RUN npm run build
+
+# --- Etapa 2: servir con nginx ------------------------------------------------
+FROM nginx:1.27-alpine
+
+RUN apk add --no-cache tzdata
+
+# La imagen oficial de nginx procesa /etc/nginx/templates/*.template con
+# envsubst antes de arrancar: así API_PROXY_TARGET se resuelve en ejecución.
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+
+# Genera /usr/share/nginx/html/env.js con las variables del contenedor.
+COPY docker-entrypoint.sh /docker-entrypoint.d/40-generar-env.sh
+RUN chmod +x /docker-entrypoint.d/40-generar-env.sh
+
+COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
+
+ENV TZ=America/Lima \
+    API_PROXY_TARGET=http://api:8080 \
+    API_URL=/api/v1 \
+    APP_URL=http://localhost:8081 \
+    APP_NAME=Ojitos \
+    APP_TAGLINE="Gestión Clínica" \
+    PRODUCTION=true \
+    USE_MOCK_API=false
+
+EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD wget -q -O /dev/null http://127.0.0.1/healthz || exit 1
