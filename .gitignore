@@ -68,3 +68,6 @@ frontend/*.log
 logs/
 # Scripts de correccion de una sola vez
 fix-*.js
+
+# --- Reporte generado por testing/run-tests.mjs ---
+testing/reporte/
