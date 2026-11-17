@@ -35,6 +35,10 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    /** Orígenes CORS permitidos (variable CORS_ALLOWED_ORIGINS, separados por coma). */
+    @org.springframework.beans.factory.annotation.Value("${app.cors.allowed-origins:*}")
+    private List<String> origenesPermitidos;
+
     /** Rutas públicas: el login, la recuperación de clave y la verificación de estado. */
     private static final String[] PUBLICOS = {
             "/api/v1/auth/login",
@@ -97,9 +101,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource(
-            @org.springframework.beans.factory.annotation.Value("${app.cors.allowed-origins:*}")
-            List<String> origenesPermitidos) {
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOriginPatterns(origenesPermitidos);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
