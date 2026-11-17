@@ -41,4 +41,10 @@ class AuthApiTest extends BaseIntegracionTest {
     void perfilSinToken() throws Exception {
         mvc.perform(get("/api/v1/auth/me")).andExpect(status().isUnauthorized());
     }
+
+    @Test
+    @DisplayName("Los archivos subidos (/uploads) NO son públicos: 401 sin sesión (RNF-01)")
+    void uploadsExigeSesion() throws Exception {
+        mvc.perform(get("/uploads/cualquier-examen.pdf")).andExpect(status().isUnauthorized());
+    }
 }
