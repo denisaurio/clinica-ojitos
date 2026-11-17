@@ -17,6 +17,9 @@ Docente: Jose Fernando Matos Vera
 | **[`docs/interaccion-modulos.pdf`](docs/interaccion-modulos.pdf)** | Diagrama visual: cómo se relacionan los módulos entre sí y cómo se comunican las carpetas de backend y frontend |
 | **[`backend/README.md`](backend/README.md)** | La API: cómo ejecutarla, su arquitectura en capas y dónde mirar primero |
 | **[`frontend/README.md`](frontend/README.md)** | La interfaz: cómo ejecutarla, su estructura y las reglas del código |
+| **[`testing/README.md`](testing/README.md)** | Pruebas **por módulo** con reporte rojo/verde, tiempos y relaciones entre módulos |
+| **[`docs/DESPLIEGUE.md`](docs/DESPLIEGUE.md)** | Despliegue paso a paso en Coolify (VPS): MySQL, backend, frontend y variables |
+| **[`.env.example`](.env.example)** | Todas las variables de entorno del sistema (plantilla; el `.env` real no se versiona) |
 | **[`AGENTS.md`](AGENTS.md)** | Qué puede y qué no puede hacer un agente de IA en este repositorio |
 
 **¿Por dónde empezar?** Si es tu primera vez, ve directo a la
@@ -622,8 +625,8 @@ ambas presentes en el prototipo.
 | **8. Frontend** | **Semanas 11–13** | **Angular, componentes, SASS, rutas, formularios** | **Implementado** |
 | 9. Integración | Semanas 13–15 | Consumo de API, autorización, autenticación, errores | Implementado |
 | 10. Tercer incremento (APF3) | Semana 15 | Sistema web integrado | Implementado |
-| 11. Pruebas y mejora | Semanas 16–17 | Comunicación frontend/backend, depuración | En curso |
-| 12. Despliegue | Semana 18 | Servidores web, nube | Pendiente |
+| 11. Pruebas y mejora | Semanas 16–17 | Comunicación frontend/backend, depuración | `testing/` por módulo + reporte |
+| 12. Despliegue | Semana 18 | Servidores web, nube | Dockerfiles + [`docs/DESPLIEGUE.md`](docs/DESPLIEGUE.md) (Coolify) |
 
 ---
 
@@ -641,17 +644,30 @@ ambas presentes en el prototipo.
 
 ## 9. Pruebas
 
-```bash
-# Backend — pruebas unitarias de la capa de servicio
-cd backend && mvnw test
+Todo el código de pruebas vive en **[`testing/`](testing/README.md)**, organizado
+por módulo. Un solo comando ejecuta todo y genera un reporte con cada módulo en
+verde o rojo, sus milisegundos y de qué otros módulos depende:
 
-# Frontend — pruebas unitarias
-cd frontend && npm test
+```bash
+node testing/run-tests.mjs                 # todo (backend + build del frontend)
+node testing/run-tests.mjs --modulo citas  # un solo módulo
+# Reporte: testing/reporte/index.html
 ```
 
-Las pruebas del backend cubren el camino feliz y las validaciones de negocio de
-cada requisito: duplicidad de documento, cruce de horario, unicidad de
-colegiatura, cancelación y reprogramación de citas.
+- **Unitarias** (JUnit 5 + Mockito): reglas de negocio de cada servicio.
+- **Integración** (`*ApiTest`, Spring + MockMvc + **H2 en memoria**): no
+  necesitan MySQL; comprueban 401 sin token y 403 por rol en cada módulo.
+- **Relaciones** (`MapaDependenciasTest`): qué servicio usa a cuál, sin ciclos.
+- Maven directo: `cd backend && ./mvnw test` (`.\mvnw.cmd test` en PowerShell).
+
+---
+
+## 9.b Variables de entorno y despliegue
+
+Toda la configuración sale de variables de entorno (ver [`.env.example`](.env.example)):
+en local `cp .env.example .env`; en Coolify se pegan en *Shared Variables*.
+El backend lee `.env` automáticamente si existe. Guía completa de publicación:
+[`docs/DESPLIEGUE.md`](docs/DESPLIEGUE.md).
 
 ---
 
@@ -716,7 +732,8 @@ Tres salvaguardas, verificadas una por una:
 
 Los códigos son ADMINISTRADOR, OFTALMOLOGO, RECEPCIONISTA y PACIENTE.
 
-> Para crear un rol nuevo solo hace falta insertarlo en la tabla ol; no hay
+> Para crear un rol nuevo solo hace falta insertarlo en la tabla 
+ol; no hay
 > que tocar el esquema, porque los roles son un catálogo (RNF-05).
 ---
 

@@ -157,12 +157,7 @@ Verifica: `mysql ... -e "USE clinica_ojitos; SHOW TABLES;"` → deben salir 24 t
 | Frontend | `https://ojitos.tudominio.com` |
 | API (vía nginx) | `https://ojitos.tudominio.com/api/v1` |
 | Estado de la API | `https://ojitos.tudominio.com/api/v1/estado` |
-| Documentación Swagger | `https://ojitos.tudominio.com/swagger-ui.html`¹ |
-
-¹ Swagger solo responde si nginx lo reenvía; la plantilla actual solo reenvía
-`/api/` y `/uploads/`. Para verlo, entra al backend por su propio dominio
-temporal o añade un `location /swagger-ui` y `/v3/api-docs` en
-`frontend/nginx.conf.template`.
+| Documentación Swagger | `https://ojitos.tudominio.com/swagger-ui.html` |
 
 **Prueba final:** abre el frontend, inicia sesión y recorre un flujo completo
 (crear paciente → reservar cita → registrar consulta).

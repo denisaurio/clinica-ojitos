@@ -21,6 +21,12 @@ server {
         proxy_pass ${BACKEND_URL};
     }
 
+    # Documentación de la API (Swagger)
+    location ~ ^/(swagger-ui|v3/api-docs) {
+        proxy_pass ${BACKEND_URL};
+        proxy_set_header Host $host;
+    }
+
     # Archivos con hash: caché larga
     location ~* \.(?:js|css|woff2?|svg|ico)$ {
         expires 1y;
