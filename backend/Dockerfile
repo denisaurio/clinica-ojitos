@@ -16,7 +16,9 @@ RUN mvn -q -B package -DskipTests
 # ---- Etapa 2: ejecutar ------------------------------------------------------
 FROM eclipse-temurin:21-jre
 WORKDIR /app
-RUN useradd --system --create-home appuser
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --system --create-home appuser
 COPY --from=build /app/target/*.jar app.jar
 USER appuser
 ENV PORT=8080 \
