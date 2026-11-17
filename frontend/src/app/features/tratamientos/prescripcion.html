@@ -6,10 +6,23 @@
 
   <ui-card class="paciente" [sinPadding]="false">
     <div class="paciente__fila">
-      <ui-avatar [iniciales]="'JP'" tamano="md" />
-      <div>
-        <p class="paciente__nombre">{{ nombrePaciente() }}</p>
-        <p class="paciente__id">ID: 849201 • 52 años</p>
+      <ui-avatar [iniciales]="inicialesPaciente() || '--'" tamano="md" />
+      <div class="paciente__datos">
+        <div class="medicamento__fila medicamento__fila--2">
+          <ui-select
+            [formControl]="paciente"
+            etiqueta="Paciente"
+            placeholder="Seleccione un paciente"
+            [opciones]="pacientesOpciones()"
+            [requerido]="true"
+          />
+          <ui-input
+            [formControl]="fechaInicio"
+            etiqueta="Fecha de Inicio"
+            tipo="date"
+            [requerido]="true"
+          />
+        </div>
       </div>
       <ui-badge variante="primario" icono="clock">Consulta Activa</ui-badge>
     </div>

@@ -107,11 +107,13 @@ public final class OftalmologoDto {
             Integer id,
             Integer diaSemanaId,
             String diaSemana,
+            String diaSemanaCodigo,
             Integer ordenDia,
             LocalTime horaInicio,
             LocalTime horaFin,
             Integer tipoBloqueId,
             String tipoBloque,
+            String tipoBloqueCodigo,
             Integer sedeId,
             String sede,
             boolean activo

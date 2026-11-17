@@ -12,6 +12,8 @@ export interface RuntimeEnv {
   production: boolean;
   useMockApi: boolean;
   apiUrl: string;
+  /** URL pública de la aplicación (sirve para enlaces que se muestran al usuario). */
+  appUrl: string;
   appName: string;
   appTagline: string;
 }
@@ -29,6 +31,7 @@ export function leerRuntimeEnv(valoresPorDefecto: RuntimeEnv): RuntimeEnv {
     production: runtime?.production ?? valoresPorDefecto.production,
     useMockApi: runtime?.useMockApi ?? valoresPorDefecto.useMockApi,
     apiUrl: runtime?.apiUrl ?? valoresPorDefecto.apiUrl,
+    appUrl: runtime?.appUrl ?? valoresPorDefecto.appUrl,
     appName: runtime?.appName ?? valoresPorDefecto.appName,
     appTagline: runtime?.appTagline ?? valoresPorDefecto.appTagline,
   };

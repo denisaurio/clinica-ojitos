@@ -17,6 +17,17 @@ export interface LoginRequest {
   password: string;
 }
 
+/** Perfil devuelto por `/auth/me` (AuthDto.PerfilResponse: sin token). */
+export interface PerfilUsuario {
+  id: number;
+  username: string;
+  nombreCompleto: string;
+  email: string;
+  rol: Rol;
+  activo: boolean;
+  ultimoAcceso: string;
+}
+
 export interface RefreshRequest {
   refreshToken: string;
 }

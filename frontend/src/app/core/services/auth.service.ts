@@ -5,7 +5,7 @@ import { Observable, defer, of, throwError } from 'rxjs';
 import { delay, tap } from 'rxjs/operators';
 
 import { environment } from '../../../environments/environment';
-import { AuthResponse, LoginRequest, MensajeRespuesta, RecuperarClaveRequest, Rol } from '../models';
+import { AuthResponse, LoginRequest, MensajeRespuesta, PerfilUsuario, RecuperarClaveRequest, Rol } from '../models';
 import { DemoDataService } from './demo-data.service';
 
 const TOKEN_KEY = 'ojitos_access_token';
@@ -55,12 +55,23 @@ export class AuthService {
       .pipe(tap((respuesta) => this.persistir(respuesta)));
   }
 
-  me(): Observable<AuthResponse> {
+  me(): Observable<PerfilUsuario> {
     if (environment.useMockApi) {
       const usuario = this._usuario();
-      return usuario ? of(usuario).pipe(delay(80)) : throwError(() => new Error('Sin sesión activa'));
+      return usuario
+        ? of({
+            id: usuario.id,
+            username: usuario.username,
+            nombreCompleto: usuario.nombreCompleto,
+            email: usuario.email,
+            rol: usuario.rol,
+            activo: true,
+            ultimoAcceso: new Date().toISOString(),
+          }).pipe(delay(80))
+        : throwError(() => new Error('Sin sesión activa'));
     }
-    return this.http.get<AuthResponse>(`${environment.apiUrl}/auth/me`);
+    // El backend devuelve el perfil, no un token nuevo (AuthDto.PerfilResponse).
+    return this.http.get<PerfilUsuario>(`${environment.apiUrl}/auth/me`);
   }
 
   recuperarClave(peticion: RecuperarClaveRequest): Observable<MensajeRespuesta> {

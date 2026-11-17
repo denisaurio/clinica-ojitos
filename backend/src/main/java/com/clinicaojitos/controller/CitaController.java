@@ -26,7 +26,7 @@ public class CitaController {
     private final CitaService citaService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR','RECEPCIONISTA','OFTALMOLOGO','PACIENTE')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR','RECEPCIONISTA','OFTALMOLOGO')")
     @Operation(summary = "Agenda en un rango de fechas")
     public List<CitaDto.Evento> agenda(
             @RequestParam(required = false) Long oftalmologoId,

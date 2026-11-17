@@ -61,6 +61,14 @@ export class CatalogoService {
     return this.cargar('dias-semana');
   }
 
+  tiposBloque(): Observable<CatalogoItem[]> {
+    return this.cargar('tipos-bloque');
+  }
+
+  estadosTratamiento(): Observable<CatalogoItem[]> {
+    return this.cargar('estados-tratamiento');
+  }
+
   /**
    * Sedes disponibles. El catálogo trae las universidades y centros del país
    * cargados por `sql/05_sedes.sql`.

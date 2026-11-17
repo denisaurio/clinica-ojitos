@@ -24,6 +24,7 @@ public class CatalogoService {
     private final EstadoCitaRepository estadoCitaRepository;
     private final OjoRepository ojoRepository;
     private final DiaSemanaRepository diaSemanaRepository;
+    private final TipoBloqueHorarioRepository tipoBloqueHorarioRepository;
     private final EstadoTratamientoRepository estadoTratamientoRepository;
     private final SedeRepository sedeRepository;
 
@@ -38,6 +39,10 @@ public class CatalogoService {
                 estadoCitaRepository.findAllByOrderByIdAsc().stream().map(this::item).toList(),
                 ojoRepository.findAllByOrderByIdAsc().stream().map(this::item).toList(),
                 diaSemanaRepository.findAllByOrderByOrdenAsc().stream().map(this::item).toList(),
+                tipoBloqueHorarioRepository.findAll().stream()
+                        .sorted(java.util.Comparator.comparing(
+                                com.clinicaojitos.domain.entity.TipoBloqueHorario::getId))
+                        .map(this::item).toList(),
                 estadoTratamientoRepository.findAllByOrderByIdAsc().stream().map(this::item).toList(),
                 sedeRepository.findByActivoTrueOrderByNombreAsc().stream().map(this::item).toList());
     }
@@ -51,6 +56,7 @@ public class CatalogoService {
         if (e instanceof com.clinicaojitos.domain.entity.EstadoCita t) return new CatalogoDto.Item(t.getId(), t.getCodigo(), t.getNombre());
         if (e instanceof com.clinicaojitos.domain.entity.Ojo t) return new CatalogoDto.Item(t.getId(), t.getCodigo(), t.getNombre());
         if (e instanceof com.clinicaojitos.domain.entity.DiaSemana t) return new CatalogoDto.Item(t.getId(), t.getCodigo(), t.getNombre());
+        if (e instanceof com.clinicaojitos.domain.entity.TipoBloqueHorario t) return new CatalogoDto.Item(t.getId(), t.getCodigo(), t.getNombre());
         if (e instanceof com.clinicaojitos.domain.entity.EstadoTratamiento t) return new CatalogoDto.Item(t.getId(), t.getCodigo(), t.getNombre());
         if (e instanceof com.clinicaojitos.domain.entity.Sede t) return new CatalogoDto.Item(t.getId(), null, t.getNombre());
         return new CatalogoDto.Item(null, null, String.valueOf(e));

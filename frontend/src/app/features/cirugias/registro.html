@@ -12,14 +12,25 @@
   <form [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
     <ui-card titulo="Información del Paciente" icono="user" class="bloque">
       <div class="bloque__grid">
-        <ui-input
+        <ui-select
           formControlName="pacienteId"
-          etiqueta="ID / Nombre del Paciente"
-          placeholder="Buscar o ingresar datos del paciente..."
-          icono="search"
+          etiqueta="Paciente"
+          placeholder="Seleccione el paciente..."
+          [opciones]="pacientesOpciones()"
           [requerido]="true"
           [error]="errorDe('pacienteId', 'Indique el paciente.')"
         />
+        <ui-select
+          formControlName="oftalmologoId"
+          etiqueta="Oftalmólogo Responsable"
+          placeholder="Seleccione el especialista..."
+          [opciones]="oftalmologosOpciones()"
+          [requerido]="true"
+          [error]="errorDe('oftalmologoId', 'Indique el oftalmólogo responsable.')"
+        />
+      </div>
+
+      <div class="bloque__grid">
         <ui-input
           formControlName="diagnosticoPreoperatorio"
           etiqueta="Diagnóstico Preoperatorio"

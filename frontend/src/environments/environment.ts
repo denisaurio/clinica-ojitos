@@ -19,6 +19,7 @@ export const environment = leerRuntimeEnv({
   production: false,
   useMockApi: false,
   apiUrl: '/api/v1',
+  appUrl: typeof window === 'undefined' ? '' : window.location.origin,
   appName: 'Ojitos',
   appTagline: 'Gestión Clínica',
 });

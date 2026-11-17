@@ -55,10 +55,10 @@ export class CitaReprogramarComponent implements OnInit {
   protected readonly guardando = signal(false);
   protected readonly error = signal('');
 
-  protected readonly mes = signal(new Date(2024, 9, 1));
+  protected readonly mes = signal(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
 
   protected readonly formulario = this.fb.nonNullable.group({
-    fecha: ['2024-10-31', [Validators.required]],
+    fecha: [this.hoyIso(), [Validators.required]],
     horaInicio: ['', [Validators.required]],
     notaInterna: [''],
   });
@@ -66,7 +66,10 @@ export class CitaReprogramarComponent implements OnInit {
   ngOnInit(): void {
     this.citas.obtener(Number(this.id())).subscribe((cita) => {
       this.cita.set(cita);
-      this.cargarDisponibilidad(this.formulario.controls.fecha.value);
+      const fecha = cita.fecha || this.hoyIso();
+      this.formulario.controls.fecha.setValue(fecha);
+      this.mes.set(new Date(`${fecha}T00:00:00`));
+      this.cargarDisponibilidad(fecha);
     });
   }
 
@@ -125,8 +128,11 @@ export class CitaReprogramarComponent implements OnInit {
 
   protected cargarDisponibilidad(fecha: string): void {
     const cita = this.cita();
+    if (!cita) {
+      return;
+    }
     this.citas
-      .disponibilidad(cita?.oftalmologoId, fecha)
+      .disponibilidad(cita.oftalmologoId, fecha)
       .subscribe((slots) => this.slots.set(slots));
   }
 
@@ -197,5 +203,9 @@ export class CitaReprogramarComponent implements OnInit {
     const mes = String(fecha.getMonth() + 1).padStart(2, '0');
     const dia = String(fecha.getDate()).padStart(2, '0');
     return `${fecha.getFullYear()}-${mes}-${dia}`;
+  }
+
+  private hoyIso(): string {
+    return this.aIso(new Date());
   }
 }

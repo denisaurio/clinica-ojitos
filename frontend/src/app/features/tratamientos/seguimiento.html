@@ -5,13 +5,15 @@
   </a>
 
   <h1 class="page-title">Seguimiento del Paciente</h1>
-  <p class="page-subtitle">{{ nombrePaciente() }} - ID: 89456-A</p>
+  <p class="page-subtitle">
+    {{ nombrePaciente() }}<span> - Documento: {{ paciente()?.documento ?? '—' }}</span>
+  </p>
 
   <div class="rejilla">
     <ui-card class="ficha">
-      <ui-avatar [iniciales]="'MG'" tamano="lg" />
+      <ui-avatar [iniciales]="inicialesPaciente()" tamano="lg" />
       <h2 class="ficha__nombre">{{ nombrePaciente() }}</h2>
-      <p class="ficha__edad">♀ 62 años</p>
+      <p class="ficha__edad">{{ paciente()?.edad ?? '—' }} años</p>
 
       <hr class="divider" />
 
@@ -31,7 +33,7 @@
 
     <ui-card titulo="Controles Programados" class="controles">
       <ng-container slot="accion">
-        <button type="button" class="anadir" (click)="modalAbierto.set(true)">
+        <button type="button" class="anadir" (click)="abrirModal()">
           <ui-icon nombre="plus" [tamano]="14" />
           Añadir Control
         </button>
@@ -77,11 +79,11 @@
 <ui-modal [abierto]="modalAbierto()" titulo="Programar Cita de Control" icono="calendar" (cerrar)="modalAbierto.set(false)">
   <form [formGroup]="formularioControl" class="control" novalidate>
     <section class="control__paciente">
-      <ui-avatar [iniciales]="'JG'" tamano="md" />
+      <ui-avatar [iniciales]="inicialesPaciente()" tamano="md" />
       <div>
         <p class="eyebrow">Paciente</p>
-        <p class="control__nombre">Juan González</p>
-        <p class="control__detalle">Tratamiento: Glaucoma - Control Mensual</p>
+        <p class="control__nombre">{{ nombrePaciente() }}</p>
+        <p class="control__detalle">Tratamiento registrado en seguimiento</p>
       </div>
     </section>
 
@@ -105,7 +107,7 @@
           [disabled]="!slot.libre"
           (click)="formularioControl.controls.horaInicio.setValue(slot.hora)"
         >
-          {{ slot.hora }}
+          {{ slot.etiqueta }}
         </button>
       }
     </div>
@@ -113,10 +115,11 @@
     <ui-select
       formControlName="oftalmologoId"
       etiqueta="Médico Asignado"
-      placeholder="Dr. Clinic (Oftalmólogo Principal)"
+      placeholder="Seleccione un oftalmólogo"
       icono="calendar"
       [opciones]="medicos()"
       [requerido]="true"
+      (valorCambia)="cargarFranjas()"
     />
 
     <ui-input

@@ -28,7 +28,7 @@
                 placeholder="Elija un oftalmólogo..."
                 [opciones]="medicos()"
                 [requerido]="true"
-                (valorCambia)="cargarDisponibilidad(c.fecha.value)"
+                (valorCambia)="cambiarMedico($event)"
               />
 
               <h2 class="detalles__titulo">
@@ -76,8 +76,12 @@
                 Horarios Disponibles
               </h2>
               <p class="horarios__nota">
-                Mostrando disponibilidad para el
-                {{ c.fecha.value | date: 'd \'de\' MMMM \'de\' y' : 'es-ES' : 'UTC' }}
+                @if (c.oftalmologoId.value) {
+                  Mostrando disponibilidad para el
+                  {{ c.fecha.value | date: 'd \'de\' MMMM \'de\' y' : 'es-ES' : 'UTC' }}
+                } @else {
+                  Elija un especialista para ver las franjas disponibles.
+                }
               </p>
 
               <p class="horarios__franja">Mañana</p>
@@ -136,10 +140,17 @@
                 [opciones]="pacientesOpciones()"
                 [requerido]="true"
               />
-              <ui-input formControlName="tipoConsulta" etiqueta="Tipo de Consulta" [requerido]="true" />
+              <ui-select
+                formControlName="tipoConsultaId"
+                etiqueta="Tipo de Consulta"
+                placeholder="Seleccione el tipo"
+                [opciones]="tiposConsulta()"
+                [requerido]="true"
+              />
             </div>
 
             <ui-input formControlName="motivo" etiqueta="Motivo de la Consulta (Opcional)" />
+            <ui-input formControlName="notaInterna" etiqueta="Nota Interna (Opcional)" />
           </div>
         }
 

@@ -31,13 +31,27 @@ export interface OftalmologoRequest {
   sedeId?: number | null;
 }
 
-export type DiaSemana = 'LUNES' | 'MARTES' | 'MIERCOLES' | 'JUEVES' | 'VIERNES';
+export type DiaSemana =
+  | 'LUNES'
+  | 'MARTES'
+  | 'MIERCOLES'
+  | 'JUEVES'
+  | 'VIERNES'
+  | 'SABADO'
+  | 'DOMINGO';
 
 export interface BloqueHorario {
+  /** Id del catálogo `dia_semana`; necesario para guardar en la API. */
+  diaSemanaId?: number;
   dia: DiaSemana;
   horaInicio: string;
   horaFin: string;
-  tipo: 'DISPONIBLE' | 'QUIRURGICO';
+  /** Id del catálogo `tipo_bloque_horario`; necesario para guardar en la API. */
+  tipoBloqueId?: number;
+  /** `DESCANSO` marca bloqueos de agenda que no se ofrecen como cita. */
+  tipo: 'DISPONIBLE' | 'QUIRURGICO' | 'DESCANSO';
+  sedeId?: number | null;
+  activo?: boolean;
 }
 
 export interface HorarioSemanal {

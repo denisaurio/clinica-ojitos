@@ -37,7 +37,7 @@ export class CitaAgendaComponent implements OnInit, OnDestroy {
   private readonly contexto = inject(ContextoPaginaService);
 
   protected readonly medicos = signal<OpcionSelect[]>([]);
-  protected readonly medicoSeleccionado = signal<number | null>(1);
+  protected readonly medicoSeleccionado = signal<number | null>(null);
   protected readonly eventos = signal<EventoAgenda[]>([]);
 
   protected readonly horas = Array.from(
@@ -47,9 +47,11 @@ export class CitaAgendaComponent implements OnInit, OnDestroy {
 
   protected readonly altoHora = ALTO_HORA;
 
-  /** Lunes 19 – viernes 23 de octubre de 2026, la semana que muestra el prototipo. */
-  private readonly semanaInicio = '2026-10-19';
-  private readonly semanaFin = '2026-10-23';
+  /** Semana en curso: de lunes a viernes, sin fechas fijas de demostración. */
+  private readonly lunes = this.inicioDeSemana(new Date());
+  private readonly viernes = this.sumarDias(this.lunes, 4);
+  private readonly semanaInicio = this.aIso(this.lunes);
+  private readonly semanaFin = this.aIso(this.viernes);
 
   ngOnInit(): void {
     this.contexto.configurar({ placeholder: '' });
@@ -74,21 +76,25 @@ export class CitaAgendaComponent implements OnInit, OnDestroy {
   }
 
   protected cambiarMedico(valor: string): void {
-    this.medicoSeleccionado.set(Number(valor));
+    this.medicoSeleccionado.set(valor ? Number(valor) : null);
     this.cargar();
   }
 
   protected readonly rangoFechas = computed(() => {
-    const inicio = new Date(`${this.semanaInicio}T00:00:00`);
-    const fin = new Date(`${this.semanaFin}T00:00:00`);
-    return `${inicio.getDate()} oct – ${fin.getDate()} oct ${fin.getFullYear()}`;
+    const inicio = this.lunes;
+    const fin = this.viernes;
+    const mesInicio = inicio.toLocaleDateString('es-ES', { month: 'short' }).replace('.', '');
+    const mesFin = fin.toLocaleDateString('es-ES', { month: 'short' }).replace('.', '');
+    const anio = fin.getFullYear();
+    return mesInicio === mesFin
+      ? `${inicio.getDate()} – ${fin.getDate()} ${mesFin} ${anio}`
+      : `${inicio.getDate()} ${mesInicio} – ${fin.getDate()} ${mesFin} ${anio}`;
   });
 
   protected readonly dias = computed<DiaAgenda[]>(() => {
     const etiquetas = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE'];
     return etiquetas.map((etiqueta, indice) => {
-      const fecha = new Date(`${this.semanaInicio}T00:00:00`);
-      fecha.setDate(fecha.getDate() + indice);
+      const fecha = this.sumarDias(this.lunes, indice);
       const iso = this.aIso(fecha);
       return {
         fecha: iso,
@@ -128,6 +134,19 @@ export class CitaAgendaComponent implements OnInit, OnDestroy {
 
   protected cancelar(evento: EventoAgenda): void {
     this.citas.cancelar(evento.id, 'Cancelada desde la agenda').subscribe(() => this.cargar());
+  }
+
+  private inicioDeSemana(fecha: Date): Date {
+    const copia = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
+    const desplazamiento = (copia.getDay() + 6) % 7;
+    copia.setDate(copia.getDate() - desplazamiento);
+    return copia;
+  }
+
+  private sumarDias(fecha: Date, dias: number): Date {
+    const copia = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
+    copia.setDate(copia.getDate() + dias);
+    return copia;
   }
 
   private aIso(fecha: Date): string {

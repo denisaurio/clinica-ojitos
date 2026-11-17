@@ -22,8 +22,9 @@ import { IconComponent } from '../../shared/components/ui-icon';
 import { DemoDataService } from '../../core/services/demo-data.service';
 import { CitaService } from '../../core/services/cita.service';
 import { OftalmologoService } from '../../core/services/oftalmologo.service';
+import { PacienteService } from '../../core/services/paciente.service';
 import { ContextoPaginaService } from '../../core/services/contexto-pagina.service';
-import { HitoControl } from '../../core/models';
+import { HitoControl, Paciente } from '../../core/models';
 
 /**
  * Seguimiento del paciente (imagen 35) con la línea de tiempo de 6 meses y el
@@ -52,18 +53,20 @@ export class SeguimientoComponent implements OnInit, OnDestroy {
   private readonly demo = inject(DemoDataService);
   private readonly citas = inject(CitaService);
   private readonly oftalmologos = inject(OftalmologoService);
+  private readonly pacientes = inject(PacienteService);
   private readonly contexto = inject(ContextoPaginaService);
 
   /** Ruta `tratamientos/seguimiento/:id`. */
   readonly id = input.required<string>();
 
   protected readonly hitos = signal<HitoControl[]>([]);
+  protected readonly paciente = signal<Paciente | null>(null);
   protected readonly modalAbierto = signal(false);
   protected readonly medicos = signal<OpcionSelect[]>([]);
-  protected readonly slots = signal<{ hora: string; libre: boolean }[]>([]);
+  protected readonly slots = signal<{ hora: string; etiqueta: string; libre: boolean }[]>([]);
 
   protected readonly formularioControl = this.fb.nonNullable.group({
-    fecha: ['', [Validators.required]],
+    fecha: [this.hoyIso(), [Validators.required]],
     horaInicio: ['', [Validators.required]],
     oftalmologoId: [null as number | null, [Validators.required]],
     notas: [''],
@@ -78,23 +81,43 @@ export class SeguimientoComponent implements OnInit, OnDestroy {
 
     this.hitos.set(this.demo.hitosDe(Number(this.id())));
 
+    this.pacientes.obtener(Number(this.id())).subscribe((paciente) => this.paciente.set(paciente));
+
     this.oftalmologos.listar('', true).subscribe((items) => {
       this.medicos.set(items.map((o) => ({ valor: o.id, etiqueta: `${o.nombreCompleto} (${o.subespecialidad})` })));
     });
 
-    this.cargarFranjas();
+    // Cambiar la fecha con el diálogo abierto refresca las franjas del médico.
+    this.formularioControl.controls.fecha.valueChanges.subscribe(() => this.cargarFranjas());
   }
 
   ngOnDestroy(): void {
     this.contexto.restablecer();
   }
 
+  /** Abre el diálogo y pide las franjas del médico ya elegido, si lo hay. */
+  protected abrirModal(): void {
+    this.modalAbierto.set(true);
+    this.cargarFranjas();
+  }
+
   protected cargarFranjas(): void {
-    this.citas.disponibilidad(undefined, '2024-09-15').subscribe((slots) => {
-      this.slots.set(
-        slots.map((s) => ({ hora: this.horaLegible(s.horaInicio), libre: s.estado === 'FREE' }))
-      );
-    });
+    const oftalmologoId = this.formularioControl.controls.oftalmologoId.value;
+    if (!oftalmologoId) {
+      this.slots.set([]);
+      return;
+    }
+    this.citas
+      .disponibilidad(Number(oftalmologoId), this.formularioControl.controls.fecha.value)
+      .subscribe((slots) => {
+        this.slots.set(
+          slots.map((s) => ({
+            hora: s.horaInicio,
+            etiqueta: this.horaLegible(s.horaInicio),
+            libre: s.estado === 'FREE',
+          }))
+        );
+      });
   }
 
   protected readonly variantes: Record<HitoControl['estado'], 'primario' | 'success' | 'warning' | 'neutro'> = {
@@ -138,5 +161,21 @@ export class SeguimientoComponent implements OnInit, OnDestroy {
     this.modalAbierto.set(false);
   }
 
-  protected readonly nombrePaciente = computed(() => 'María García S.');
+  protected readonly nombrePaciente = computed(() => this.paciente()?.nombreCompleto ?? '—');
+
+  protected readonly inicialesPaciente = computed(() =>
+    (this.paciente()?.nombreCompleto ?? '')
+      .split(/\s+/)
+      .filter((parte) => parte.length > 0)
+      .slice(0, 2)
+      .map((parte) => parte.charAt(0).toUpperCase())
+      .join('') || '--'
+  );
+
+  private hoyIso(): string {
+    const hoy = new Date();
+    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+    const dia = String(hoy.getDate()).padStart(2, '0');
+    return `${hoy.getFullYear()}-${mes}-${dia}`;
+  }
 }

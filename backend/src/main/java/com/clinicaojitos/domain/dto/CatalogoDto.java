@@ -25,6 +25,7 @@ public final class CatalogoDto {
             List<Item> estadosCita,
             List<Item> ojos,
             List<Item> diasSemana,
+            List<Item> tiposBloque,
             List<Item> estadosTratamiento,
             List<Item> sedes
     ) {

@@ -11,6 +11,7 @@ window.__env = window.__env || {
   production: false,
   useMockApi: false,
   apiUrl: '/api/v1',
+  appUrl: window.location.origin,
   appName: 'Ojitos',
   appTagline: 'Gestión Clínica'
 };

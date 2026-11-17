@@ -15,6 +15,7 @@ export interface Cita {
   telefonoPaciente: string;
   oftalmologoId: number;
   oftalmologoNombre: string;
+  subespecialidad?: string;
   fecha: string;
   horaInicio: string;
   horaFin: string;
@@ -25,15 +26,16 @@ export interface Cita {
   motivoCancelacion: string;
 }
 
+/** Alta de cita. El backend referencia los catálogos por id (CitaDto.Request). */
 export interface CitaRequest {
   pacienteId: number;
   oftalmologoId: number;
   fecha: string;
   horaInicio: string;
   horaFin: string;
-  tipoConsulta: string;
+  tipoConsultaId: number | null;
   motivo: string;
-  notas: string;
+  notaInterna: string;
 }
 
 export interface ReprogramarRequest {
@@ -51,7 +53,7 @@ export interface EstadoRequest {
   estado: EstadoCita;
 }
 
-/** Evento devuelto por `/citas/agenda`, ya normalizado para el calendario. */
+/** Evento del calendario semanal, ya normalizado para la pantalla de agenda. */
 export interface EventoAgenda {
   id: number;
   titulo: string;

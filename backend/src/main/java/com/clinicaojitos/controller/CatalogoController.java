@@ -83,6 +83,18 @@ public class CatalogoController {
         return catalogoService.todos().diasSemana();
     }
 
+    @GetMapping("/tipos-bloque")
+    @Operation(summary = "Tipos de bloque horario (consulta, cirugía, descanso)")
+    public List<CatalogoDto.Item> tiposBloque() {
+        return catalogoService.todos().tiposBloque();
+    }
+
+    @GetMapping("/estados-tratamiento")
+    @Operation(summary = "Estados del tratamiento (activo, completado, suspendido, anulado)")
+    public List<CatalogoDto.Item> estadosTratamiento() {
+        return catalogoService.todos().estadosTratamiento();
+    }
+
     /**
      * Sedes disponibles para registrar un profesional.
      */

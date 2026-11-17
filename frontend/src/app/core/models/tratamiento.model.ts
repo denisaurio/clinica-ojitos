@@ -17,12 +17,18 @@ export interface Tratamiento {
 
 export interface TratamientoRequest {
   pacienteId: number;
-  tipo: TipoTratamiento;
-  medicamento: string;
-  dosis: string;
-  frecuencia: string;
-  duracion: string;
-  instrucciones: string;
+  oftalmologoId?: number | null;
+  /** Id del catálogo `tipo_tratamiento` (obligatorio en la API). */
+  tipoId: number;
+  /** Id del catálogo `estado_tratamiento`; «Activo» al prescribir. */
+  estadoId: number;
+  medicamento?: string;
+  principioActivo?: string;
+  dosis?: string;
+  frecuencia?: string;
+  duracion?: string;
+  instrucciones?: string;
+  fechaInicio?: string;
 }
 
 /** Control de seguimiento de un tratamiento. */
@@ -59,6 +65,8 @@ export interface Cirugia {
   id: number;
   pacienteId: number;
   pacienteNombre: string;
+  oftalmologoId?: number;
+  oftalmologoNombre?: string;
   diagnosticoPreoperatorio: string;
   tipoCirugia: string;
   fecha: string;
@@ -70,6 +78,8 @@ export interface Cirugia {
 
 export interface CirugiaRequest {
   pacienteId: number;
+  /** El backend exige el oftalmólogo responsable de la intervención. */
+  oftalmologoId: number;
   diagnosticoPreoperatorio: string;
   tipoCirugia: string;
   fecha: string;

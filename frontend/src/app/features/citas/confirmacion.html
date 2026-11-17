@@ -16,9 +16,9 @@
           </span>
           <div>
             <p class="eyebrow">Paciente</p>
-            <p class="ficha__valor">{{ paciente()?.nombreCompleto ?? '—' }}</p>
+            <p class="ficha__valor">{{ cita()?.pacienteNombre ?? '—' }}</p>
             <p class="ficha__detalle">
-              Historia Clínica: #{{ paciente()?.documento ?? '—' }}
+              Historia Clínica: #{{ cita()?.documentoPaciente || '—' }}
             </p>
           </div>
         </section>
@@ -29,8 +29,8 @@
           </span>
           <div>
             <p class="eyebrow">Especialista</p>
-            <p class="ficha__valor">{{ medico()?.nombreCompleto ?? '—' }}</p>
-            <p class="ficha__detalle">{{ medico()?.subespecialidad ?? '—' }}</p>
+            <p class="ficha__valor">{{ cita()?.oftalmologoNombre || '—' }}</p>
+            <p class="ficha__detalle">{{ cita()?.subespecialidad || '—' }}</p>
           </div>
         </section>
       </div>
@@ -42,7 +42,7 @@
           </span>
           <div>
             <p class="eyebrow">Fecha</p>
-            <p class="ficha__valor">{{ fechaLegible }}</p>
+            <p class="ficha__valor">{{ fechaLegible() }}</p>
           </div>
         </div>
         <div class="ficha__separador"></div>
@@ -52,7 +52,7 @@
           </span>
           <div>
             <p class="eyebrow">Hora</p>
-            <p class="ficha__valor">{{ horaLegible }}</p>
+            <p class="ficha__valor">{{ horaLegible() }}</p>
           </div>
         </div>
       </section>

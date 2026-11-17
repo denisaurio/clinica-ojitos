@@ -15,7 +15,8 @@ import { SelectComponent, OpcionSelect } from '../../shared/components/ui-select
 import { CardComponent } from '../../shared/components/ui-card';
 import { AlertComponent } from '../../shared/components/ui-alert';
 import { TratamientoService } from '../../core/services/tratamiento.service';
-import { CatalogoService } from '../../core/services/catalogo.service';
+import { PacienteService } from '../../core/services/paciente.service';
+import { OftalmologoService } from '../../core/services/oftalmologo.service';
 import { ContextoPaginaService } from '../../core/services/contexto-pagina.service';
 import { DemoDataService } from '../../core/services/demo-data.service';
 import { Lateralidad } from '../../core/models';
@@ -43,7 +44,8 @@ import { Lateralidad } from '../../core/models';
 export class CirugiaRegistroComponent implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly cirugias = inject(TratamientoService);
-  private readonly catalogos = inject(CatalogoService);
+  private readonly pacientes = inject(PacienteService);
+  private readonly oftalmologos = inject(OftalmologoService);
   private readonly demo = inject(DemoDataService);
   private readonly router = inject(Router);
   private readonly contexto = inject(ContextoPaginaService);
@@ -57,16 +59,18 @@ export class CirugiaRegistroComponent implements OnInit, OnDestroy {
     'Tópica', 'Peribulbar', 'Retrobulbar', 'General'
   ].map((a) => ({ valor: a, etiqueta: a }));
 
-  protected readonly tiposExamen = signal<OpcionSelect[]>([]);
+  protected readonly pacientesOpciones = signal<OpcionSelect[]>([]);
+  protected readonly oftalmologosOpciones = signal<OpcionSelect[]>([]);
 
   protected readonly guardando = signal(false);
   protected readonly error = signal('');
 
   protected readonly formulario = this.fb.nonNullable.group({
-    pacienteId: [0, [Validators.required]],
+    pacienteId: [null as number | null, [Validators.required]],
+    oftalmologoId: [null as number | null, [Validators.required]],
     diagnosticoPreoperatorio: ['', [Validators.required]],
     tipoCirugia: ['', [Validators.required]],
-    fecha: ['', [Validators.required]],
+    fecha: [this.hoyIso(), [Validators.required]],
     lateralidad: ['OD' as Lateralidad, [Validators.required]],
     tipoAnestesia: ['Tópica', [Validators.required]],
     reporteOperatorio: ['', [Validators.required]],
@@ -78,9 +82,17 @@ export class CirugiaRegistroComponent implements OnInit, OnDestroy {
       antetitulo: 'CIRUGÍAS > Nuevo Registro',
     });
 
-    this.catalogos
-      .tiposExamen()
-      .subscribe((items) => this.tiposExamen.set(items.map((i) => ({ valor: i.nombre, etiqueta: i.nombre }))));
+    this.pacientes.listar('', 0, 100).subscribe((pagina) => {
+      this.pacientesOpciones.set(
+        pagina.content.map((p) => ({ valor: p.id, etiqueta: p.nombreCompleto }))
+      );
+    });
+
+    this.oftalmologos.listar('', true).subscribe((items) => {
+      this.oftalmologosOpciones.set(
+        items.map((o) => ({ valor: o.id, etiqueta: o.nombreCompleto }))
+      );
+    });
   }
 
   ngOnDestroy(): void {
@@ -103,12 +115,31 @@ export class CirugiaRegistroComponent implements OnInit, OnDestroy {
     }
 
     this.guardando.set(true);
-    this.cirugias.crearCirugia(this.formulario.getRawValue()).subscribe({
-      next: () => this.router.navigate(['/dashboard']),
-      error: () => {
-        this.guardando.set(false);
-        this.error.set('No se pudo guardar el registro quirúrgico. Inténtelo de nuevo.');
-      },
-    });
+    const valores = this.formulario.getRawValue();
+    this.cirugias
+      .crearCirugia({
+        pacienteId: Number(valores.pacienteId),
+        oftalmologoId: Number(valores.oftalmologoId),
+        diagnosticoPreoperatorio: valores.diagnosticoPreoperatorio,
+        tipoCirugia: valores.tipoCirugia,
+        fecha: valores.fecha,
+        lateralidad: valores.lateralidad,
+        tipoAnestesia: valores.tipoAnestesia,
+        reporteOperatorio: valores.reporteOperatorio,
+      })
+      .subscribe({
+        next: () => this.router.navigate(['/dashboard']),
+        error: () => {
+          this.guardando.set(false);
+          this.error.set('No se pudo guardar el registro quirúrgico. Inténtelo de nuevo.');
+        },
+      });
+  }
+
+  private hoyIso(): string {
+    const hoy = new Date();
+    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+    const dia = String(hoy.getDate()).padStart(2, '0');
+    return `${hoy.getFullYear()}-${mes}-${dia}`;
   }
 }

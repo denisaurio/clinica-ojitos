@@ -101,11 +101,13 @@ public class Mapeador {
                 h.getId(),
                 h.getDiaSemana() != null ? h.getDiaSemana().getId() : null,
                 h.getDiaSemana() != null ? h.getDiaSemana().getNombre() : null,
+                h.getDiaSemana() != null ? h.getDiaSemana().getCodigo() : null,
                 h.getDiaSemana() != null ? h.getDiaSemana().getOrden() : null,
                 h.getHoraInicio(),
                 h.getHoraFin(),
                 h.getTipoBloque() != null ? h.getTipoBloque().getId() : null,
                 h.getTipoBloque() != null ? h.getTipoBloque().getNombre() : null,
+                h.getTipoBloque() != null ? h.getTipoBloque().getCodigo() : null,
                 h.getSede() != null ? h.getSede().getId() : null,
                 h.getSede() != null ? h.getSede().getNombre() : null,
                 Boolean.TRUE.equals(h.getActivo()));

@@ -16,6 +16,7 @@ import { IconComponent } from '../../shared/components/ui-icon';
 import { AvatarComponent } from '../../shared/components/ui-avatar';
 import { PacienteService } from '../../core/services/paciente.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
+import { environment } from '../../../environments/environment';
 
 /**
  * Alta de paciente en tres pasos (imagen 25).
@@ -80,6 +81,9 @@ export class PacienteNuevoComponent implements OnDestroy {
 
   /** Credenciales del portal, mostradas una sola vez tras el alta. */
   protected readonly credenciales = signal<Credenciales | null>(null);
+
+  /** URL pública del portal que se muestra al entregar las credenciales. */
+  protected readonly urlLogin = `${environment.appUrl || window.location.origin}/login`;
 
   /** Documento del paciente recién creado; permite volver a su ficha. */
   protected readonly pacienteId = signal<string>('');

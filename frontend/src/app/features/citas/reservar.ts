@@ -13,6 +13,7 @@ import { IconComponent } from '../../shared/components/ui-icon';
 import { CitaService } from '../../core/services/cita.service';
 import { OftalmologoService } from '../../core/services/oftalmologo.service';
 import { PacienteService } from '../../core/services/paciente.service';
+import { CatalogoService } from '../../core/services/catalogo.service';
 import { ContextoPaginaService } from '../../core/services/contexto-pagina.service';
 import { SlotDisponibilidad } from '../../core/models';
 
@@ -50,28 +51,30 @@ export class CitaReservarComponent implements OnInit, OnDestroy {
   private readonly citas = inject(CitaService);
   private readonly oftalmologos = inject(OftalmologoService);
   private readonly pacientes = inject(PacienteService);
+  private readonly catalogos = inject(CatalogoService);
   private readonly router = inject(Router);
   private readonly contexto = inject(ContextoPaginaService);
 
   protected readonly paso = signal(1);
   protected readonly medicos = signal<OpcionSelect[]>([]);
   protected readonly pacientesOpciones = signal<OpcionSelect[]>([]);
+  protected readonly tiposConsulta = signal<OpcionSelect[]>([]);
   protected readonly slots = signal<SlotDisponibilidad[]>([]);
   protected readonly slotSeleccionado = signal<string>('');
   protected readonly cargando = signal(false);
   protected readonly error = signal('');
 
-  /** Fecha por defecto del prototipo: sábado 14 de octubre de 2023. */
-  private readonly mesActual = new Date(2023, 9, 1);
-  protected readonly mes = signal(new Date(2023, 9, 1));
+  /** El calendario arranca en el mes real, no en una fecha del prototipo. */
+  protected readonly mes = signal(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
 
   protected readonly formulario = this.fb.nonNullable.group({
     oftalmologoId: [null as number | null, [Validators.required]],
-    pacienteId: [7 as number | null, [Validators.required]],
-    fecha: ['2023-10-14', [Validators.required]],
+    pacienteId: [null as number | null, [Validators.required]],
+    fecha: [this.hoyIso(), [Validators.required]],
     horaInicio: ['', [Validators.required]],
-    tipoConsulta: ['', [Validators.required]],
+    tipoConsultaId: [null as number | null, [Validators.required]],
     motivo: [''],
+    notaInterna: [''],
   });
 
   ngOnInit(): void {
@@ -81,13 +84,15 @@ export class CitaReservarComponent implements OnInit, OnDestroy {
       this.medicos.set(items.map((o) => ({ valor: o.id, etiqueta: o.nombreCompleto })));
     });
 
-    this.pacientes.listar('', 0, 50).subscribe((pagina) => {
+    this.pacientes.listar('', 0, 100).subscribe((pagina) => {
       this.pacientesOpciones.set(
         pagina.content.map((p) => ({ valor: p.id, etiqueta: p.nombreCompleto }))
       );
     });
 
-    this.cargarDisponibilidad('2023-10-14');
+    this.catalogos.tiposConsulta().subscribe((items) => {
+      this.tiposConsulta.set(items.map((t) => ({ valor: t.id, etiqueta: t.nombre })));
+    });
   }
 
   ngOnDestroy(): void {
@@ -162,11 +167,24 @@ export class CitaReservarComponent implements OnInit, OnDestroy {
   );
 
   protected cargarDisponibilidad(fecha: string): void {
+    const medico = this.c.oftalmologoId.value;
+    if (!medico) {
+      this.slots.set([]);
+      return;
+    }
     this.cargando.set(true);
-    this.citas.disponibilidad(this.c.oftalmologoId.value ?? undefined, fecha).subscribe((slots) => {
+    this.citas.disponibilidad(Number(medico), fecha || this.hoyIso()).subscribe((slots) => {
       this.slots.set(slots);
       this.cargando.set(false);
     });
+  }
+
+  /** Al elegir especialista se recargan las franjas de la fecha ya seleccionada. */
+  protected cambiarMedico(valor: string): void {
+    this.c.oftalmologoId.setValue(valor ? Number(valor) : null);
+    this.slotSeleccionado.set('');
+    this.c.horaInicio.setValue('');
+    this.cargarDisponibilidad(this.c.fecha.value);
   }
 
   protected seleccionarSlot(slot: SlotDisponibilidad): void {
@@ -183,13 +201,13 @@ export class CitaReservarComponent implements OnInit, OnDestroy {
   }
 
   protected nombreMedico(): string {
-    const id = this.c.oftalmologoId.value;
-    return this.medicos().find((m) => m.valor === id)?.etiqueta ?? '—';
+    const id = Number(this.c.oftalmologoId.value);
+    return this.medicos().find((m) => Number(m.valor) === id)?.etiqueta ?? '—';
   }
 
   protected nombrePaciente(): string {
-    const id = this.c.pacienteId.value;
-    return this.pacientesOpciones().find((p) => p.valor === id)?.etiqueta ?? '—';
+    const id = Number(this.c.pacienteId.value);
+    return this.pacientesOpciones().find((p) => Number(p.valor) === id)?.etiqueta ?? '—';
   }
 
   protected seleccionada(hora: string): boolean {
@@ -224,14 +242,14 @@ export class CitaReservarComponent implements OnInit, OnDestroy {
 
     this.citas
       .crear({
-        pacienteId: this.c.pacienteId.value ?? 0,
-        oftalmologoId: this.c.oftalmologoId.value ?? 0,
+        pacienteId: Number(this.c.pacienteId.value),
+        oftalmologoId: Number(this.c.oftalmologoId.value),
         fecha: this.c.fecha.value,
         horaInicio,
         horaFin: `${String(fin.getHours()).padStart(2, '0')}:${String(fin.getMinutes()).padStart(2, '0')}`,
-        tipoConsulta: this.c.tipoConsulta.value || 'Consulta General',
+        tipoConsultaId: Number(this.c.tipoConsultaId.value),
         motivo: this.c.motivo.value,
-        notas: '',
+        notaInterna: this.c.notaInterna.value,
       })
       .subscribe({
         next: () => this.router.navigate(['/citas/confirmacion']),
@@ -245,5 +263,9 @@ export class CitaReservarComponent implements OnInit, OnDestroy {
     const mes = String(fecha.getMonth() + 1).padStart(2, '0');
     const dia = String(fecha.getDate()).padStart(2, '0');
     return `${fecha.getFullYear()}-${mes}-${dia}`;
+  }
+
+  private hoyIso(): string {
+    return this.aIso(new Date());
   }
 }
