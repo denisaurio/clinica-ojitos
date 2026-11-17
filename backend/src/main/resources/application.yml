@@ -8,6 +8,12 @@ spring:
     name: clinica-ojitos-backend
     profiles:
       default: dev
+  # Lee un .env si existe (en local). En Coolify no hace falta: las variables
+  # llegan como variables de entorno reales del contenedor.
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
 
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/clinica_ojitos?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Lima&createDatabaseIfNotExist=true}
@@ -15,7 +21,7 @@ spring:
     password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
-      maximum-pool-size: 10
+      maximum-pool-size: ${DB_POOL_SIZE:10}
       minimum-idle: 2
       connection-timeout: 30000
       pool-name: ClinicaOjitosPool
@@ -23,13 +29,13 @@ spring:
   jpa:
     # El esquema lo crea sql/01_esquema.sql. El backend solo valida.
     hibernate:
-      ddl-auto: validate
+      ddl-auto: ${JPA_DDL_AUTO:validate}
     open-in-view: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: false
-        jdbc.time_zone: America/Lima
+        jdbc.time_zone: ${APP_TIMEZONE:America/Lima}
     show-sql: false
 
   jackson:
@@ -40,8 +46,8 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 25MB
+      max-file-size: ${UPLOAD_MAX_FILE_SIZE:10MB}
+      max-request-size: ${UPLOAD_MAX_REQUEST_SIZE:25MB}
 
   mvc:
     throw-exception-if-no-handler-found: true
@@ -51,7 +57,14 @@ spring:
       add-mappings: true
 
 # --- Seguridad (RF-06) ------------------------------------------------------
+server:
+  port: ${PORT:8080}
+
 app:
+  # Orígenes permitidos por CORS, separados por coma. Con el frontend detrás
+  # de nginx (mismo origen) no hace falta; sirve si el front va en otro dominio.
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
   jwt:
     # Cadena de firma del token.
     #
@@ -75,8 +88,8 @@ springdoc:
 # --- Logging ----------------------------------------------------------------
 logging:
   level:
-    root: INFO
-    com.clinicaojitos: DEBUG
+    root: ${LOG_LEVEL_ROOT:INFO}
+    com.clinicaojitos: ${LOG_LEVEL_APP:DEBUG}
     org.springframework.security: WARN
     org.hibernate.SQL: WARN
   pattern:
