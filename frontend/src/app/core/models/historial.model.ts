@@ -55,7 +55,10 @@ export interface RegistroAgudeza {
 export interface ConsultaRequest {
   pacienteId: number;
   motivo: string;
+  /** Nombre legible del tipo (se usa en el modo demostración). */
   tipoConsulta: string;
+  /** Id del catálogo `tipo_consulta`: el backend lo exige (@NotNull). */
+  tipoConsultaId?: number | null;
   diagnosticoPrincipal: string;
   agudezaOd: string;
   agudezaOi: string;

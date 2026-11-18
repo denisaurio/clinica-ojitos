@@ -105,7 +105,7 @@ public class CitaService {
     public CitaDto.Response registrar(CitaDto.Request r) {
         validarRango(r.horaInicio(), r.horaFin());
 
-        if (citaRepository.contarSolapes(r.oftalmologoId(), r.fecha(), r.horaInicio(), null) > 0) {
+        if (citaRepository.contarSolapes(r.oftalmologoId(), r.fecha(), r.horaInicio(), r.horaFin(), null) > 0) {
             throw new CruceDeHorarioException(
                     "El oftalmólogo seleccionado ya tiene una cita registrada en ese horario.");
         }
@@ -139,7 +139,7 @@ public class CitaService {
         Cita c = obtenerEntidad(id);
         validarRango(r.horaInicio(), r.horaFin());
 
-        if (citaRepository.contarSolapes(c.getOftalmologo().getId(), r.fecha(), r.horaInicio(), id) > 0) {
+        if (citaRepository.contarSolapes(c.getOftalmologo().getId(), r.fecha(), r.horaInicio(), r.horaFin(), id) > 0) {
             throw new CruceDeHorarioException(
                     "El horario elegido ya está ocupado para este oftalmólogo.");
         }

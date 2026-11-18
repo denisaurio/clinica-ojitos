@@ -122,7 +122,8 @@ export class HistorialService {
     return this.http
       .post<ConsultaApi>(this.base, {
         pacienteId: peticion.pacienteId,
-        tipoConsulta: peticion.tipoConsulta,
+        // El backend recibe el id del catálogo, no el nombre (ConsultaDto.Request).
+        tipoConsultaId: peticion.tipoConsultaId ?? null,
         agudezaOd: peticion.agudezaOd || null,
         agudezaOi: peticion.agudezaOi || null,
         pioOd: peticion.pioOd || null,
@@ -135,6 +136,8 @@ export class HistorialService {
         soapObjetivo: peticion.notasObjetivo || null,
         soapEvaluacion: peticion.notasEvaluacion || null,
         soapPlan: peticion.notasPlan || null,
+        // La consulta no tiene columna «motivo»: se conserva en observaciones.
+        observaciones: peticion.motivo ? `Motivo: ${peticion.motivo}` : null,
       })
       .pipe(map((r) => this.aConsulta(r)));
   }

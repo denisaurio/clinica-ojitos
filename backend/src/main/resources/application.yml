@@ -11,9 +11,12 @@ server:
 spring:
   application:
     name: clinica-ojitos-backend
-    profiles:
-      # Perfil activo por defecto. En producción: SPRING_PROFILES_ACTIVE=prod.
-      default: ${SPRING_PROFILES_ACTIVE:dev}
+
+  # Perfil por defecto cuando no se define SPRING_PROFILES_ACTIVE (en producción
+  # se define =prod). Antes estaba anidado bajo `spring.application` y Spring
+  # lo ignoraba, así que application-dev.yml nunca se cargaba en local.
+  profiles:
+    default: dev
 
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/clinica_ojitos?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Lima&createDatabaseIfNotExist=true}

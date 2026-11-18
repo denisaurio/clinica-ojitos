@@ -26,6 +26,10 @@ const RUTA_RUNTIME_ENV = 'frontend/src/environments/runtime-env.ts';
 const RUTA_ENV_JS = 'frontend/public/env.js';
 const RUTA_INDEX = 'frontend/src/index.html';
 const RUTA_NUEVO_PACIENTE = 'frontend/src/app/features/pacientes/nuevo.ts';
+const RUTA_HISTORIAL_SERVICE = 'frontend/src/app/core/services/historial.service.ts';
+const RUTA_NUEVA_CONSULTA = 'frontend/src/app/features/historial/nueva-consulta.ts';
+const RUTA_CITA_REPOSITORY =
+  'backend/src/main/java/com/clinicaojitos/domain/repository/CitaRepository.java';
 
 export default {
   nombre: 'contrato',
@@ -184,6 +188,25 @@ export default {
       contiene(RUTA_OFTA_SERVICE, 'valoracionMedia', 'modelo de la pantalla');
       contiene(RUTA_OFTA_SERVICE, 'diaSemanaCodigo', 'día del bloque');
       contiene(RUTA_OFTA_SERVICE, 'tipoBloqueCodigo', 'tipo del bloque');
+    });
+
+    await prueba('Registrar consulta envía tipoConsultaId (RF-02)', () => {
+      // ConsultaDto.Request exige @NotNull tipoConsultaId: sin él el alta da 400.
+      contiene(RUTA_HISTORIAL_SERVICE, 'tipoConsultaId', 'id del tipo de consulta');
+      contiene(RUTA_NUEVA_CONSULTA, 'valor: String(i.id)', 'el select debe guardar el id');
+    });
+
+    await prueba('El cruce de horario compara el rango completo (RF3.2)', () => {
+      contiene(RUTA_CITA_REPOSITORY, 'c.horaInicio < :horaFin', 'solapamiento por rango');
+      contiene(RUTA_CITA_REPOSITORY, 'c.horaFin    > :horaInicio', 'solapamiento por rango');
+    });
+
+    await prueba('spring.profiles.default está al nivel correcto', () => {
+      const yml = leer(RUTA_APP);
+      asegurar(
+        /^spring:\n(?:.*\n)*?  profiles:\n    default:/m.test(yml.replace(/\r/g, '')),
+        'spring.profiles.default debe colgar de spring:, no de spring.application:'
+      );
     });
   },
 };

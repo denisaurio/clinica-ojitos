@@ -92,7 +92,7 @@ class CitaServiceTest {
     @Test
     @DisplayName("Registra una cita como PROGRAMADA")
     void registraCita() {
-        when(citaRepository.contarSolapes(anyLong(), any(), any(), any())).thenReturn(0L);
+        when(citaRepository.contarSolapes(anyLong(), any(), any(), any(), any())).thenReturn(0L);
 
         servicio.registrar(request(LocalTime.of(9, 0), LocalTime.of(9, 30)));
 
@@ -102,12 +102,27 @@ class CitaServiceTest {
     @Test
     @DisplayName("RF3.2 — Rechaza una cita en un horario ya ocupado")
     void rechazaCruceDeHorario() {
-        when(citaRepository.contarSolapes(anyLong(), any(), any(), any())).thenReturn(1L);
+        when(citaRepository.contarSolapes(anyLong(), any(), any(), any(), any())).thenReturn(1L);
 
         assertThatThrownBy(() -> servicio.registrar(request(LocalTime.of(9, 0), LocalTime.of(9, 30))))
                 .isInstanceOf(CruceDeHorarioException.class)
                 .hasMessageContaining("ya tiene una cita");
 
+        verify(citaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("RF3.2 — El control de cruce compara el rango completo (inicio y fin)")
+    void cruceComparaRangoCompleto() {
+        // Cita existente 09:00-10:00; la nueva 09:30-10:30 se solapa aunque
+        // empiece a otra hora. El repositorio recibe inicio Y fin del turno.
+        when(citaRepository.contarSolapes(eq(1L), any(), eq(LocalTime.of(9, 30)), eq(LocalTime.of(10, 30)), any()))
+                .thenReturn(1L);
+
+        assertThatThrownBy(() -> servicio.registrar(request(LocalTime.of(9, 30), LocalTime.of(10, 30))))
+                .isInstanceOf(CruceDeHorarioException.class);
+
+        verify(citaRepository).contarSolapes(eq(1L), any(), eq(LocalTime.of(9, 30)), eq(LocalTime.of(10, 30)), any());
         verify(citaRepository, never()).save(any());
     }
 
@@ -151,7 +166,7 @@ class CitaServiceTest {
         cita.setEstadoCita(EstadoCita.builder().id(1).codigo("PROGRAMADA").build());
 
         when(citaRepository.findById(1L)).thenReturn(Optional.of(cita));
-        when(citaRepository.contarSolapes(eq(1L), any(), any(), eq(1L))).thenReturn(0L);
+        when(citaRepository.contarSolapes(eq(1L), any(), any(), any(), eq(1L))).thenReturn(0L);
         when(mapeador.aCita(any(Cita.class))).thenReturn(null);
 
         LocalDate manana = hoy.plusDays(1);
@@ -172,7 +187,7 @@ class CitaServiceTest {
         cita.setFecha(hoy);
 
         when(citaRepository.findById(1L)).thenReturn(Optional.of(cita));
-        when(citaRepository.contarSolapes(eq(1L), any(), any(), eq(1L))).thenReturn(1L);
+        when(citaRepository.contarSolapes(eq(1L), any(), any(), any(), eq(1L))).thenReturn(1L);
 
         assertThatThrownBy(() -> servicio.reprogramar(1L, new CitaDto.ReprogramarRequest(
                 hoy.plusDays(1), LocalTime.of(11, 0), LocalTime.of(11, 30), null)))
