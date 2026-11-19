@@ -36,6 +36,7 @@ class CitaDisponibilidadTest {
     @Mock private CitaRepository citaRepository;
     @Mock private DiaSemanaRepository diaSemanaRepository;
     @Mock private HorarioLaboralRepository horarioLaboralRepository;
+    @Mock private com.clinicaojitos.notificacion.NotificacionService notificaciones;
     @InjectMocks private CitaService servicio;
 
     /** Jueves 19 de noviembre de 2026. */

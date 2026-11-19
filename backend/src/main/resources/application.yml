@@ -52,6 +52,25 @@ spring:
       max-file-size: ${MULTIPART_MAX_FILE:10MB}
       max-request-size: ${MULTIPART_MAX_REQUEST:25MB}
 
+  # RF3.5 y RF6.4: correo saliente. Sin SMTP_HOST no se envía nada (solo log).
+  mail:
+    host: ${SMTP_HOST:}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USER:}
+    password: ${SMTP_PASSWORD:}
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: ${SMTP_AUTH:true}
+          starttls:
+            enable: ${SMTP_STARTTLS:true}
+          ssl:
+            enable: ${SMTP_SSL:false}
+          connectiontimeout: 10000
+          timeout: 10000
+          writetimeout: 10000
+
   mvc:
     throw-exception-if-no-handler-found: true
 
@@ -78,6 +97,14 @@ app:
     # dominio (nginx del frontend proxya /api) no hace falta abrir CORS.
     # Ejemplo: https://app.midominio.com,http://localhost:4200
     allowed-origins: ${CORS_ALLOWED_ORIGINS:}
+
+  # Dirección pública de la web: se usa en los enlaces de los correos.
+  url: ${APP_URL:}
+
+  correo:
+    # Remitente de los correos, p. ej. "Clínica Ojitos <no-responder@midominio.com>".
+    # Si se deja vacío se usa SMTP_USER.
+    remitente: ${MAIL_FROM:${SMTP_USER:}}
 
   cifrado:
     # RNF-01: clave AES-256 (32 bytes en Base64) para cifrar los textos clínicos en

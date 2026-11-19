@@ -2,6 +2,7 @@ package com.clinicaojitos.domain.service;
 
 import com.clinicaojitos.audit.Auditado;
 import com.clinicaojitos.domain.dto.CitaDto;
+import com.clinicaojitos.notificacion.NotificacionService;
 import com.clinicaojitos.domain.entity.*;
 import com.clinicaojitos.domain.repository.*;
 import com.clinicaojitos.exception.CruceDeHorarioException;
@@ -39,6 +40,7 @@ public class CitaService {
     private final TipoBloqueHorarioRepository tipoBloqueRepository;
     private final Mapeador mapeador;
     private final AutorizacionPacienteService autorizacion;
+    private final NotificacionService notificaciones;
 
     @Transactional(readOnly = true)
     public List<CitaDto.Evento> agenda(Long oftalmologoId, LocalDate desde, LocalDate hasta) {
@@ -187,7 +189,9 @@ public class CitaService {
         aplicarReferencias(c, r.sedeId(), r.tipoConsultaId());
         c.setEstadoCita(estadoPorCodigo("PROGRAMADA"));
 
-        return mapeador.aCita(citaRepository.save(c));
+        Cita guardada = citaRepository.save(c);
+        notificaciones.citaProgramada(guardada);   // RF3.5: se envía tras el commit
+        return mapeador.aCita(guardada);
     }
 
     /**
@@ -210,6 +214,8 @@ public class CitaService {
                     "El horario elegido ya está ocupado para este oftalmólogo.");
         }
 
+        LocalDate fechaAnterior = c.getFecha();
+        LocalTime horaAnterior = c.getHoraInicio();
         c.setFecha(r.fecha());
         c.setHoraInicio(r.horaInicio());
         c.setHoraFin(r.horaFin());
@@ -219,7 +225,9 @@ public class CitaService {
         EstadoCita reprogramada = estadoPorCodigo("PROGRAMADA");
         if (reprogramada != null) c.setEstadoCita(reprogramada);
 
-        return mapeador.aCita(citaRepository.save(c));
+        Cita guardada = citaRepository.save(c);
+        notificaciones.citaReprogramada(guardada, fechaAnterior, horaAnterior);
+        return mapeador.aCita(guardada);
     }
 
     /** Cancelación: el turno se libera pero el registro se conserva (RF3.4). */
@@ -233,7 +241,9 @@ public class CitaService {
         if (cancelada != null) c.setEstadoCita(cancelada);
         c.setNotaInterna(r.motivo());
         c.setBloqueo(Boolean.FALSE);
-        return mapeador.aCita(citaRepository.save(c));
+        Cita guardada = citaRepository.save(c);
+        notificaciones.citaCancelada(guardada, r.motivo());
+        return mapeador.aCita(guardada);
     }
 
     /** Cambio de estado en el flujo de atención: confirmado, en espera, en consulta... */

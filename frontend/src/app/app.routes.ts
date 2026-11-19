@@ -26,6 +26,14 @@ export const routes: Routes = [
         (m) => m.RecuperarClaveComponent
       ),
   },
+  {
+    // RF6.4: destino del enlace que llega por correo (?token=...).
+    path: 'restablecer-clave',
+    loadComponent: () =>
+      import('./features/auth/restablecer-clave/restablecer-clave').then(
+        (m) => m.RestablecerClaveComponent
+      ),
+  },
 
   // ------------------------------------------------- Aplicación con shell
   {

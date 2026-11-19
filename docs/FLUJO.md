@@ -102,6 +102,30 @@ configuración está en [`ESTRUCTURA.md`](ESTRUCTURA.md).
 > el login muestra «Servidor no disponible» en ámbar y **no** consume ninguno de
 > los tres intentos: solo un 401 del servidor cuenta como intento fallido.
 
+### 2.1 Olvidé mi contraseña (RF6.4)
+
+```
+ /recuperar-clave   escribe su correo
+   ▼
+ POST /api/v1/auth/recuperar-clave { email }
+   │  Responde SIEMPRE el mismo mensaje (no revela qué correos existen)
+   │  Solo envía si la cuenta existe, está activa y no está bloqueada
+   ▼
+ Correo con  APP_URL/restablecer-clave?token=...   (vence en 30 min)
+   ▼
+ /restablecer-clave  nueva contraseña + repetirla
+   ▼
+ POST /api/v1/auth/restablecer-clave { token, passwordNueva }
+   ├─ token alterado, vencido o ya usado ──► 400 "El enlace no es válido..."
+   └─ 200 ──► [Ir al inicio de sesión]
+```
+
+El token no se guarda en la base: va firmado con HMAC (clave derivada de
+`JWT_SECRET`) e incluye el hash de la contraseña actual, así que deja de servir
+en cuanto la contraseña cambia. No es un JWT: no sirve para entrar a la API.
+Necesita `SMTP_HOST` y `APP_URL` (ver [DESPLIEGUE.md](DESPLIEGUE.md)); sin SMTP
+la petición responde igual, pero el correo solo queda anotado en el log.
+
 ---
 
 ## 3. Pacientes (RF-01)
@@ -326,7 +350,7 @@ citas (403 en cualquier otra). Para todos los roles: no se agenda en días pasad
    ├─ Encabezado verde: turno registrado
    ├─ Fichas: paciente + nº historia · especialista + subespecialidad
    │          día y hora exactos
-   ├─ Aviso: se enviaría la notificación por WhatsApp y correo
+   ├─ Aviso: el paciente recibe la confirmación por correo (RF3.5)
    └─ [Imprimir comprobante]   [Volver al calendario]
 ```
 
@@ -355,6 +379,11 @@ confirmar o cancelar vuelve a la agenda en la semana de la cita
    └─ PATCH /api/v1/citas/:id/cancelar { motivo }
          └─ la cita pasa a CANCELADA y LIBERA el horario (bloqueo = 0)
 ```
+
+> **Avisos por correo (RF3.5).** Al programar, reprogramar o cancelar, el
+> paciente recibe un correo (si tiene email) con fecha, hora, especialista y sede.
+> Se envía después de guardar y en segundo plano: si el SMTP falla o no está
+> configurado, la cita se guarda igual y el fallo solo queda en el log.
 
 ---
 

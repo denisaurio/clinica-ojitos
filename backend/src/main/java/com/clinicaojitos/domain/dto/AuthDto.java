@@ -37,6 +37,18 @@ public final class AuthDto {
     ) {
     }
 
+    /** RF6.4: nueva contraseña con el token recibido por correo. */
+    public record RestablecerClaveRequest(
+            @NotBlank(message = "El enlace no es válido")
+            String token,
+
+            @NotBlank(message = "La nueva contraseña es obligatoria")
+            @jakarta.validation.constraints.Size(min = 8, max = 100,
+                    message = "La contraseña debe tener entre 8 y 100 caracteres")
+            String passwordNueva
+    ) {
+    }
+
     /** Token emitido tras una autenticación correcta. */
     public record TokenResponse(
             String accessToken,

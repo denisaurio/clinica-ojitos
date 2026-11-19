@@ -35,3 +35,9 @@ export interface RefreshRequest {
 export interface RecuperarClaveRequest {
   email: string;
 }
+
+/** RF6.4: nueva contraseña con el token del enlace recibido por correo. */
+export interface RestablecerClaveRequest {
+  token: string;
+  passwordNueva: string;
+}

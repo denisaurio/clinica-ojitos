@@ -5,7 +5,7 @@ import { Observable, defer, of, throwError } from 'rxjs';
 import { delay, tap } from 'rxjs/operators';
 
 import { environment } from '../../../environments/environment';
-import { AuthResponse, LoginRequest, MensajeRespuesta, PerfilUsuario, RecuperarClaveRequest, Rol } from '../models';
+import { AuthResponse, LoginRequest, MensajeRespuesta, PerfilUsuario, RecuperarClaveRequest, RestablecerClaveRequest, Rol } from '../models';
 import { DemoDataService } from './demo-data.service';
 
 const TOKEN_KEY = 'ojitos_access_token';
@@ -87,6 +87,17 @@ export class AuthService {
     }
     return this.http.post<MensajeRespuesta>(
       `${environment.apiUrl}/auth/recuperar-clave`,
+      peticion
+    );
+  }
+
+  /** RF6.4: fija la contraseña nueva con el token del enlace del correo. */
+  restablecerClave(peticion: RestablecerClaveRequest): Observable<MensajeRespuesta> {
+    if (environment.useMockApi) {
+      return of({ mensaje: 'Contraseña actualizada. Ya puede iniciar sesión.' }).pipe(delay(200));
+    }
+    return this.http.post<MensajeRespuesta>(
+      `${environment.apiUrl}/auth/restablecer-clave`,
       peticion
     );
   }

@@ -8,8 +8,8 @@
     <div class="recuperar__cuerpo">
       <h2 class="recuperar__encabezado">Recuperación de Contraseña</h2>
       <p class="recuperar__texto">
-        Ingrese el correo electrónico o nombre de usuario asociado a su cuenta y le
-        enviaremos las instrucciones para restablecer su contraseña.
+        Ingrese el correo electrónico asociado a su cuenta y le enviaremos un enlace
+        para elegir una contraseña nueva. El enlace vence en 30 minutos.
       </p>
 
       @if (enviado()) {
@@ -23,8 +23,8 @@
       <form [formGroup]="formulario" (ngSubmit)="enviar()" novalidate>
         <ui-input
           formControlName="email"
-          etiqueta="Correo electrónico o Usuario"
-          placeholder="e.g., patient@ejemplo.com"
+          etiqueta="Correo electrónico"
+          placeholder="p. ej., paciente@ejemplo.com"
           icono="mail"
           tipo="email"
           [error]="emailControl.invalid && emailControl.touched ? 'Ingrese un correo válido.' : ''"

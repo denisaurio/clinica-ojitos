@@ -174,6 +174,15 @@ ADMIN_PASSWORD=REEMPLAZA_CLAVE_ADMIN
 ADMIN_EMAIL=admin@clinicaojitos.pe
 ADMIN_FORZAR_CLAVE=false
 
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=REEMPLAZA_CUENTA@gmail.com
+SMTP_PASSWORD=REEMPLAZA_CONTRASENA_DE_APLICACION
+SMTP_AUTH=true
+SMTP_STARTTLS=true
+SMTP_SSL=false
+MAIL_FROM=
+
 DB_URL=jdbc:mysql://REEMPLAZA_HOST_INTERNO:3306/clinica_ojitos?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Lima
 DB_USER=clinica
 DB_PASSWORD=REEMPLAZA_CLAVE_MYSQL
@@ -210,6 +219,12 @@ Reglas:
   textos clínicos. Guarda una copia fuera del VPS: sin ella esos textos no se
   pueden leer. Los datos antiguos en texto plano se siguen leyendo y se cifran
   la próxima vez que se guardan.
+- `SMTP_*` (RF3.5 y RF6.4): correo de avisos de citas y del enlace "olvidé mi
+  contraseña". Con Gmail usa una **contraseña de aplicación** (Cuenta de Google →
+  Seguridad → Verificación en 2 pasos → Contraseñas de aplicación), no la clave
+  normal. Si dejas `SMTP_HOST` vacío todo funciona, pero no se envían correos.
+  Marca `SMTP_PASSWORD` como **Locked**. El backend arma los enlaces con
+  `APP_URL`, así que debe ser la dirección pública del **frontend**.
 - `CORS_ALLOWED_ORIGINS` se queda vacío: todo pasa por el mismo dominio.
   Si usas **dos subdominios** (frontend y backend separados), mira el paso 6.4.
 - Si tu proyecto usa otro dominio, cambia `APP_DOMAIN` y `APP_URL`.
@@ -371,6 +386,15 @@ JWT_SECRET={{environment.JWT_SECRET}}
 JWT_EXPIRATION_MINUTES={{environment.JWT_EXPIRATION_MINUTES}}
 CORS_ALLOWED_ORIGINS={{environment.CORS_ALLOWED_ORIGINS}}
 DATA_ENCRYPTION_KEY={{environment.DATA_ENCRYPTION_KEY}}
+APP_URL={{environment.APP_URL}}
+SMTP_HOST={{environment.SMTP_HOST}}
+SMTP_PORT={{environment.SMTP_PORT}}
+SMTP_USER={{environment.SMTP_USER}}
+SMTP_PASSWORD={{environment.SMTP_PASSWORD}}
+SMTP_AUTH={{environment.SMTP_AUTH}}
+SMTP_STARTTLS={{environment.SMTP_STARTTLS}}
+SMTP_SSL={{environment.SMTP_SSL}}
+MAIL_FROM={{environment.MAIL_FROM}}
 ADMIN_USERNAME={{environment.ADMIN_USERNAME}}
 ADMIN_PASSWORD={{environment.ADMIN_PASSWORD}}
 ADMIN_EMAIL={{environment.ADMIN_EMAIL}}

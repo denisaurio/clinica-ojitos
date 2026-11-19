@@ -51,6 +51,7 @@ class CitaServiceTest {
     @Mock private TipoBloqueHorarioRepository tipoBloqueRepository;
     @Mock private Mapeador mapeador;
 
+    @Mock private com.clinicaojitos.notificacion.NotificacionService notificaciones;
     @InjectMocks private CitaService servicio;
 
     private LocalDate hoy;
@@ -121,6 +122,7 @@ class CitaServiceTest {
         servicio.registrar(request(LocalTime.of(9, 0), LocalTime.of(9, 30)));
 
         verify(citaRepository).save(any(Cita.class));
+        verify(notificaciones).citaProgramada(any(Cita.class));   // RF3.5
     }
 
     @Test
@@ -176,6 +178,7 @@ class CitaServiceTest {
 
         assertThat(cita.getBloqueo()).isFalse();
         assertThat(cita.getEstadoCita().getCodigo()).isEqualTo("CANCELADA");
+        verify(notificaciones).citaCancelada(cita, "El paciente no puede asistir");   // RF3.5
     }
 
     @Test
@@ -200,6 +203,7 @@ class CitaServiceTest {
         assertThat(cita.getFecha()).isEqualTo(manana);
         assertThat(cita.getHoraInicio()).isEqualTo(LocalTime.of(11, 0));
         assertThat(cita.getNotaInterna()).isEqualTo("Cambio de turno");
+        verify(notificaciones).citaReprogramada(any(Cita.class), any(), any());   // RF3.5
     }
 
     @Test
