@@ -19,6 +19,7 @@ import { SkeletonComponent } from '../../shared/components/ui-skeleton';
 import { IconComponent } from '../../shared/components/ui-icon';
 import { ModalComponent } from '../../shared/components/ui-modal';
 import { CredencialesComponent } from '../../shared/components/ui-credenciales';
+import { CambiarClaveMedicoComponent } from './cambiar-clave';
 import { OftalmologoService } from '../../core/services/oftalmologo.service';
 import { CitaService } from '../../core/services/cita.service';
 import { ContextoPaginaService } from '../../core/services/contexto-pagina.service';
@@ -39,6 +40,7 @@ import { BloqueHorario, Cita, Credenciales, EstadoCita, MetricasOftalmologo, Oft
     IconComponent,
     ModalComponent,
     CredencialesComponent,
+    CambiarClaveMedicoComponent,
   ],
   templateUrl: './perfil.html',
   styleUrl: './perfil.scss',
@@ -61,6 +63,8 @@ export class OftalmologoPerfilComponent implements OnInit, OnDestroy {
   protected readonly aviso = signal('');
   /** Credencial recién emitida; se muestra una sola vez. */
   protected readonly credenciales = signal<Credenciales | null>(null);
+  /** Modal para que el administrador escriba la nueva contraseña. */
+  protected readonly cambioClave = signal(false);
 
   protected readonly columnas = ['Paciente', 'Fecha y Hora', 'Tipo', 'Estado'];
 
@@ -200,25 +204,5 @@ export class OftalmologoPerfilComponent implements OnInit, OnDestroy {
           this.aviso.set('No se pudo reactivar al médico.');
         },
       });
-  }
-
-  /**
-   * Emite una contraseña nueva (POST /oftalmologos/{id}/credenciales). Es la
-   * única forma de dar acceso a un médico que perdió o nunca vio su clave.
-   */
-  protected generarCredenciales(): void {
-    const m = this.medico();
-    if (!m) return;
-    this.procesando.set(true);
-    this.oftalmologos.credenciales(m.id).subscribe({
-      next: (c) => {
-        this.procesando.set(false);
-        this.credenciales.set(c);
-      },
-      error: (fallo) => {
-        this.procesando.set(false);
-        this.aviso.set(fallo?.error?.message || 'No se pudieron generar las credenciales.');
-      },
-    });
   }
 }

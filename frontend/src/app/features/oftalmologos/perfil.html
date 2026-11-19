@@ -16,8 +16,8 @@
         <ui-button variante="contorno" icono="pencil" [destino]="'/oftalmologos/editar/' + m.id" [enlace]="true">
           Editar perfil
         </ui-button>
-        <ui-button variante="contorno" icono="lock" [deshabilitado]="procesando()" (click)="generarCredenciales()">
-          Generar nuevas credenciales
+        <ui-button variante="contorno" icono="lock" [deshabilitado]="procesando()" (click)="cambioClave.set(true)">
+          Cambiar contraseña
         </ui-button>
         @if (m.activo) {
           <ui-button variante="peligro" icono="x" [deshabilitado]="procesando()" (click)="confirmarBaja.set(true)">
@@ -160,10 +160,19 @@
       </ng-container>
     </ui-modal>
 
+    @if (cambioClave()) {
+      <app-cambiar-clave-medico
+        [medicoId]="m.id"
+        [nombre]="nombreCompleto()"
+        (cerrar)="cambioClave.set(false)"
+        (listo)="cambioClave.set(false); credenciales.set($event)"
+      />
+    }
+
     @if (credenciales(); as c) {
       <ui-credenciales
         [credenciales]="c"
-        [titulo]="'Nuevas credenciales de ' + nombreCompleto()"
+        [titulo]="'Nueva contraseña de ' + nombreCompleto()"
         (cerrar)="credenciales.set(null)"
       />
     }

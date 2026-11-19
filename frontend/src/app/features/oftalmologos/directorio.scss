@@ -51,11 +51,11 @@
   }
 }
 
+// Fijo a la ventana: dentro de la tabla (overflow-x: auto) se recortaba y solo
+// se veían las dos primeras opciones.
 .menu {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 4px);
-  z-index: 10;
+  position: fixed;
+  z-index: 50;
   min-width: 200px;
   padding: 6px;
   background: $surface;

@@ -128,7 +128,7 @@ public class OftalmologoService {
         }
 
         Oftalmologo guardado = oftalmologoRepository.save(o);
-        OftalmologoDto.Credenciales credenciales = crearCuentaDeAcceso(guardado);
+        OftalmologoDto.Credenciales credenciales = crearCuentaDeAcceso(guardado, r.password());
         return new OftalmologoDto.AltaConCredenciales(
                 mapeador.aOftalmologo(guardado), credenciales);
     }
@@ -167,9 +167,9 @@ public class OftalmologoService {
     @Transactional
     @Auditado(accion = "RESETEAR_CLAVE", recurso = "OFTALMOLOGO",
             descripcion = "Emisión de nuevas credenciales")
-    public OftalmologoDto.Credenciales regenerarCredenciales(Long id) {
+    public OftalmologoDto.Credenciales regenerarCredenciales(Long id, String passwordElegida) {
         Oftalmologo o = obtenerEntidad(id);
-        OftalmologoDto.Credenciales credenciales = crearCuentaDeAcceso(o);
+        OftalmologoDto.Credenciales credenciales = crearCuentaDeAcceso(o, passwordElegida);
         if (credenciales == null) {
             throw new OperacionInvalidaException(
                     "No se pudo emitir la credencial: el correo ya pertenece a otra cuenta.");
@@ -328,16 +328,19 @@ public class OftalmologoService {
      * La contraseña inicial es temporal y el administrador debe cambiarla.
      */
     /**
-     * Crea —o restablece— la cuenta de acceso del profesional con una contraseña
-     * aleatoria y la devuelve para que el administrador se la entregue.
+     * Crea —o restablece— la cuenta de acceso del profesional con la contraseña
+     * que eligió el administrador (o una aleatoria si no eligió ninguna) y la
+     * devuelve para que se la entregue.
      *
      * @return las credenciales de primer ingreso, o {@code null} si el correo
      *         ya está en uso por otra cuenta y no se puede crear la suya
      */
-    private OftalmologoDto.Credenciales crearCuentaDeAcceso(Oftalmologo o) {
+    private OftalmologoDto.Credenciales crearCuentaDeAcceso(Oftalmologo o, String passwordElegida) {
 
         String username = usernameSugerido(o);
-        String password = generador.nuevaPassword();
+        String password = passwordElegida == null || passwordElegida.isBlank()
+                ? generador.nuevaPassword()
+                : passwordElegida;
 
         UsuarioOftalmologo vinculo = usuarioOftalmologoRepository.findByOftalmologoId(o.getId())
                 .orElse(null);

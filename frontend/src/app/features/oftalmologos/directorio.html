@@ -33,21 +33,24 @@
                 type="button"
                 class="menu-btn"
                 aria-label="Acciones"
-                (click)="alternarMenu(medico.id)"
+                (click)="alternarMenu(medico.id, $event)"
               >
                 <ui-icon nombre="more-vertical" [tamano]="17" />
               </button>
 
               @if (menuAbierto() === medico.id) {
-                <div class="menu">
+                <div class="menu" [style.top.px]="posicionMenu().top" [style.right.px]="posicionMenu().right">
                   <button type="button" class="menu__opcion" (click)="irA('/oftalmologos/perfil/' + medico.id)">
                     <ui-icon nombre="user" [tamano]="14" /> Ver perfil
                   </button>
                   <button type="button" class="menu__opcion" (click)="irA('/oftalmologos/horarios/' + medico.id)">
                     <ui-icon nombre="calendar" [tamano]="14" /> Configurar horarios
                   </button>
-                  <button type="button" class="menu__opcion" (click)="irA('/oftalmologos/nuevo')">
+                  <button type="button" class="menu__opcion" (click)="irA('/oftalmologos/editar/' + medico.id)">
                     <ui-icon nombre="pencil" [tamano]="14" /> Editar
+                  </button>
+                  <button type="button" class="menu__opcion" (click)="abrirCambioClave(medico)">
+                    <ui-icon nombre="lock" [tamano]="14" /> Cambiar contraseña
                   </button>
                   @if (medico.activo) {
                     <button
@@ -84,4 +87,21 @@
       </ui-empty-state>
     }
   </ui-card>
+
+  @if (cambioClave(); as m) {
+    <app-cambiar-clave-medico
+      [medicoId]="m.id"
+      [nombre]="m.nombreCompleto"
+      (cerrar)="cambioClave.set(null)"
+      (listo)="cambioClave.set(null); credenciales.set($event)"
+    />
+  }
+
+  @if (credenciales(); as c) {
+    <ui-credenciales
+      [credenciales]="c"
+      [titulo]="'Nueva contraseña de ' + c.nombreCompleto"
+      (cerrar)="credenciales.set(null)"
+    />
+  }
 </div>

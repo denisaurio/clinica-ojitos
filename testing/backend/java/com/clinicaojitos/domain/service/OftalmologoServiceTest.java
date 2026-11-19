@@ -56,7 +56,7 @@ class OftalmologoServiceTest {
     private OftalmologoDto.Request requestValido() {
         return new OftalmologoDto.Request(
                 "Elena", "Rostova", "e.rostova@clinicaojitos.pe", "987654321",
-                "COP-38472", 1, null, 1, null, null, null, Boolean.TRUE);
+                "COP-38472", 1, null, 1, null, null, null, Boolean.TRUE, null);
     }
 
     @Test
@@ -73,6 +73,37 @@ class OftalmologoServiceTest {
         servicio.registrar(requestValido());
 
         verify(oftalmologoRepository).save(any(Oftalmologo.class));
+    }
+
+    @Test
+    @DisplayName("Usa la contraseña que escribe el administrador en el alta")
+    void registraConClaveElegida() {
+        when(oftalmologoRepository.existsByNumeroColegiatura("COP-38472")).thenReturn(false);
+        when(subespecialidadRepository.findById(1)).thenReturn(Optional.of(
+                Subespecialidad.builder().id(1).codigo("GLAUCOMA").nombre("Glaucoma").build()));
+        when(oftalmologoRepository.save(any(Oftalmologo.class))).thenAnswer(inv -> {
+            Oftalmologo o = inv.getArgument(0);
+            o.setId(5L);
+            return o;
+        });
+        when(usuarioOftalmologoRepository.findByOftalmologoId(5L)).thenReturn(Optional.empty());
+        when(usuarioRepository.findByUsernameIgnoreCase("e.rostova")).thenReturn(Optional.empty());
+        when(rolRepository.findByCodigo("OFTALMOLOGO")).thenReturn(Optional.of(
+                com.clinicaojitos.domain.entity.Rol.builder().id(2).codigo("OFTALMOLOGO").build()));
+        when(passwordEncoder.encode("ClaveDelAdmin2026")).thenReturn("hash");
+        when(usuarioRepository.save(any(com.clinicaojitos.domain.entity.Usuario.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        var base = requestValido();
+        var conClave = new OftalmologoDto.Request(base.nombres(), base.apellidos(), base.email(),
+                base.telefono(), base.numeroColegiatura(), base.subespecialidadId(), null,
+                null, null, null, null, Boolean.TRUE, "ClaveDelAdmin2026");
+
+        var alta = servicio.registrar(conClave);
+
+        assertThat(alta.credenciales().username()).isEqualTo("e.rostova");
+        assertThat(alta.credenciales().password()).isEqualTo("ClaveDelAdmin2026");
+        verify(generador, never()).nuevaPassword();
     }
 
     @Test

@@ -88,7 +88,7 @@ export class OftalmologoService {
         oftalmologo: nuevo,
         credenciales: {
           username: peticion.email.split('@')[0],
-          password: 'Demo9!aZ#2kLq',
+          password: peticion.password || 'Demo9!aZ#2kLq',
           nombreCompleto: nuevo.nombreCompleto,
           textoParaDescargar: 'Credenciales de demostración',
         },
@@ -98,19 +98,22 @@ export class OftalmologoService {
   }
 
   /**
-   * Pide nuevas credenciales para un profesional. La contraseña anterior no es
-   * recuperable —solo existe su hash—, así que el backend emite una nueva.
+   * Cambia la contraseña de un profesional: la que escribe el administrador o,
+   * si no se indica, una aleatoria. La anterior no es recuperable (solo hash).
    */
-  credenciales(id: number): Observable<Credenciales> {
+  credenciales(id: number, password?: string): Observable<Credenciales> {
     if (environment.useMockApi) {
       return of({
         username: `demo${id}`,
-        password: 'Demo9!aZ#2kLq',
+        password: password || 'Demo9!aZ#2kLq',
         nombreCompleto: 'Oftalmólogo de demostración',
         textoParaDescargar: 'Credenciales de demostración',
       }).pipe(delay(150));
     }
-    return this.http.post<Credenciales>(`${this.base}/${id}/credenciales`, {});
+    return this.http.post<Credenciales>(
+      `${this.base}/${id}/credenciales`,
+      password ? { password } : {}
+    );
   }
 
   /** El backend guarda `subespecialidad` como id de catálogo, no como texto. */
@@ -125,6 +128,8 @@ export class OftalmologoService {
       subespecialidad: p.subespecialidad || null,
       sedeId: p.sedeId ?? null,
       sede: p.sede || null,
+      // Solo en el alta: la contraseña inicial que escribió el administrador.
+      ...(p.password ? { password: p.password } : {}),
       // Sin valor explícito no se envía: editar a un médico desactivado no lo
       // reactiva (antes se mandaba siempre true).
       ...(activo === undefined ? {} : { activo }),

@@ -59,7 +59,22 @@ public final class OftalmologoDto {
 
             String fotoUrl,
             LocalDate fechaIngreso,
-            Boolean activo
+            Boolean activo,
+
+            /**
+             * Contraseña inicial elegida por el administrador (solo en el alta).
+             * Vacía = el sistema genera una aleatoria. El médico la cambia luego
+             * desde Configuración → Mi cuenta.
+             */
+            @Size(min = 8, max = 100, message = "La contraseña debe tener entre 8 y 100 caracteres")
+            String password
+    ) {
+    }
+
+    /** Contraseña que el administrador fija para un médico; vacía = generar una. */
+    public record ClaveRequest(
+            @Size(min = 8, max = 100, message = "La contraseña debe tener entre 8 y 100 caracteres")
+            String password
     ) {
     }
 

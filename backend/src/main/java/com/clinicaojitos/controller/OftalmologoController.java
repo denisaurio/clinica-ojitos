@@ -60,14 +60,17 @@ public class OftalmologoController {
     }
 
     /**
-     * Genera una contraseña nueva para el profesional y la devuelve una sola vez.
-     * No existe forma de recuperar la anterior: la base solo guarda el hash BCrypt.
+     * Fija una contraseña nueva para el profesional: la que escribe el
+     * administrador o, si viene vacía, una aleatoria. La anterior no se puede
+     * recuperar: la base solo guarda el hash BCrypt.
      */
     @PostMapping("/{id}/credenciales")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
-    @Operation(summary = "Emite nuevas credenciales de acceso (la contraseña anterior no es recuperable)")
-    public OftalmologoDto.Credenciales credenciales(@PathVariable Long id) {
-        return oftalmologoService.regenerarCredenciales(id);
+    @Operation(summary = "Cambia la contraseña de acceso del profesional (elegida o aleatoria)")
+    public OftalmologoDto.Credenciales credenciales(
+            @PathVariable Long id,
+            @Valid @RequestBody(required = false) OftalmologoDto.ClaveRequest request) {
+        return oftalmologoService.regenerarCredenciales(id, request == null ? null : request.password());
     }
 
     @PutMapping("/{id}")

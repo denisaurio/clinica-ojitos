@@ -92,7 +92,23 @@ export class OftalmologoRegistroComponent implements OnInit, OnDestroy {
     numeroColegiatura: ['', [Validators.required, Validators.minLength(5)]],
     subespecialidad: ['', [Validators.required]],
     sede: ['', [Validators.required]],
+    // Contraseña inicial que elige el administrador (solo en el alta).
+    password: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(100)]],
+    repetir: ['', [Validators.required]],
   });
+
+  /** Usuario con el que entrará el médico: la parte del correo antes de la @. */
+  protected usuarioSugerido(): string {
+    const email = this.formulario.controls.email.value.trim();
+    return email.includes('@') ? email.split('@')[0].replace(/[^A-Za-z0-9._-]/g, '') : '';
+  }
+
+  protected errorRepetir(): string {
+    const c = this.formulario.controls.repetir;
+    if (!c.touched) return '';
+    if (c.hasError('required')) return 'Repita la contraseña.';
+    return c.hasError('distinta') ? 'Las contraseñas no coinciden.' : '';
+  }
 
   /** Valor a guardar: lo elegido del catálogo o lo tecleado a mano. */
   protected readonly subespecialidadElegida = computed<string>(() => {
@@ -106,6 +122,9 @@ export class OftalmologoRegistroComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     const id = this.id();
     if (id) {
+      // Al editar no se toca la contraseña: se cambia desde el directorio o el perfil.
+      this.formulario.controls.password.disable();
+      this.formulario.controls.repetir.disable();
       this.oftalmologos.obtener(Number(id)).subscribe({
         next: (m) => {
           this.colegiaturaOriginal = m.numeroColegiatura;
@@ -224,6 +243,10 @@ export class OftalmologoRegistroComponent implements OnInit, OnDestroy {
   }
 
   protected guardar(): void {
+    const { password, repetir } = this.formulario.controls;
+    if (password.enabled && repetir.value && password.value !== repetir.value) {
+      repetir.setErrors({ distinta: true });
+    }
     if (this.formulario.invalid) {
       this.formulario.markAllAsTouched();
       return;
@@ -232,9 +255,10 @@ export class OftalmologoRegistroComponent implements OnInit, OnDestroy {
     this.guardando.set(true);
     this.error.set('');
 
-    const valores = this.formulario.getRawValue();
+    const { password: clave, repetir: _repetir, ...valores } = this.formulario.getRawValue();
     const peticion = {
       ...valores,
+      password: this.editando() ? undefined : clave,
       subespecialidad: this.subespecialidadElegida(),
       subespecialidadId: this.idDeSubespecialidad(this.subespecialidadElegida()),
       sedeId: this.idDeSede(valores.sede),

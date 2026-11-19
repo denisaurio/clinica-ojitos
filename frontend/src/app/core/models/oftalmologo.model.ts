@@ -29,6 +29,9 @@ export interface OftalmologoRequest {
 
   /** Id del catálogo de sedes. */
   sedeId?: number | null;
+
+  /** Contraseña inicial que elige el administrador (solo en el alta). */
+  password?: string;
 }
 
 export type DiaSemana =
