@@ -157,7 +157,7 @@
 /* ------------------------------------------------------- Pantallas pequeñas */
 /* En tablet vertical y celular el menú queda como barra de íconos: los textos
    siguen disponibles como tooltip (title) y para lectores de pantalla. */
-@media (max-width: 900px) {
+@media (min-width: 721px) and (max-width: 900px) {
   :host {
     width: 68px;
   }
@@ -189,5 +189,28 @@
   .usuario {
     justify-content: center;
     margin-inline: 8px;
+  }
+}
+
+/* ------------------------------------------------------------- Celular */
+/* En el celular el menú no roba ancho: se oculta a la izquierda y el botón
+   ☰ de la barra superior lo abre como panel deslizante, con los textos. */
+@media (max-width: 720px) {
+  :host {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 60;
+    width: min(280px, 84vw);
+    height: 100dvh;
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    box-shadow: none;
+  }
+
+  :host-context(.shell--menu-abierto) {
+    transform: translateX(0);
+    box-shadow: 0 10px 40px rgba(15, 23, 42, 0.25);
   }
 }

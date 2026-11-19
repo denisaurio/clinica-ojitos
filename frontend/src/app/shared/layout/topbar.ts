@@ -4,6 +4,7 @@ import {
   computed,
   inject,
   input,
+  output,
   signal,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
@@ -39,6 +40,9 @@ export class TopbarComponent {
   readonly textoEnlace = input('');
 
   readonly accion = input<AccionTopbar | null>(null);
+  /** Muestra el botón ☰ que abre el menú lateral en el celular. */
+  readonly conMenu = input(false);
+  readonly abrirMenu = output<void>();
 
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);

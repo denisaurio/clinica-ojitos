@@ -3,12 +3,14 @@
 :host {
   display: block;
   height: 100vh;
+  height: 100dvh;
 }
 
 .shell {
   display: flex;
   height: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
   background: $page-bg;
 }
 
@@ -21,5 +23,32 @@
 
 .shell__principal {
   flex: 1;
+  min-width: 0;
   overflow-y: auto;
+  // Nada de la pantalla puede empujar la página hacia los lados: las tablas
+  // anchas ya tienen su propio desplazamiento horizontal.
+  overflow-x: hidden;
+}
+
+.shell__velo {
+  display: none;
+}
+
+/* ------------------------------------------------------------- Celular */
+@media (max-width: 720px) {
+  .shell__velo {
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    display: block;
+    background: rgba(15, 23, 42, 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .shell--menu-abierto .shell__velo {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }

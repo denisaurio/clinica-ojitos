@@ -266,3 +266,14 @@
     flex-direction: row;
   }
 }
+
+@media (max-width: 720px) {
+  .lateral {
+    flex-direction: column;
+  }
+
+  // En pantalla táctil: tocar pinta una hora y arrastrar desplaza la tabla.
+  .matriz__rejilla {
+    touch-action: pan-x pan-y;
+  }
+}

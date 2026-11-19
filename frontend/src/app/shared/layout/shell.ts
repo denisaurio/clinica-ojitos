@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { ChangeDetectionStrategy, Component, HostListener, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 import { SidebarComponent } from './sidebar';
 import { TopbarComponent } from './topbar';
@@ -17,9 +19,11 @@ import { ContextoPaginaService } from '../../core/services/contexto-pagina.servi
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterOutlet, SidebarComponent, TopbarComponent],
   template: `
-    <div class="shell">
+    <div class="shell" [class.shell--menu-abierto]="menuMovil()">
       @if (mostrarSidebar()) {
         <app-sidebar [variante]="variante()" />
+        <!-- Celular: el menú es un panel deslizante; el velo lo cierra. -->
+        <div class="shell__velo" (click)="menuMovil.set(false)"></div>
       }
 
       <div class="shell__contenido">
@@ -30,6 +34,8 @@ import { ContextoPaginaService } from '../../core/services/contexto-pagina.servi
           [antetitulo]="contexto.config().antetitulo"
           [textoEnlace]="contexto.config().textoEnlace"
           [accion]="contexto.config().accion"
+          [conMenu]="mostrarSidebar()"
+          (abrirMenu)="menuMovil.set(true)"
         />
         <main class="shell__principal">
           <router-outlet />
@@ -46,6 +52,24 @@ export class ShellComponent {
   protected readonly contexto = inject(ContextoPaginaService);
 
   protected readonly mostrarSidebar = computed(() => this.auth.rol() !== 'PACIENTE');
+
+  /** Panel del menú abierto en pantallas de celular (≤ 720 px). */
+  protected readonly menuMovil = signal(false);
+
+  constructor() {
+    // Al elegir una opción del menú se navega: el panel se cierra solo.
+    inject(Router)
+      .events.pipe(
+        filter((e) => e instanceof NavigationEnd),
+        takeUntilDestroyed()
+      )
+      .subscribe(() => this.menuMovil.set(false));
+  }
+
+  @HostListener('document:keydown.escape')
+  protected cerrarMenuMovil(): void {
+    this.menuMovil.set(false);
+  }
 
   protected readonly variante = computed<'clinico' | 'gestion' | 'operativo'>(() => {
     switch (this.auth.rol()) {

@@ -168,6 +168,7 @@ export class OftalmologoHorariosComponent implements OnInit, OnDestroy {
   }
 
   @HostListener('window:pointerup')
+  @HostListener('window:pointercancel')
   protected alSoltar(): void {
     this.pintando = null;
   }

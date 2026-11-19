@@ -15,12 +15,15 @@
 
 .agenda__controles {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
   gap: 12px;
+  max-width: 100%;
 }
 
 .agenda__medico {
   width: 200px;
+  max-width: 100%;
 }
 
 /* ------------------------------------------------------------- Rejilla */
@@ -244,4 +247,18 @@
 .semana__hoy {
   padding: 0 14px;
   border-inline: 1px solid $border;
+}
+
+@media (max-width: 720px) {
+  .agenda {
+    padding: 16px 12px 28px;
+  }
+
+  .agenda__controles {
+    width: 100%;
+  }
+
+  .agenda__medico {
+    flex: 1 1 160px;
+  }
 }
