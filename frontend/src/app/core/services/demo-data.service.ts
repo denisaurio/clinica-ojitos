@@ -738,8 +738,8 @@ export class DemoDataService {
       { id: 2, horaInicio: '10:30', horaFin: '11:00', pacienteNombre: 'Carlos Mendoza', motivo: 'Consulta General - Presbicia', tipoConsulta: 'Consulta', estado: 'EN_ESPERA', sala: 'Sala 2' },
     ],
     pendientes: [
-      { id: 1, titulo: 'Revisar OCT - L. Gómez', detalle: 'Miopatía diabética · sospechosa', icono: 'clipboard-list' },
-      { id: 2, titulo: 'Renovar Receta - J. Silva', detalle: 'Gotas Glaucoma', icono: 'clipboard-list' },
+      { id: 1, titulo: 'Revisar OCT - L. Gómez', detalle: 'Miopatía diabética · sospechosa', icono: 'clipboardList' },
+      { id: 2, titulo: 'Renovar Receta - J. Silva', detalle: 'Gotas Glaucoma', icono: 'clipboardList' },
     ],
     historialesRecientes: [
       { id: 1, iniciales: 'AM', pacienteNombre: 'Ana M.', hora: '09:15' },
@@ -762,7 +762,7 @@ export class DemoDataService {
     ],
     avisos: [
       { icono: 'info', texto: 'El equipo OCT en sala 2 está en mantenimiento hasta las 11:00 AM.' },
-      { icono: 'alert-triangle', texto: '2 pacientes requieren actualización de seguro médico hoy.' },
+      { icono: 'alertTriangle', texto: '2 pacientes requieren actualización de seguro médico hoy.' },
     ],
   };
 

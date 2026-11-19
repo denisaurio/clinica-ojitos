@@ -1,0 +1,111 @@
+@use 'variables' as *;
+
+.buscador {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 52px;
+  margin: 24px 0 20px;
+  padding: 0 18px;
+  border: 1.5px solid $border-strong;
+  border-radius: $radius;
+  background: $surface;
+  color: $text-muted;
+  transition: border-color $transition, box-shadow $transition;
+
+  &:focus-within {
+    border-color: $primary;
+    box-shadow: $focus-ring;
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 15px;
+    color: $text;
+  }
+}
+
+.pacientes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 14px;
+}
+
+.paciente {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 100%;
+  padding: 16px 18px;
+  border: 1px solid $border;
+  border-radius: $radius-card;
+  background: $surface;
+  box-shadow: $shadow-sm;
+  text-decoration: none;
+  transition: border-color $transition, box-shadow $transition, transform $transition;
+
+  &:hover {
+    border-color: $primary;
+    box-shadow: $shadow-md;
+    text-decoration: none;
+    transform: translateY(-1px);
+  }
+}
+
+.paciente__datos {
+  flex: 1;
+  min-width: 0;
+}
+
+.paciente__nombre {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: $text;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.paciente__meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  color: $text-muted;
+}
+
+.paciente__ir {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: $primary;
+}
+
+.vacio,
+.aviso {
+  grid-column: 1 / -1;
+  padding: 40px 16px;
+  border: 1px dashed $border-strong;
+  border-radius: $radius;
+  font-size: 14px;
+  text-align: center;
+  color: $text-muted;
+}
+
+.aviso {
+  border-color: $danger-border;
+  background: $danger-bg;
+  color: $danger;
+}

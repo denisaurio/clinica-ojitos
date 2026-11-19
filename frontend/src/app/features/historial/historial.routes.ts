@@ -1,7 +1,12 @@
 import { Routes } from '@angular/router';
 
 export const HISTORIAL_ROUTES: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'paciente/5' },
+  {
+    // Antes redirigía siempre al paciente 5: ahora se elige el paciente.
+    path: '',
+    pathMatch: 'full',
+    loadComponent: () => import('./seleccion').then((m) => m.HistorialSeleccionComponent),
+  },
   {
     path: 'paciente/:id',
     loadComponent: () => import('./timeline').then((m) => m.HistorialTimelineComponent),

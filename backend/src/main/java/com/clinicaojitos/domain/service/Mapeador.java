@@ -152,7 +152,9 @@ public class Mapeador {
                 c.getEstado(),
                 c.getEstadoCita() != null ? c.getEstadoCita().getNombre() : null,
                 c.getConsultorio(),
-                c.getTipoConsulta() != null ? c.getTipoConsulta().getNombre() : null);
+                c.getTipoConsulta() != null ? c.getTipoConsulta().getNombre() : null,
+                c.getPaciente() != null ? c.getPaciente().getId() : null,
+                c.getOftalmologo() != null ? c.getOftalmologo().getNombreCompleto() : null);
     }
 
     public CitaDto.Evento aEvento(Cita c) {

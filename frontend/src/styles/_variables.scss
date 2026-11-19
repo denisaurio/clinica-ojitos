@@ -41,14 +41,23 @@ $warning: #d97706;
 $warning-bg: #fef3c7;
 $info: #1e40af;
 $info-bg: #dbeafe;
+$violet: #6d28d9;
+$violet-bg: #ede9fe;
+$teal-bg: #d5f0ee;
 
 // ---------------------------------------------------------------- Geometry
 $radius: 10px;
 $radius-sm: 6px;
 $radius-lg: 14px;
+$radius-card: 14px;
+
+// ---------------------------------------------------------------- Layout
+// Ancho máximo del contenido: centrado, para que en monitores anchos no quede
+// todo pegado a la izquierda con un hueco a la derecha.
+$page-max: 1480px;
 
 // ---------------------------------------------------------------- Sidebar
-$sidebar-w: 200px;
+$sidebar-w: 236px;
 $sidebar-w-ext: 178px;
 $topbar-h: 44px;
 

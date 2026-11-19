@@ -187,6 +187,11 @@ export class DashboardService {
   private aDashboardMedico(r: DashboardMedicoApi): DashboardMedico {
     return {
       fecha: new Date().toISOString().slice(0, 10),
+      indicadores: (r.indicadores ?? []).map((i) => ({
+        etiqueta: i.etiqueta,
+        valor: i.valor,
+        detalle: i.detalle,
+      })),
       citasHoy: (r.agendaHoy ?? []).map((c) => this.aCitaDia(c)),
       pendientes: (r.tareas ?? []).map((t) => this.aTarea(t)),
       historialesRecientes: (r.historialesRecientes ?? []).map((p) => ({
@@ -234,6 +239,8 @@ export class DashboardService {
       tipoConsulta: c.tipoConsulta ?? '',
       estado: (c.estado ?? 'PROGRAMADA') as CitaDia['estado'],
       sala: c.consultorio ?? '',
+      pacienteId: c.pacienteId,
+      oftalmologo: c.oftalmologo ?? '',
     };
   }
 
@@ -287,11 +294,14 @@ interface CitaApi {
   tipoConsulta?: string;
   estado?: string;
   consultorio?: string;
+  pacienteId?: number;
+  oftalmologo?: string;
 }
 
 interface IndicadorApi {
   etiqueta: string;
   valor: string;
+  detalle?: string;
 }
 
 interface TareaApi {

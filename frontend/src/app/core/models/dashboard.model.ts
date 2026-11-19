@@ -36,6 +36,10 @@ export interface TarjetaCita {
   motivo: string;
   tipoConsulta: string;
   estado: EstadoCita;
+  /** Para enlazar a la ficha; puede faltar en datos de demostración. */
+  pacienteId?: number;
+  /** Profesional que atiende la cita. */
+  oftalmologo?: string;
 }
 
 /** Tarea pendiente del panel médico. */
@@ -61,8 +65,17 @@ export interface DashboardAdmin {
   intentosAcceso: IntentoAcceso[];
 }
 
+/** Métrica resumida que calcula el backend (DashboardDto.Indicador). */
+export interface IndicadorPanel {
+  etiqueta: string;
+  valor: string;
+  detalle?: string;
+}
+
 export interface DashboardMedico {
   fecha: string;
+  /** Vacío en modo demostración: la pantalla los calcula de la agenda. */
+  indicadores?: IndicadorPanel[];
   citasHoy: CitaDia[];
   pendientes: TareaPendiente[];
   historialesRecientes: HistorialReciente[];

@@ -1,80 +1,66 @@
 <div class="page">
-  <h1 class="page-title">Resumen del Administrador</h1>
-  <p class="page-subtitle">Métricas de la clínica y registros de seguridad en tiempo real.</p>
+  <header class="page-head">
+    <div>
+      <h1 class="page-title">Resumen del Administrador</h1>
+      <p class="page-subtitle">Métricas de la clínica y registros de seguridad en tiempo real.</p>
+    </div>
+    <span class="cabecera__fecha">
+      <ui-icon nombre="calendar" [tamano]="16" />
+      {{ hoy }}
+    </span>
+  </header>
 
   @if (datos(); as d) {
-    <div class="metricas">
-      <ui-card class="metrica">
-        <div class="metrica__cabeza">
-          <span class="metrica__icono">
-            <ui-icon nombre="users" [tamano]="19" />
-          </span>
-          <ui-badge variante="info">{{ d.totalPacientes }} pacientes</ui-badge>
-        </div>
-        <p class="metrica__etiqueta">Total de Pacientes</p>
-          <p class="metrica__valor">{{ d.totalPacientes.toLocaleString('es-ES') }}</p>
-      </ui-card>
-
-      <ui-card class="metrica">
-        <div class="metrica__cabeza">
-          <span class="metrica__icono">
-            <ui-icon nombre="calendar" [tamano]="19" />
-          </span>
-          <ui-badge variante="neutro">Hoy</ui-badge>
-        </div>
-        <p class="metrica__etiqueta">Citas</p>
-          <p class="metrica__valor">{{ d.citasHoy }}</p>
-      </ui-card>
-
-      <ui-card class="metrica">
-        <div class="metrica__cabeza">
-          <span class="metrica__icono">
-            <ui-icon nombre="briefcase" [tamano]="19" />
-          </span>
-          <ui-badge variante="neutro">Activos</ui-badge>
-        </div>
-        <p class="metrica__etiqueta">Oftalmólogos</p>
-          <p class="metrica__valor">{{ d.oftalmologosActivos }}</p>
-      </ui-card>
+    <div class="stats">
+      <ui-stat tono="azul" icono="users" chip="Registrados"
+        [valor]="d.totalPacientes.toLocaleString('es-PE')" etiqueta="Total de pacientes" />
+      <ui-stat tono="verde" icono="calendar" chip="Hoy" [valor]="d.citasHoy" etiqueta="Citas programadas" />
+      <ui-stat tono="violeta" icono="briefcase" chip="Activos" [valor]="d.oftalmologosActivos" etiqueta="Oftalmólogos" />
+      <ui-stat [tono]="fallidos() > 0 ? 'rojo' : 'gris'" icono="alertTriangle" chip="Recientes"
+        [valor]="fallidos()" etiqueta="Accesos fallidos" />
     </div>
 
     <div class="paneles">
-      <ui-card titulo="Tendencia de Volumen de Pacientes" class="volumen">
+      <ui-card
+        titulo="Tendencia de Volumen de Pacientes"
+        subtitulo="Pacientes atendidos en el periodo reciente"
+        icono="trending-up"
+        class="volumen"
+      >
         <app-grafico-volumen [datos]="d.volumenPacientes" />
       </ui-card>
 
-      <ui-card titulo="Intentos de Acceso" class="accesos">
+      <ui-card titulo="Intentos de Acceso" subtitulo="Últimos inicios de sesión" icono="shield" class="accesos">
         <ng-container slot="accion">
-          <ui-button variante="enlace" tamano="sm">Ver Todos →</ui-button>
+          <span class="accesos__total">{{ d.intentosAcceso.length }}</span>
         </ng-container>
 
-        <ul class="accesos__lista">
-          @for (intento of d.intentosAcceso; track intento.usuario) {
-            <li class="acceso">
-              <span
-                class="acceso__icono"
-                [class.acceso__icono--fallo]="intento.resultado === 'FALLIDO'"
-              >
-                <ui-icon
-                  [nombre]="intento.resultado === 'FALLIDO' ? 'alertTriangle' : 'user'"
-                  [tamano]="15"
-                />
-              </span>
-              <span class="acceso__datos">
-                <span class="acceso__usuario">{{ intento.usuario }}</span>
-                <span class="acceso__ip">IP: {{ intento.ip }}</span>
-              </span>
-              <span class="acceso__resultado">
-                <ui-badge
-                  [variante]="intento.resultado === 'EXITOSO' ? 'success' : 'danger'"
-                >
-                  {{ intento.resultado === 'EXITOSO' ? 'Exitoso' : 'Fallido' }}
-                </ui-badge>
-                <span class="acceso__hora">{{ intento.hora }}</span>
-              </span>
-            </li>
-          }
-        </ul>
+        @if (d.intentosAcceso.length === 0) {
+          <p class="vacio">Todavía no hay intentos de acceso registrados.</p>
+        } @else {
+          <ul class="accesos__lista">
+            @for (intento of d.intentosAcceso; track $index) {
+              <li class="acceso">
+                <span class="acceso__icono" [class.acceso__icono--fallo]="intento.resultado === 'FALLIDO'">
+                  <ui-icon
+                    [nombre]="intento.resultado === 'FALLIDO' ? 'alertTriangle' : 'user'"
+                    [tamano]="16"
+                  />
+                </span>
+                <span class="acceso__datos">
+                  <span class="acceso__usuario">{{ intento.usuario }}</span>
+                  <span class="acceso__ip">IP {{ intento.ip }}</span>
+                </span>
+                <span class="acceso__resultado">
+                  <ui-badge [variante]="intento.resultado === 'EXITOSO' ? 'success' : 'danger'">
+                    {{ intento.resultado === 'EXITOSO' ? 'Exitoso' : 'Fallido' }}
+                  </ui-badge>
+                  <span class="acceso__hora">{{ intento.hora }}</span>
+                </span>
+              </li>
+            }
+          </ul>
+        }
       </ui-card>
     </div>
   } @else {

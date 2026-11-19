@@ -182,6 +182,10 @@ reacción adversa en consulta.
 
 ## 4. Historial médico (RF-02)
 
+Al entrar desde el menú **Historial Médico** (`/historial`) se muestra primero un
+buscador de pacientes; al elegir uno se abre su línea de tiempo
+(`/historial/paciente/{id}`). Antes la ruta abría siempre al paciente 5.
+
 ### 4.1 Línea de tiempo (3.6.5)
 
 ```
