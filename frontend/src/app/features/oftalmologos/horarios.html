@@ -1,83 +1,105 @@
 <div class="page">
   <header class="encabezado">
     <div>
-      <h1 class="page-title">{{ medicoNombre() }} - Horario</h1>
+      <h1 class="page-title">
+        {{ esPropio() ? 'Mi Horario de Atención' : (medicoNombre() || 'Médico') + ' - Horario' }}
+      </h1>
       <p class="page-subtitle">
-        Configure los bloques de disponibilidad semanal.<br />
-        Arrastre para seleccionar múltiples turnos.
+        Pinte las horas en que atiende: haga clic o arrastre sobre la tabla.<br />
+        Las horas de <strong>Consulta</strong> son las que el paciente puede reservar.
       </p>
     </div>
 
     <div class="encabezado__acciones">
-      <ui-select
-        class="encabezado__sede"
-        placeholder="Sede: Clínica Principal (Centre)"
-        [opciones]="sedes"
-      />
-      <ui-button variante="primario" icono="save" [deshabilitado]="guardando()" (click)="guardar()">
-        Guardar Horario
+      @if (esAdmin() && medicoId(); as id) {
+        <ui-button variante="contorno" icono="user" [destino]="'/oftalmologos/perfil/' + id" [enlace]="true">
+          Ver perfil
+        </ui-button>
+      }
+      <ui-button variante="primario" icono="save" [deshabilitado]="guardando() || cargando()" (click)="guardar()">
+        {{ guardando() ? 'Guardando…' : 'Guardar Horario' }}
       </ui-button>
     </div>
   </header>
 
+  @if (aviso(); as a) {
+    <ui-alert [tipo]="a.tipo" class="aviso">{{ a.texto }}</ui-alert>
+  }
+
   <div class="rejilla">
     <div class="lateral">
-      <ui-card titulo="Leyenda" icono="info" class="leyenda">
-        <ul class="leyenda__lista">
-          <li class="leyenda__item">
-            <i class="muestra muestra--disponible"></i>
-            <span>Disponible para Citas</span>
-          </li>
-          <li class="leyenda__item">
-            <i class="muestra muestra--no"></i>
-            <span>No Disponible</span>
-          </li>
-          <li class="leyenda__item">
-            <i class="muestra muestra--quirurgico"></i>
-            <span>Bloque Quirúrgico (Específico de Sede)</span>
-          </li>
-        </ul>
+      <ui-card titulo="¿Qué pinto?" icono="info" class="leyenda">
+        <div class="modos">
+          <button
+            type="button"
+            class="modo"
+            [class.modo--activo]="modo() === 'DISPONIBLE'"
+            (click)="modo.set('DISPONIBLE')"
+          >
+            <i class="muestra muestra--disponible"></i> Consulta (reservable)
+          </button>
+          <button
+            type="button"
+            class="modo"
+            [class.modo--activo]="modo() === 'QUIRURGICO'"
+            (click)="modo.set('QUIRURGICO')"
+          >
+            <i class="muestra muestra--quirurgico"></i> Cirugía (no reservable)
+          </button>
+        </div>
+        <p class="leyenda__nota">
+          <i class="muestra muestra--no"></i> En blanco: no atiende. Pulse de nuevo una
+          hora pintada para borrarla.
+        </p>
       </ui-card>
 
       <ui-card titulo="Resumen Semanal" class="resumen">
         <p class="resumen__linea">
-          Total de Horas Clínicas:<strong>{{ totalHoras() }} hrs</strong>
+          Horas de consulta: <strong>{{ totalHoras() }} h</strong>
         </p>
         <div class="resumen__barra">
-          <span class="resumen__relleno" [style.width.%]="acotar(totalHoras() * 6)"></span>
+          <span class="resumen__relleno" [style.width.%]="acotar(totalHoras() * 2.5)"></span>
         </div>
 
         <p class="resumen__linea resumen__linea--separada">
-          Bloques Quirúrgicos: <strong>{{ horasQuirurgicas() }} hrs</strong>
+          Horas de cirugía: <strong>{{ horasQuirurgicas() }} h</strong>
         </p>
         <div class="resumen__barra">
-          <span class="resumen__relleno resumen__relleno--quirurgico" [style.width.%]="acotar(horasQuirurgicas() * 8)"></span>
+          <span class="resumen__relleno resumen__relleno--quirurgico" [style.width.%]="acotar(horasQuirurgicas() * 5)"></span>
         </div>
+
+        <ul class="resumen__dias">
+          @for (dia of dias; track dia.codigo) {
+            <li>
+              <span>{{ dia.nombre }}</span>
+              <small>{{ resumenDia(dia.codigo) }}</small>
+            </li>
+          }
+        </ul>
       </ui-card>
     </div>
 
     <ui-card class="matriz" [sinPadding]="true">
       <div class="matriz__rejilla">
         <div class="matriz__esquina"></div>
-        @for (dia of dias; track dia) {
-          <div class="matriz__dia">{{ dia }}</div>
+        @for (dia of dias; track dia.codigo) {
+          <div class="matriz__dia">
+            {{ dia.nombre }}
+            <button type="button" class="matriz__limpiar" title="Vaciar el día" (click)="limpiarDia(dia.codigo)">×</button>
+          </div>
         }
 
-        @for (fila of horas; track fila; let indiceFila = $index) {
-          <div class="matriz__hora">{{ fila }}</div>
+        @for (hora of horas; track hora) {
+          <div class="matriz__hora">{{ etiquetaHora(hora) }}</div>
 
-          @for (dia of dias; track dia + $index) {
+          @for (dia of dias; track dia.codigo) {
             <div
               class="matriz__celda"
-              [class.matriz__celda--libre]="disponible(dia, indiceFila)"
-              [class.matriz__celda--quirurgica]="quirurgico(dia, indiceFila)"
-              [class.matriz__celda--arrastrando]="arrastreActivo()"
-              draggable="true"
-              (dragstart)="alArrastrarInicio()"
-              (dragend)="alArrastrarFin()"
-              (dragover)="$event.preventDefault()"
-              (drop)="alSoltar(dia, indiceFila)"
-              (click)="alternar(dia, indiceFila)"
+              [class.matriz__celda--libre]="tipoDe(dia.codigo, hora) === 'DISPONIBLE'"
+              [class.matriz__celda--quirurgica]="tipoDe(dia.codigo, hora) === 'QUIRURGICO'"
+              [attr.title]="dia.nombre + ' ' + etiquetaHora(hora)"
+              (pointerdown)="alPresionar(dia.codigo, hora, $event)"
+              (pointerenter)="alEntrar(dia.codigo, hora)"
             ></div>
           }
         }

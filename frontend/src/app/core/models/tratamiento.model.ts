@@ -74,6 +74,15 @@ export interface Cirugia {
   tipoAnestesia: string;
   reporteOperatorio: string;
   estado: 'PROGRAMADA' | 'EN_CURSO' | 'FINALIZADA' | 'COMPLICACION';
+  /** Consultas firmadas del historial que respaldan la cirugía. */
+  consultas?: ConsultaVinculada[];
+}
+
+export interface ConsultaVinculada {
+  id: number;
+  fecha: string;
+  diagnostico: string;
+  oftalmologoNombre?: string;
 }
 
 export interface CirugiaRequest {
@@ -86,4 +95,8 @@ export interface CirugiaRequest {
   lateralidad: Lateralidad;
   tipoAnestesia: string;
   reporteOperatorio: string;
+  /** PROGRAMADA (se indica tras la consulta) o REALIZADA (ya se operó). */
+  estado: 'PROGRAMADA' | 'REALIZADA';
+  /** Consultas firmadas que justifican la cirugía (una o varias). */
+  consultaIds: number[];
 }

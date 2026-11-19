@@ -16,6 +16,10 @@
 --
 --  Orden de ejecución:
 --      01_esquema.sql  ->  02_datos_prueba.sql  ->  (opcional) 03_consultas.sql
+--
+--  Este archivo es la VERSIÓN 1 del esquema. Los cambios posteriores (V2, V3...)
+--  están en backend/src/main/resources/db/migration y el backend los aplica
+--  solo al arrancar (Flyway). No los copies aquí.
 -- =============================================================================
 
 SET NAMES utf8mb4;

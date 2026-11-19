@@ -90,7 +90,9 @@ public class CitaService {
         horarioLaboralRepository
                 .findByOftalmologoIdAndActivoTrue(oftalmologoId).stream()
                 .filter(h -> dia.getId().equals(h.getDiaSemana().getId()))
-                .filter(h -> h.getTipoBloque() == null || !"DESCANSO".equals(h.getTipoBloque().getCodigo()))
+                // Solo los bloques de consulta se ofrecen como cita: los de cirugía y
+                // descanso no son reservables (antes se ofrecían los quirúrgicos).
+                .filter(h -> h.getTipoBloque() == null || "CONSULTA".equals(h.getTipoBloque().getCodigo()))
                 .sorted(java.util.Comparator.comparing(HorarioLaboral::getHoraInicio))
                 .forEach(h -> {
                     String tipo = h.getTipoBloque() != null ? h.getTipoBloque().getNombre() : "Consulta";

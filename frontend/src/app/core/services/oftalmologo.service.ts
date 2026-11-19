@@ -165,6 +165,14 @@ export class OftalmologoService {
     return this.http.get<ExisteColegiaturaResponse>(`${this.base}/existe-colegiatura`, { params });
   }
 
+  /** Ficha del oftalmólogo con sesión iniciada (para "Mi horario"). */
+  yo(): Observable<Oftalmologo> {
+    if (environment.useMockApi) {
+      return of(this.demo.oftalmologos[0]).pipe(delay(80));
+    }
+    return this.http.get<Oftalmologo>(`${this.base}/yo`);
+  }
+
   horarios(id: number): Observable<HorarioSemanal> {
     if (environment.useMockApi) {
       return of({ bloques: this.demo.horariosPorOftalmologo[id] ?? this.demo.horarios }).pipe(

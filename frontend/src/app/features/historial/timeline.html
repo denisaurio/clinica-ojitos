@@ -14,7 +14,9 @@
         </p>
       </div>
       <div class="resumen__acciones">
-        <ui-button variante="contorno" icono="pencil">Editar datos</ui-button>
+        <ui-button variante="contorno" icono="user" [destino]="'/pacientes/perfil/' + p.id" [enlace]="true">
+          Ficha del paciente
+        </ui-button>
         <ui-button
           variante="primario"
           icono="plus"
@@ -38,6 +40,10 @@
         </div>
       </div>
 
+      @if (aviso(); as a) {
+        <ui-alert [tipo]="a.tipo" class="aviso">{{ a.texto }}</ui-alert>
+      }
+
       <div class="linea-tiempo">
         @for (consulta of resultado()?.content ?? []; track consulta.id; let i = $index) {
           <article class="hito">
@@ -50,14 +56,44 @@
                   }
                   <span>{{ fechaIso(consulta) }} · {{ consulta.hora }}</span>
                 </div>
-                <ui-badge variante="neutro" icono="stethoscope">
-                  {{ consulta.oftalmologoNombre }}
-                </ui-badge>
+                <div class="hito__etiquetas">
+                  @if (consulta.firmadaEn) {
+                    <ui-badge variante="success">Firmada</ui-badge>
+                  } @else {
+                    <ui-badge variante="warning">Pendiente de firma</ui-badge>
+                  }
+                  <ui-badge variante="neutro" icono="stethoscope">
+                    {{ consulta.oftalmologoNombre }}
+                  </ui-badge>
+                </div>
               </header>
 
               <h3 class="hito__titulo">{{ consulta.diagnosticoPrincipal }}</h3>
 
               <p class="hito__notas">{{ consulta.notasSubjectivo }}</p>
+
+              @if (abierta() === consulta.id) {
+                <dl class="informe">
+                  <div><dt>Tipo</dt><dd>{{ consulta.tipoConsulta || '—' }}</dd></div>
+                  <div><dt>Agudeza OD / OI</dt><dd>{{ consulta.agudezaOd || '—' }} / {{ consulta.agudezaOi || '—' }}</dd></div>
+                  <div><dt>PIO OD / OI</dt><dd>{{ consulta.pioOd || '—' }} / {{ consulta.pioOi || '—' }} mmHg</dd></div>
+                  <div><dt>Biomicroscopía</dt><dd>{{ consulta.biomicroscopia || '—' }}</dd></div>
+                  <div><dt>Fondo de ojo</dt><dd>{{ consulta.fondoOjo || '—' }}</dd></div>
+                  <div><dt>Objetivo</dt><dd>{{ consulta.notasObjetivo || '—' }}</dd></div>
+                  <div><dt>Evaluación</dt><dd>{{ consulta.notasEvaluacion || '—' }}</dd></div>
+                  <div><dt>Plan</dt><dd>{{ consulta.notasPlan || '—' }}</dd></div>
+                  <div>
+                    <dt>Firma</dt>
+                    <dd>
+                      @if (consulta.firmadaEn) {
+                        {{ consulta.firmadaPor }} · {{ consulta.firmadaEn }}
+                      } @else {
+                        Pendiente de firma del médico encargado
+                      }
+                    </dd>
+                  </div>
+                </dl>
+              }
 
               @if (consulta.archivos.length > 0) {
                 <p class="hito__archivo">
@@ -67,20 +103,47 @@
               }
 
               <footer class="hito__pie">
-                <ui-button variante="enlace" tamano="sm" icono="eye">Ver informe completo</ui-button>
-                <ui-button variante="fantasma" tamano="sm" icono="print">Imprimir</ui-button>
+                <ui-button variante="enlace" tamano="sm" icono="eye" (click)="alternarInforme(consulta.id)">
+                  {{ abierta() === consulta.id ? 'Ocultar informe' : 'Ver informe completo' }}
+                </ui-button>
+                <ui-button variante="fantasma" tamano="sm" icono="print" (click)="imprimir(consulta.id)">Imprimir</ui-button>
+                @if (puedeFirmar(consulta)) {
+                  <ui-button
+                    variante="primario"
+                    tamano="sm"
+                    icono="check"
+                    [deshabilitado]="firmando() === consulta.id"
+                    (click)="firmar(consulta)"
+                  >
+                    {{ firmando() === consulta.id ? 'Firmando…' : 'Firmar consulta' }}
+                  </ui-button>
+                }
+                @if (consulta.firmadaEn && puedeProgramarCirugia()) {
+                  <ui-button
+                    variante="contorno"
+                    tamano="sm"
+                    icono="scissors"
+                    [destino]="'/cirugias/registro?paciente=' + consulta.pacienteId + '&consulta=' + consulta.id"
+                    [enlace]="true"
+                  >
+                    Indicar cirugía
+                  </ui-button>
+                }
               </footer>
             </div>
           </article>
         }
 
-        <!-- Tercera tarjeta en carga: el prototipo la muestra como esqueleto. -->
-        <article class="hito hito--carga">
-          <span class="hito__marca hito__marca--carga"></span>
-          <div class="hito__tarjeta">
-            <ui-skeleton [lineas]="5" alto="13px" padding="18px 20px" />
-          </div>
-        </article>
+        @if (cargando()) {
+          <article class="hito hito--carga">
+            <span class="hito__marca hito__marca--carga"></span>
+            <div class="hito__tarjeta">
+              <ui-skeleton [lineas]="5" alto="13px" padding="18px 20px" />
+            </div>
+          </article>
+        } @else if ((resultado()?.content ?? []).length === 0) {
+          <p class="vacio">Este paciente aún no tiene consultas registradas.</p>
+        }
       </div>
 
       @if (resultado(); as datos) {

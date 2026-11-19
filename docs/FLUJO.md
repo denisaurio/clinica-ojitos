@@ -438,20 +438,33 @@ Registrar un control actualiza automáticamente la fecha del próximo:
 PATCH /api/v1/tratamientos/:id/seguimiento { fecha, resultado, pioOd, pioOi, observaciones }
 ```
 
-### 6.3 Cirugía (3.6.13)
+### 6.3 Cirugía (3.6.13) — nace de consultas firmadas
 
 ```
- /cirugias/registro
-   │
-   │  BLOQUE 1 · Paciente y diagnóstico preoperatorio (buscador)
-   │  BLOQUE 2 · Variables técnicas
-   │            tipo de cirugía · fecha programada · ojo · anestesia
-   │  BLOQUE 3 · Detalle
-   │            técnica · incidencias · modelo de LIO o injerto
+ Paciente reserva cita ──► el médico la atiende y registra la consulta
    ▼
- POST /api/v1/tratamientos/cirugias
+ /historial/paciente/:id
+   │  Cada consulta muestra "Firmada" o "Pendiente de firma"
+   │  [Firmar consulta]  solo lo ve el médico ENCARGADO de esa consulta
    ▼
- 201 ──► la cirugía queda en el historial y puede asociarse a un tratamiento
+ PATCH /api/v1/historiales/:id/firmar          (rol OFTALMOLOGO)
+   ├─ otro médico o el administrador ──► 403
+   ├─ ya estaba firmada            ──► 400
+   └─ 200: firmada_en + firmada_por; la consulta queda cerrada
+   ▼
+ [Indicar cirugía]  en la consulta firmada
+   ▼
+ /cirugias/registro?paciente=:id&consulta=:id
+   │  BLOQUE 1 · Paciente, responsable, diagnóstico preoperatorio
+   │  BLOQUE 2 · Consultas que respaldan la cirugía (una o VARIAS)
+   │            solo se listan las firmadas del mismo paciente
+   │  BLOQUE 3 · Tipo · estado (Programada / Realizada) · fecha · ojo · anestesia
+   │  BLOQUE 4 · Reporte operatorio (obligatorio si ya se realizó)
+   ▼
+ POST /api/v1/tratamientos/cirugias { ..., consultaIds: [..] }
+   ├─ sin consultas, de otro paciente o sin firmar ──► 400
+   ▼
+ 201 ──► vuelve al historial del paciente; tabla cirugia_consulta
 ```
 
 ---
@@ -492,23 +505,27 @@ PATCH /api/v1/tratamientos/:id/seguimiento { fecha, resultado, pioOd, pioOi, obs
 ### 7.3 Horarios (3.6.17)
 
 ```
- /oftalmologos/horarios/:id
-   │
-   │  Cuadrícula de arrastrar y soltar: 7 días × franjas
-   │
-   │  Leyenda de colores:
-   │    azul  → Consulta externa
-   │    verde → Bloque quirúrgico
-   │    gris  → Pausa / almuerzo
-   │    blanco→ Fuera de turno
-   │
-   │  Tarjeta de resumen: total de horas asistenciales y quirúrgicas
+ Administrador: Doctores ──► ⋮ ──► Configurar horarios   /oftalmologos/horarios/:id
+ Médico:        menú "Mi Horario"                        /oftalmologos/mi-horario
+   │                                                     (GET /oftalmologos/yo)
+   │  Cuadrícula lunes a sábado, 07:00 a 20:00, una celda por hora
+   │  Clic o arrastre para pintar; el modo elige qué se pinta:
+   │    azul   → Consulta (lo único que el paciente puede reservar)
+   │    ámbar  → Cirugía (no reservable)
+   │    blanco → no atiende
+   │  Resumen: horas de consulta y de cirugía, y el horario de cada día
    ▼
  PUT /api/v1/oftalmologos/:id/horarios  { horarios: [...] }
-   │
-   ├─ Reemplaza la matriz completa
+   ├─ Reemplaza la matriz completa (las horas seguidas se unen en bloques)
+   ├─ un médico que no es el dueño del horario ──► 403
    └─ hora_fin <= hora_inicio ──► 400
+   ▼
+ GET /citas/disponibilidad parte esos bloques de CONSULTA en turnos de 30 min
 ```
+
+> **Permisos de citas.** El oftalmólogo atiende las citas pero **no las crea**
+> (`POST /citas` → 403 y sin botón "Nueva Cita"): las reserva el paciente
+> desde su portal, o recepción y administración por él.
 
 ### 7.4 Perfil con métricas (3.6.18)
 

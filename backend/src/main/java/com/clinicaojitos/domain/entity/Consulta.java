@@ -110,6 +110,21 @@ public class Consulta {
     @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
 
+    /**
+     * Firma del médico encargado. Firmada, la consulta queda cerrada y puede
+     * respaldar la indicación de una cirugía (V2__firma_consulta...).
+     */
+    @Column(name = "firmada_en")
+    private LocalDateTime firmadaEn;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "firmada_por")
+    private Oftalmologo firmadaPor;
+
+    public boolean estaFirmada() {
+        return firmadaEn != null;
+    }
+
     @PrePersist
     void alCrear() {
         if (fechaCreacion == null) fechaCreacion = LocalDateTime.now();

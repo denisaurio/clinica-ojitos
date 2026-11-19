@@ -103,8 +103,14 @@ public final class ConsultaDto {
             String soapEvaluacion,
             String soapPlan,
             String observaciones,
-            int adjuntos
+            int adjuntos,
+            /** Firma del médico encargado; null = pendiente de firma. */
+            LocalDateTime firmadaEn,
+            String firmadaPor
     ) {
+        public boolean firmada() {
+            return firmadaEn != null;
+        }
     }
 
     /** Punto de la serie temporal para la gráfica de evolución (pantalla 3.6.4). */

@@ -29,6 +29,15 @@ spring:
       connection-timeout: ${DB_CONNECTION_TIMEOUT_MS:30000}
       pool-name: ${DB_POOL_NAME:ClinicaOjitosPool}
 
+  # Migraciones del esquema (backend/src/main/resources/db/migration). La base
+  # existente creada con sql/01_esquema.sql se toma como versión 1 y luego se
+  # aplican V2, V3... al arrancar, antes de que Hibernate valide el esquema.
+  flyway:
+    enabled: ${FLYWAY_ENABLED:true}
+    baseline-on-migrate: true
+    baseline-version: 1
+    locations: classpath:db/migration
+
   jpa:
     # El esquema lo crea sql/01_esquema.sql. En producción, `validate`.
     hibernate:

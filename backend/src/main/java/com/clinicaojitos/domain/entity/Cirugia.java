@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * Procedimiento quirúrgico (RF4.4, pantalla 3.6.13 del prototipo).
@@ -67,4 +69,13 @@ public class Cirugia {
     @Builder.Default
     @Column(nullable = false, length = 30)
     private String estado = "PROGRAMADA";
+
+    /** Consultas firmadas del historial que respaldan la cirugía (una o varias). */
+    @Builder.Default
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "cirugia_consulta",
+            joinColumns = @JoinColumn(name = "cirugia_id"),
+            inverseJoinColumns = @JoinColumn(name = "consulta_id"))
+    @OrderBy("fecha DESC")
+    private Set<Consulta> consultas = new LinkedHashSet<>();
 }

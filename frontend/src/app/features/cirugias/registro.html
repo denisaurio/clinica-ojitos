@@ -41,6 +41,43 @@
       </div>
     </ui-card>
 
+    <ui-card titulo="Consultas que respaldan la cirugía" icono="fileText" class="bloque">
+      @if (!c.pacienteId.value) {
+        <p class="consultas__nota">Elija primero el paciente para ver su historial.</p>
+      } @else if (firmadas().length === 0) {
+        <p class="consultas__nota">
+          Este paciente no tiene consultas firmadas. El médico encargado debe firmar la
+          consulta en el <strong>Historial Médico</strong> antes de indicar la cirugía.
+        </p>
+      } @else {
+        <p class="consultas__nota">
+          Marque una o varias consultas firmadas en las que se indicó la operación.
+        </p>
+        <ul class="consultas">
+          @for (consulta of firmadas(); track consulta.id) {
+            <li>
+              <label class="consulta" [class.consulta--activa]="seleccionadas().has(consulta.id)">
+                <input
+                  type="checkbox"
+                  [checked]="seleccionadas().has(consulta.id)"
+                  (change)="alternarConsulta(consulta.id)"
+                />
+                <span class="consulta__texto">
+                  <strong>{{ consulta.diagnosticoPrincipal }}</strong>
+                  <small>{{ consulta.fecha }} · {{ consulta.oftalmologoNombre }} · firmada</small>
+                </span>
+              </label>
+            </li>
+          }
+        </ul>
+      }
+      @if (sinFirmar() > 0) {
+        <p class="consultas__nota consultas__nota--aviso">
+          {{ sinFirmar() }} consulta(s) sin firmar no aparecen aquí.
+        </p>
+      }
+    </ui-card>
+
     <ui-card titulo="Detalles del Procedimiento" icono="scissors" class="bloque">
       <div class="bloque__grid">
         <ui-select
@@ -52,6 +89,15 @@
           [requerido]="true"
           [error]="errorDe('tipoCirugia', 'Seleccione el tipo de cirugía.')"
         />
+        <ui-select
+          formControlName="estado"
+          etiqueta="Estado"
+          [opciones]="estados"
+          [requerido]="true"
+        />
+      </div>
+
+      <div class="bloque__grid">
         <ui-input
           formControlName="fecha"
           etiqueta="Fecha del Procedimiento"
@@ -91,7 +137,10 @@
 
     <ui-card titulo="Observaciones / Notas Quirúrgicas" icono="clipboardList" class="bloque">
       <label class="area">
-        <span class="area__etiqueta">Reporte Operatorio y Complicaciones</span>
+        <span class="area__etiqueta">
+          Reporte Operatorio y Complicaciones
+          @if (c.estado.value === 'PROGRAMADA') { (al realizarla) }
+        </span>
         <textarea
           class="area__campo"
           rows="7"
@@ -101,14 +150,19 @@
         <span class="area__ayuda">
           Incluya detalles específicos de la sutura o dimensiones de injerto, según corresponda.
         </span>
-        @if (errorDe('reporteOperatorio', '')) {
-          <span class="area__error">El reporte operatorio es obligatorio.</span>
-        }
+
       </label>
     </ui-card>
 
     <div class="acciones">
-      <ui-button variante="contorno" tipo="button" destino="/dashboard" [enlace]="true">Cancelar</ui-button>
+      <ui-button
+        variante="contorno"
+        tipo="button"
+        [destino]="c.pacienteId.value ? '/historial/paciente/' + c.pacienteId.value : '/dashboard'"
+        [enlace]="true"
+      >
+        Cancelar
+      </ui-button>
       <ui-button variante="primario" tipo="submit" icono="save" [deshabilitado]="guardando()">
         Guardar Registro
       </ui-button>

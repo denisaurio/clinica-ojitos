@@ -72,6 +72,13 @@ public class ConsultaController {
         return consultaService.registrar(request);
     }
 
+    @PatchMapping("/{id}/firmar")
+    @PreAuthorize("hasRole('OFTALMOLOGO')")
+    @Operation(summary = "El médico encargado firma la consulta (queda cerrada)")
+    public ConsultaDto.Response firmar(@PathVariable Long id) {
+        return consultaService.firmar(id);
+    }
+
     @PostMapping("/{id}/examenes")
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('ADMINISTRADOR','OFTALMOLOGO')")

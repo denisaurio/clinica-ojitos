@@ -173,6 +173,7 @@ lista completa, con ejemplos y comentarios, está en
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | *(vacío)* | Cuenta ADMINISTRADOR que se crea al arrancar si no existe (`config/AdministradorInicial`) |
 | `ADMIN_EMAIL` | *(usuario@clinicaojitos.pe)* | Correo de esa cuenta |
 | `ADMIN_FORZAR_CLAVE` | `false` | `true` restablece la clave del admin en cada arranque |
+| `FLYWAY_ENABLED` | `true` | Aplica al arrancar las migraciones de `db/migration` (V2: firma de consultas y cirugía↔consulta) |
 | `JPA_DDL_AUTO` | `validate` | Validar el esquema, sin modificarlo |
 | `APP_TIMEZONE` | `America/Lima` | Zona horaria de Hibernate y las fechas |
 | `LOG_LEVEL_*` | `INFO` / `WARN` | Niveles de log por paquete |

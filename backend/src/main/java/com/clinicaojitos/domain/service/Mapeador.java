@@ -200,7 +200,9 @@ public class Mapeador {
                 c.getSoapEvaluacion(),
                 c.getSoapPlan(),
                 c.getObservaciones(),
-                (int) adjuntos);
+                (int) adjuntos,
+                c.getFirmadaEn(),
+                c.getFirmadaPor() != null ? c.getFirmadaPor().getNombreCompleto() : null);
     }
 
     public ConsultaDto.Evolución aEvolucion(Consulta c) {
@@ -281,7 +283,12 @@ public class Mapeador {
                 s.getTecnica(),
                 s.getIncidencias(),
                 s.getLenteIntraocular(),
-                s.getEstado());
+                s.getEstado(),
+                s.getConsultas() == null ? java.util.List.of() : s.getConsultas().stream()
+                        .map(c -> new TratamientoDto.ConsultaVinculada(
+                                c.getId(), c.getFecha(), c.getDiagnostico(),
+                                c.getOftalmologo() != null ? c.getOftalmologo().getNombreCompleto() : null))
+                        .toList());
     }
 
     /**

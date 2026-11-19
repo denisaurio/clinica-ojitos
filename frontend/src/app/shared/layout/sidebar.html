@@ -8,7 +8,7 @@
   </span>
 </div>
 
-@if (variante() === 'clinico' || variante() === 'operativo') {
+@if ((variante() === 'clinico' || variante() === 'operativo') && puedeReservar()) {
   <div class="accion">
     <ui-button
       [enlace]="true"

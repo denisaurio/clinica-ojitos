@@ -3,7 +3,9 @@ import {
   Component,
   OnDestroy,
   OnInit,
+  computed,
   inject,
+  input,
   signal,
 } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
@@ -19,7 +21,9 @@ import { PacienteService } from '../../core/services/paciente.service';
 import { OftalmologoService } from '../../core/services/oftalmologo.service';
 import { ContextoPaginaService } from '../../core/services/contexto-pagina.service';
 import { DemoDataService } from '../../core/services/demo-data.service';
-import { Lateralidad } from '../../core/models';
+import { HistorialService } from '../../core/services/historial.service';
+import { AuthService } from '../../core/services/auth.service';
+import { Consulta, Lateralidad } from '../../core/models';
 
 /**
  * Registro de procedimiento quirúrgico (imagen 36), en tres bloques:
@@ -49,11 +53,28 @@ export class CirugiaRegistroComponent implements OnInit, OnDestroy {
   private readonly demo = inject(DemoDataService);
   private readonly router = inject(Router);
   private readonly contexto = inject(ContextoPaginaService);
+  private readonly historial = inject(HistorialService);
+  private readonly auth = inject(AuthService);
+
+  /** Query params desde el historial: ?paciente=1&consulta=5. */
+  readonly paciente = input<string>();
+  readonly consulta = input<string>();
+
+  /** Consultas del paciente; solo las firmadas pueden vincularse. */
+  protected readonly consultasPaciente = signal<Consulta[]>([]);
+  protected readonly seleccionadas = signal<Set<number>>(new Set());
+  protected readonly firmadas = computed(() => this.consultasPaciente().filter((c) => !!c.firmadaEn));
+  protected readonly sinFirmar = computed(() => this.consultasPaciente().filter((c) => !c.firmadaEn).length);
 
   protected readonly tiposCirugia: OpcionSelect[] = this.demo.tiposCirugia.map((t) => ({
     valor: t,
     etiqueta: t,
   }));
+
+  protected readonly estados: OpcionSelect[] = [
+    { valor: 'PROGRAMADA', etiqueta: 'Programada (se operará)' },
+    { valor: 'REALIZADA', etiqueta: 'Realizada (ya se operó)' },
+  ];
 
   protected readonly anestesias: OpcionSelect[] = [
     'Tópica', 'Peribulbar', 'Retrobulbar', 'General'
@@ -70,10 +91,12 @@ export class CirugiaRegistroComponent implements OnInit, OnDestroy {
     oftalmologoId: [null as number | null, [Validators.required]],
     diagnosticoPreoperatorio: ['', [Validators.required]],
     tipoCirugia: ['', [Validators.required]],
+    estado: ['PROGRAMADA' as 'PROGRAMADA' | 'REALIZADA', [Validators.required]],
     fecha: [this.hoyIso(), [Validators.required]],
     lateralidad: ['OD' as Lateralidad, [Validators.required]],
     tipoAnestesia: ['Tópica', [Validators.required]],
-    reporteOperatorio: ['', [Validators.required]],
+    // Solo es obligatorio cuando la cirugía ya se realizó.
+    reporteOperatorio: [''],
   });
 
   ngOnInit(): void {
@@ -88,11 +111,53 @@ export class CirugiaRegistroComponent implements OnInit, OnDestroy {
       );
     });
 
-    this.oftalmologos.listar('', true).subscribe((items) => {
+    this.oftalmologos.activos().subscribe((items) => {
       this.oftalmologosOpciones.set(
         items.map((o) => ({ valor: o.id, etiqueta: o.nombreCompleto }))
       );
     });
+
+    // El médico que indica la cirugía es, por defecto, el responsable.
+    if (this.auth.rol() === 'OFTALMOLOGO') {
+      this.oftalmologos.yo().subscribe({
+        next: (m) => this.c.oftalmologoId.setValue(m.id),
+        error: () => undefined,
+      });
+    }
+
+    this.c.pacienteId.valueChanges.subscribe((id) => this.cargarConsultas(id));
+
+    const desdeHistorial = Number(this.paciente());
+    if (desdeHistorial) {
+      this.c.pacienteId.setValue(desdeHistorial);
+    }
+  }
+
+  private cargarConsultas(pacienteId: number | null): void {
+    this.consultasPaciente.set([]);
+    this.seleccionadas.set(new Set());
+    if (!pacienteId) return;
+    this.historial.delPaciente(Number(pacienteId)).subscribe({
+      next: (lista) => {
+        this.consultasPaciente.set(lista);
+        const preelegida = Number(this.consulta());
+        const firmada = lista.find((c) => c.id === preelegida && c.firmadaEn);
+        if (firmada) {
+          this.seleccionadas.set(new Set([firmada.id]));
+          if (!this.c.diagnosticoPreoperatorio.value) {
+            this.c.diagnosticoPreoperatorio.setValue(firmada.diagnosticoPrincipal);
+          }
+        }
+      },
+      error: () => this.error.set('No se pudo cargar el historial del paciente.'),
+    });
+  }
+
+  protected alternarConsulta(id: number): void {
+    const nuevas = new Set(this.seleccionadas());
+    if (nuevas.has(id)) nuevas.delete(id);
+    else nuevas.add(id);
+    this.seleccionadas.set(nuevas);
   }
 
   ngOnDestroy(): void {
@@ -111,11 +176,22 @@ export class CirugiaRegistroComponent implements OnInit, OnDestroy {
   protected guardar(): void {
     if (this.formulario.invalid) {
       this.formulario.markAllAsTouched();
+      this.error.set('Complete los campos obligatorios.');
+      return;
+    }
+    if (this.seleccionadas().size === 0) {
+      this.error.set('Seleccione al menos una consulta firmada del historial que respalde la cirugía.');
+      return;
+    }
+    const valores = this.formulario.getRawValue();
+    if (valores.estado === 'REALIZADA' && !valores.reporteOperatorio.trim()) {
+      this.c.reporteOperatorio.markAsTouched();
+      this.error.set('Si la cirugía ya se realizó, escriba el reporte operatorio.');
       return;
     }
 
     this.guardando.set(true);
-    const valores = this.formulario.getRawValue();
+    this.error.set('');
     this.cirugias
       .crearCirugia({
         pacienteId: Number(valores.pacienteId),
@@ -126,12 +202,16 @@ export class CirugiaRegistroComponent implements OnInit, OnDestroy {
         lateralidad: valores.lateralidad,
         tipoAnestesia: valores.tipoAnestesia,
         reporteOperatorio: valores.reporteOperatorio,
+        estado: valores.estado,
+        consultaIds: [...this.seleccionadas()],
       })
       .subscribe({
-        next: () => this.router.navigate(['/dashboard']),
-        error: () => {
+        next: () => this.router.navigate(['/historial/paciente', valores.pacienteId]),
+        error: (fallo) => {
           this.guardando.set(false);
-          this.error.set('No se pudo guardar el registro quirúrgico. Inténtelo de nuevo.');
+          this.error.set(
+            fallo?.error?.message || 'No se pudo guardar el registro quirúrgico. Inténtelo de nuevo.'
+          );
         },
       });
   }

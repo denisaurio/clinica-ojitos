@@ -23,6 +23,9 @@ export interface Consulta {
   oftalmologoNombre: string;
   archivos: ArchivoConsulta[];
   esUltima: boolean;
+  /** Firma del médico encargado ("19 de noviembre de 2026, 10:30"); null = pendiente. */
+  firmadaEn?: string | null;
+  firmadaPor?: string;
 }
 
 export interface ArchivoConsulta {

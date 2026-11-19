@@ -62,7 +62,9 @@ public class CitaController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR','RECEPCIONISTA','OFTALMOLOGO','PACIENTE')")
+    // El oftalmólogo atiende las citas, pero no las crea: las reserva el
+    // paciente desde su portal, o recepción / administración por él.
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR','RECEPCIONISTA','PACIENTE')")
     @Operation(summary = "Programa una cita (rechaza cruces de horario, RF3.2)")
     public CitaDto.Response registrar(@Valid @RequestBody CitaDto.Request request) {
         return citaService.registrar(request);

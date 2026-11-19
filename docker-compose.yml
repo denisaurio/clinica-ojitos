@@ -78,6 +78,7 @@ services:
 
       JPA_DDL_AUTO: ${JPA_DDL_AUTO:-validate}
       JPA_SHOW_SQL: ${JPA_SHOW_SQL:-false}
+      FLYWAY_ENABLED: ${FLYWAY_ENABLED:-true}
 
       JWT_SECRET: ${JWT_SECRET:?Define JWT_SECRET en .env}
       JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES:-480}

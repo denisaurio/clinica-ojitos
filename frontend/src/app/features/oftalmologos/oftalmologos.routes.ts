@@ -15,6 +15,11 @@ export const OFTALMOLOGOS_ROUTES: Routes = [
     loadComponent: () => import('./registro').then((m) => m.OftalmologoRegistroComponent),
   },
   {
+    // El médico edita su propio horario (los pacientes reservan sobre él).
+    path: 'mi-horario',
+    loadComponent: () => import('./horarios').then((m) => m.OftalmologoHorariosComponent),
+  },
+  {
     path: 'horarios/:id',
     loadComponent: () => import('./horarios').then((m) => m.OftalmologoHorariosComponent),
   },

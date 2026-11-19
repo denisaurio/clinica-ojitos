@@ -151,7 +151,24 @@ public final class TratamientoDto {
             String lenteIntraocular,
 
             @Size(max = 30)
-            String estado
+            String estado,
+
+            /**
+             * Consultas firmadas del historial que justifican la cirugía
+             * (una o varias, del mismo paciente).
+             */
+            @jakarta.validation.constraints.NotEmpty(
+                    message = "Seleccione al menos una consulta firmada del historial")
+            List<Long> consultaIds
+    ) {
+    }
+
+    /** Consulta del historial a la que está vinculada una cirugía. */
+    public record ConsultaVinculada(
+            Long id,
+            java.time.LocalDateTime fecha,
+            String diagnostico,
+            String oftalmologoNombre
     ) {
     }
 
@@ -172,7 +189,8 @@ public final class TratamientoDto {
             String tecnica,
             String incidencias,
             String lenteIntraocular,
-            String estado
+            String estado,
+            List<ConsultaVinculada> consultas
     ) {
     }
 }

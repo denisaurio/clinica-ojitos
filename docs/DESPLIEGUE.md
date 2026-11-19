@@ -164,6 +164,7 @@ SPRING_PROFILES_ACTIVE=prod
 SERVER_PORT=8080
 JPA_DDL_AUTO=validate
 JPA_SHOW_SQL=false
+FLYWAY_ENABLED=true
 JWT_EXPIRATION_MINUTES=480
 JWT_SECRET=REEMPLAZA_SECRETO_JWT
 CORS_ALLOWED_ORIGINS=
@@ -382,6 +383,7 @@ DB_POOL_NAME={{environment.DB_POOL_NAME}}
 
 JPA_DDL_AUTO={{environment.JPA_DDL_AUTO}}
 JPA_SHOW_SQL={{environment.JPA_SHOW_SQL}}
+FLYWAY_ENABLED={{environment.FLYWAY_ENABLED}}
 JWT_SECRET={{environment.JWT_SECRET}}
 JWT_EXPIRATION_MINUTES={{environment.JWT_EXPIRATION_MINUTES}}
 CORS_ALLOWED_ORIGINS={{environment.CORS_ALLOWED_ORIGINS}}
@@ -655,16 +657,18 @@ Más detalles en [`testing/README.md`](../testing/README.md).
 1. Haz commit y push de tus cambios (con autorización).
 2. En Coolify, cada aplicación tiene **Automatic Deployment** si conectaste el
    webhook de GitHub; si no, pulsa **Redeploy** en la aplicación afectada.
-3. Si el cambio incluye un script SQL nuevo (`sql/07_...sql`), ejecútalo en
-   MySQL **antes** de desplegar el backend, usando la misma función `sql()` del
-   paso 4.2.
+3. Los cambios de esquema **se aplican solos**: el backend usa Flyway
+   (`backend/src/main/resources/db/migration`). En el primer arranque toma la
+   base existente (la de `sql/01`) como versión 1, aplica V2, V3... y recién
+   después Hibernate valida. No hay que ejecutar SQL a mano. El historial queda
+   en la tabla `flyway_schema_history`. (`FLYWAY_ENABLED=false` lo desactiva.)
 4. Si cambiaste solo variables de entorno, usa **Restart**; si cambiaste
    código, **Redeploy**.
 
 Orden recomendado:
 
 ```
-MySQL (migración) → API → Web
+API (migra la base al arrancar) → Web
 ```
 
 La API arranca con `validate`: si el esquema está incompleto, falla rápido y

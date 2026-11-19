@@ -36,4 +36,16 @@ class CitasApiTest extends BaseIntegracionTest {
                                 + "\",\"horaInicio\":\"09:00\",\"horaFin\":\"09:30\"}"))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    @WithMockUser(username = "dra.prueba", roles = "OFTALMOLOGO")
+    @DisplayName("El OFTALMÓLOGO no crea citas: las reserva el paciente o recepción (403)")
+    void oftalmologoNoCreaCitas() throws Exception {
+        String manana = java.time.LocalDate.now().plusDays(1).toString();
+        mvc.perform(post("/api/v1/citas")
+                        .contentType("application/json")
+                        .content("{\"pacienteId\":1,\"oftalmologoId\":1,\"fecha\":\"" + manana
+                                + "\",\"horaInicio\":\"09:00\",\"horaFin\":\"09:30\"}"))
+                .andExpect(status().isForbidden());
+    }
 }

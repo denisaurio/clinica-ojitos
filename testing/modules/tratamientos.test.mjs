@@ -9,6 +9,45 @@ import {
   omitir,
 } from '../lib/assert.mjs';
 import { fechaIso } from '../lib/util.mjs';
+import { iniciarSesion } from '../lib/http.mjs';
+
+/**
+ * La cirugía exige una consulta firmada del historial. La firma la hace el
+ * médico encargado, así que se entra con la cuenta de oftalmólogo de prueba,
+ * se registra una consulta TEST a su nombre y se firma.
+ */
+async function consultaFirmada(ctx, cliente, config, pacienteId) {
+  if (ctx.datos.consultaFirmada) return ctx.datos.consultaFirmada;
+  let sesion;
+  try {
+    sesion = await iniciarSesion(cliente, config.credenciales.oftalmologo);
+  } catch {
+    omitir(`no se pudo entrar como ${config.credenciales.oftalmologo.username} (TEST_DOCTOR_USER)`);
+  }
+  const medico = cliente.conToken(sesion.accessToken);
+  const { datos: yo } = await medico.get('/oftalmologos/yo');
+  const { datos: tipos } = await cliente.get('/catalogo/tipos-consulta', { auth: false });
+  const ahora = new Date();
+  const hora = [ahora.getHours(), ahora.getMinutes(), ahora.getSeconds()]
+    .map((n) => String(n).padStart(2, '0'))
+    .join(':');
+
+  const alta = await medico.post('/historiales', {
+    pacienteId,
+    oftalmologoId: yo.id,
+    tipoConsultaId: tipos[0].id,
+    fecha: `${fechaIso(ahora)}T${hora}`,
+    diagnostico: 'TEST catarata senil, indicación quirúrgica',
+  });
+  igual(alta.status, 201, 'código HTTP de la consulta del médico');
+
+  const firma = await medico.patch(`/historiales/${alta.datos.id}/firmar`, {});
+  igual(firma.status, 200, 'código HTTP de la firma');
+  esTexto(firma.datos.firmadaEn, 'fecha de firma');
+
+  ctx.datos.consultaFirmada = { id: alta.datos.id, oftalmologoId: yo.id };
+  return ctx.datos.consultaFirmada;
+}
 
 async function catalogo(cliente, ruta) {
   const { datos } = await cliente.get(ruta, { auth: false });
@@ -146,14 +185,35 @@ export default {
       );
     });
 
-    await prueba('La cirugía registra ojo, técnica y estado', async () => {
+    await prueba('Sin consulta firmada la cirugía se rechaza', async () => {
       if (!config.escribir) {
         omitir('TEST_WRITES=false: no se registran cirugías');
       }
       const paciente = ctx.exigirPaciente();
       const oftalmologo = ctx.exigirOftalmologo();
+      const respuesta = await cliente.post(
+        '/tratamientos/cirugias',
+        {
+          pacienteId: paciente.id,
+          oftalmologoId: oftalmologo.id,
+          tipoCirugia: 'TEST sin respaldo',
+          estado: 'PROGRAMADA',
+          consultaIds: [],
+        },
+        { permitirError: true }
+      );
+      igual(respuesta.status, 400, 'una cirugía sin consulta firmada debe dar 400');
+    });
+
+    await prueba('La cirugía registra ojo, técnica, estado y su consulta firmada', async () => {
+      if (!config.escribir) {
+        omitir('TEST_WRITES=false: no se registran cirugías');
+      }
+      const paciente = ctx.exigirPaciente();
       const { ojoId } = await idsNecesarios(ctx, cliente);
       const hoy = fechaIso(new Date());
+      const consulta = await consultaFirmada(ctx, cliente, config, paciente.id);
+      const oftalmologo = { id: consulta.oftalmologoId };
 
       const respuesta = await cliente.post('/tratamientos/cirugias', {
         pacienteId: paciente.id,
@@ -168,6 +228,7 @@ export default {
         incidencias: 'TEST sin incidencias',
         lenteIntraocular: 'TEST monofocal',
         estado: 'REALIZADA',
+        consultaIds: [consulta.id],
       });
 
       igual(respuesta.status, 201, 'código HTTP de la cirugía');
@@ -181,6 +242,7 @@ export default {
         `el ojo de la cirugía no corresponde a OD: ${cirugia.ojo}`
       );
       igual(cirugia.estado, 'REALIZADA', 'estado de la cirugía');
+      incluye(cirugia.consultas, (c) => c.id === consulta.id, 'la cirugía no quedó vinculada a la consulta firmada');
 
       ctx.datos.cirugia = {
         id: cirugia.id,

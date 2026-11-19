@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { AuthService } from '../../core/services/auth.service';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { ButtonComponent } from '../../shared/components/ui-button';
@@ -41,6 +42,7 @@ const ALTO_HORA = 64;
 })
 export class CitaAgendaComponent implements OnInit, OnDestroy {
   private readonly citas = inject(CitaService);
+  protected readonly puedeReservar = inject(AuthService).puedeReservar;
   private readonly oftalmologos = inject(OftalmologoService);
   private readonly contexto = inject(ContextoPaginaService);
   private readonly ruta = inject(ActivatedRoute);

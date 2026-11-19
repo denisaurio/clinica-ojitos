@@ -36,6 +36,7 @@ const MENUS: Record<'clinico' | 'gestion' | 'operativo', EntradaMenu[]> = {
     { etiqueta: 'Tratamientos', ruta: '/tratamientos/prescripcion', icono: 'pill', solo: ['ADMINISTRADOR', 'OFTALMOLOGO'] },
     { etiqueta: 'Cirugías', ruta: '/cirugias/registro', icono: 'scissors', solo: ['ADMINISTRADOR', 'OFTALMOLOGO'] },
     { etiqueta: 'Agenda', ruta: '/citas/agenda', icono: 'calendar' },
+    { etiqueta: 'Mi Horario', ruta: '/oftalmologos/mi-horario', icono: 'clock', solo: ['OFTALMOLOGO'] },
   ],
 
   /**
@@ -120,6 +121,7 @@ export class SidebarComponent {
   readonly variante = input<'clinico' | 'gestion' | 'operativo'>('clinico');
 
   private readonly auth = inject(AuthService);
+  protected readonly puedeReservar = this.auth.puedeReservar;
   private readonly router = inject(Router);
 
   protected readonly marca = computed(() => {

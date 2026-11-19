@@ -51,6 +51,17 @@
       <artifactId>spring-boot-starter-mail</artifactId>
     </dependency>
 
+    <!-- Migraciones del esquema: se aplican solas al arrancar, antes de que
+         Hibernate valide (ddl-auto=validate). V1 = sql/01_esquema.sql. -->
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-mysql</artifactId>
+    </dependency>
+
     <!-- Seguridad: Spring Security + JWT (Fase 6, RF-06) -->
     <dependency>
       <groupId>org.springframework.boot</groupId>

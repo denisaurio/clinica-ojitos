@@ -41,6 +41,9 @@ export class AuthService {
   /** `true` cuando el usuario solo puede leer su propia información. */
   readonly esPaciente = computed(() => this.rol() === 'PACIENTE');
 
+  /** El oftalmólogo atiende citas pero no las crea (las reserva el paciente o recepción). */
+  readonly puedeReservar = computed(() => this.rol() !== null && this.rol() !== 'OFTALMOLOGO');
+
   /**
    * @param recordar `true` guarda la sesión en localStorage (sobrevive al cerrar
    *   el navegador); `false` en sessionStorage (se borra al cerrar la pestaña).

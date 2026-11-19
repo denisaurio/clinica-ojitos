@@ -16,7 +16,7 @@
     { "id": "historial",    "nombre": "Historial clínico",    "rf": "RF-02", "depende": ["auth", "pacientes"],
       "tests": ["HistorialApiTest"] },
     { "id": "tratamientos", "nombre": "Tratamientos y cirugías", "rf": "RF-04", "depende": ["auth", "pacientes"],
-      "tests": ["TratamientosApiTest"] },
+      "tests": ["TratamientosApiTest", "FirmaYCirugiaTest"] },
     { "id": "dashboard",    "nombre": "Paneles y auditoría",  "rf": "—",     "depende": ["pacientes", "citas", "historial", "tratamientos", "auth"],
       "tests": ["DashboardApiTest"] },
     { "id": "relaciones",   "nombre": "Relaciones entre servicios", "rf": "—", "depende": [],

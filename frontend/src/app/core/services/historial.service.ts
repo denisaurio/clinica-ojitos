@@ -44,7 +44,11 @@ export class HistorialService {
     return this.http.get<PageResponse<ConsultaApi>>(this.base, { params }).pipe(
       map((p) => ({
         ...p,
-        content: (p.content ?? []).map((c) => this.aConsulta(c)),
+        // El backend ordena de la más reciente a la más antigua.
+        content: (p.content ?? []).map((c, i) => ({
+          ...this.aConsulta(c),
+          esUltima: page === 0 && i === 0,
+        })),
       }))
     );
   }
@@ -98,7 +102,25 @@ export class HistorialService {
       oftalmologoNombre: c.oftalmologoNombre ?? '',
       archivos: [],
       esUltima: false,
+      firmadaEn: c.firmadaEn ? `${this.fechaLarga(c.firmadaEn)}, ${this.horaCorta(c.firmadaEn)}` : null,
+      firmadaPor: c.firmadaPor ?? '',
     };
+  }
+
+  /** El médico encargado firma la consulta (PATCH /historiales/{id}/firmar). */
+  firmar(id: number): Observable<Consulta> {
+    if (environment.useMockApi) {
+      const c = this.todas().find((x) => x.id === id) ?? this.todas()[0];
+      const ahora = new Date().toISOString();
+      return of({
+        ...c,
+        firmadaEn: `${this.fechaLarga(ahora)}, ${this.horaCorta(ahora)}`,
+        firmadaPor: c.oftalmologoNombre,
+      }).pipe(delay(150));
+    }
+    return this.http
+      .patch<ConsultaApi>(`${this.base}/${id}/firmar`, {})
+      .pipe(map((c) => this.aConsulta(c)));
   }
 
   private fechaLarga(iso: string): string {
@@ -305,6 +327,8 @@ interface ConsultaApi {
   soapObjetivo?: string;
   soapEvaluacion?: string;
   soapPlan?: string;
+  firmadaEn?: string;
+  firmadaPor?: string;
 }
 
 /** `ConsultaDto.Evolucion`. */

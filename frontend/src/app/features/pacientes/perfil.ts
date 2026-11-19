@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal } from '@angular/core';
+import { AuthService } from '../../core/services/auth.service';
 
 import { ButtonComponent } from '../../shared/components/ui-button';
 import { CardComponent } from '../../shared/components/ui-card';
@@ -32,6 +33,7 @@ import { ActividadReciente, Paciente } from '../../core/models';
 })
 export class PacientePerfilComponent implements OnInit {
   private readonly pacientes = inject(PacienteService);
+  protected readonly puedeReservar = inject(AuthService).puedeReservar;
 
   /** Enrutado como `perfil/:id`; `withComponentInputBinding` lo inyecta. */
   readonly id = input.required<string>();

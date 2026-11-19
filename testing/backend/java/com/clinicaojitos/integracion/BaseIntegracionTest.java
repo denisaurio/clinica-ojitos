@@ -23,6 +23,8 @@ import org.springframework.test.web.servlet.MockMvc;
         "spring.datasource.username=sa",
         "spring.datasource.password=",
         "spring.jpa.hibernate.ddl-auto=create-drop",
+        // Las migraciones usan SQL de MySQL; en H2 el esquema lo crea Hibernate.
+        "spring.flyway.enabled=false",
         "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect",
         "app.jwt.secret=clave-de-pruebas-con-mas-de-treinta-y-dos-caracteres-0123456789",
         // RNF-01: las pruebas de integración corren con cifrado activo.

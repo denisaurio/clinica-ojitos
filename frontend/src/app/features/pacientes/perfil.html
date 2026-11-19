@@ -21,9 +21,11 @@
         >
           Ver historial médico
         </ui-button>
-        <ui-button variante="primario" icono="calendar" destino="/citas/reservar" [enlace]="true">
-          Programar cita
-        </ui-button>
+        @if (puedeReservar()) {
+          <ui-button variante="primario" icono="calendar" destino="/citas/reservar" [enlace]="true">
+            Programar cita
+          </ui-button>
+        }
       </div>
     </header>
 

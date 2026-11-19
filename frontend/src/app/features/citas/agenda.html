@@ -21,9 +21,11 @@
         [opciones]="medicos()"
         (valorCambia)="cambiarMedico($event)"
       />
-      <ui-button variante="primario" icono="plus" destino="/citas/reservar" [enlace]="true">
-        Nueva Cita
-      </ui-button>
+      @if (puedeReservar()) {
+        <ui-button variante="primario" icono="plus" destino="/citas/reservar" [enlace]="true">
+          Nueva Cita
+        </ui-button>
+      }
     </div>
   </header>
 
