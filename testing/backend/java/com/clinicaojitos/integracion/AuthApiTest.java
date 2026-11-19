@@ -47,4 +47,14 @@ class AuthApiTest extends BaseIntegracionTest {
     void uploadsExigeSesion() throws Exception {
         mvc.perform(get("/uploads/cualquier-examen.pdf")).andExpect(status().isUnauthorized());
     }
+
+    @Test
+    @DisplayName("Un User-Agent largo no rompe el login: la auditoría lo recorta (antes 500)")
+    void userAgentLargoNoRompeLogin() throws Exception {
+        mvc.perform(post("/api/v1/auth/login")
+                        .header("User-Agent", "Mozilla/5.0 ".repeat(25))
+                        .contentType("application/json")
+                        .content("{\"username\":\"no.existe\",\"password\":\"xxxxxxxx\"}"))
+                .andExpect(status().isUnauthorized());
+    }
 }

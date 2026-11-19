@@ -112,6 +112,10 @@ export class CitaReservarComponent implements OnInit, OnDestroy {
           if (portal.pacienteId) {
             this.pacientesOpciones.set([{ valor: portal.pacienteId, etiqueta: portal.nombre }]);
             this.formulario.controls.pacienteId.setValue(portal.pacienteId);
+          } else {
+            this.error.set(
+              'Su cuenta no está vinculada a una ficha de paciente. Comuníquese con recepción.'
+            );
           }
         },
         error: () => this.error.set('No se encontró su ficha de paciente. Comuníquese con recepción.'),
@@ -253,23 +257,60 @@ export class CitaReservarComponent implements OnInit, OnDestroy {
 
   /* ------------------------------------------------------- Navegación */
 
+  /** Qué falta en un paso; vacío = se puede avanzar. */
+  private faltanteDelPaso(paso: number): string {
+    if (paso === 1) {
+      if (this.c.oftalmologoId.value === null) return 'Elija un especialista.';
+      if (!this.c.horaInicio.value) return 'Elija un horario disponible.';
+    }
+    if (paso === 2) {
+      if (this.c.pacienteId.value === null) {
+        return this.esPaciente()
+          ? 'Su cuenta no está vinculada a una ficha de paciente. Comuníquese con recepción.'
+          : 'Seleccione el paciente.';
+      }
+      if (this.c.tipoConsultaId.value === null) return 'Seleccione el tipo de consulta.';
+    }
+    return '';
+  }
+
   protected siguiente(): void {
-    if (this.paso() === 1 && (this.c.oftalmologoId.value === null || !this.c.horaInicio.value)) {
-      this.c.oftalmologoId.markAsTouched();
-      this.c.horaInicio.markAsTouched();
+    // Antes el paso 2 dejaba avanzar sin tipo de consulta y en el paso 3
+    // "Confirmar Cita" no hacía nada, sin decir por qué.
+    const falta = this.faltanteDelPaso(this.paso());
+    if (falta) {
+      this.formulario.markAllAsTouched();
+      this.error.set(falta);
       return;
     }
+    this.error.set('');
     if (this.paso() < 3) {
       this.paso.update((valor) => valor + 1);
     }
   }
 
   protected confirmar(): void {
+    for (const paso of [1, 2]) {
+      const falta = this.faltanteDelPaso(paso);
+      if (falta) {
+        this.error.set(falta);
+        this.paso.set(paso);
+        this.formulario.markAllAsTouched();
+        return;
+      }
+    }
     if (this.formulario.invalid) {
       this.formulario.markAllAsTouched();
+      this.error.set('Revise los datos de la cita.');
       return;
     }
+    this.error.set('');
     this.guardando();
+  }
+
+  protected nombreTipo(): string {
+    const id = Number(this.c.tipoConsultaId.value);
+    return this.tiposConsulta().find((t) => Number(t.valor) === id)?.etiqueta ?? '—';
   }
 
   private guardando(): void {

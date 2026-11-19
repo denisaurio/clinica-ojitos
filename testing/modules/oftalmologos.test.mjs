@@ -99,7 +99,10 @@ export default {
       esNumero(datos.citasSemana, 'citas de la semana');
       esNumero(datos.horasSemanales, 'horas semanales');
       esNumero(datos.cirugiasRealizadas, 'cirugías realizadas');
-      esNumero(datos.satisfaccionMedia, 'satisfacción media');
+      // Sin encuestas de satisfacción el dato llega vacío (antes era inventado).
+      if (datos.satisfaccionMedia !== undefined && datos.satisfaccionMedia !== null) {
+        esNumero(datos.satisfaccionMedia, 'satisfacción media');
+      }
       asegurar(
         datos.horasSemanales >= 0 && datos.horasSemanales <= 168,
         'las horas semanales deben estar entre 0 y 168'
