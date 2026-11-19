@@ -30,17 +30,25 @@ export class PacienteDashboardComponent {
   }
 
   protected etiqueta(estado: EstadoCita): string {
-    return estado === 'CONFIRMADA' ? 'Confirmada' : 'Pendiente';
+    const textos: Partial<Record<EstadoCita, string>> = {
+      CONFIRMADA: 'Confirmada', PROGRAMADA: 'Programada', EN_ESPERA: 'En espera',
+      EN_CURSO: 'En consulta', COMPLETADA: 'Completada', CANCELADA: 'Cancelada',
+    };
+    return textos[estado] ?? estado;
   }
 
-  /** «OCT 12» — el mes abreviado y el día, como en las tarjetas del prototipo. */
-  protected readonly mes = [
-    'ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN',
-    'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC',
-  ];
+  private static readonly MESES = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
 
-  protected diaDe(indice: number): string {
-    const dias = ['12', '05', '18', '22', '09', '27', '30'];
-    return dias[indice % dias.length] as string;
+  /**
+   * «NOV» y «20» de la fecha REAL de la cita (AAAA-MM-DD). Antes el mes salía
+   * de la posición en la lista y el día de una lista fija de números.
+   */
+  protected mesDe(fecha?: string): string {
+    const m = Number(fecha?.slice(5, 7));
+    return m ? PacienteDashboardComponent.MESES.at(m - 1) ?? '—' : '—';
+  }
+
+  protected diaDe(fecha?: string): string {
+    return fecha?.slice(8, 10) ?? '—';
   }
 }

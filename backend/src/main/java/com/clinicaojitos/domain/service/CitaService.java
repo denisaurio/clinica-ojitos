@@ -38,6 +38,7 @@ public class CitaService {
     private final DiaSemanaRepository diaSemanaRepository;
     private final TipoBloqueHorarioRepository tipoBloqueRepository;
     private final Mapeador mapeador;
+    private final AutorizacionPacienteService autorizacion;
 
     @Transactional(readOnly = true)
     public List<CitaDto.Evento> agenda(Long oftalmologoId, LocalDate desde, LocalDate hasta) {
@@ -113,12 +114,48 @@ public class CitaService {
 
     @Transactional(readOnly = true)
     public CitaDto.Response obtener(Long id) {
-        return mapeador.aCita(obtenerEntidad(id));
+        Cita c = obtenerEntidad(id);
+        exigirPropiaSiEsPaciente(c);
+        return mapeador.aCita(c);
+    }
+
+    /**
+     * RF3.1 — el paciente gestiona solo SUS citas; el resto de roles, todas.
+     * Misma regla de pertenencia que protege su historial (RNF-01).
+     */
+    private void exigirPropiaSiEsPaciente(Cita c) {
+        if (com.clinicaojitos.security.SecurityUtils.esPaciente()) {
+            autorizacion.exigirAcceso(c.getPaciente() != null ? c.getPaciente().getId() : null);
+        }
+    }
+
+    private void exigirPropiaSiEsPaciente(Long pacienteId) {
+        if (com.clinicaojitos.security.SecurityUtils.esPaciente()) {
+            autorizacion.exigirAcceso(pacienteId);
+        }
+    }
+
+    /** Una cita cancelada, atendida o con inasistencia ya no se modifica. */
+    private void exigirModificable(Cita c) {
+        String estado = c.getEstado();
+        if ("CANCELADA".equals(estado) || "COMPLETADA".equals(estado) || "NO_ASISTIO".equals(estado)) {
+            throw new OperacionInvalidaException(
+                    "La cita está " + estado.toLowerCase().replace('_', ' ') + " y ya no se puede modificar.");
+        }
+    }
+
+    /** No se programan ni reprograman citas en días pasados. */
+    private void exigirFechaFutura(LocalDate fecha) {
+        if (fecha != null && fecha.isBefore(LocalDate.now())) {
+            throw new OperacionInvalidaException("No se pueden programar citas en una fecha pasada.");
+        }
     }
 
     @Transactional
     @Auditado(accion = "CREAR", recurso = "CITA", descripcion = "Programación de cita")
     public CitaDto.Response registrar(CitaDto.Request r) {
+        exigirPropiaSiEsPaciente(r.pacienteId());
+        exigirFechaFutura(r.fecha());
         validarRango(r.horaInicio(), r.horaFin());
 
         if (citaRepository.contarSolapes(r.oftalmologoId(), r.fecha(), r.horaInicio(), r.horaFin(), null) > 0) {
@@ -162,6 +199,10 @@ public class CitaService {
     @Auditado(accion = "REPROGRAMAR", recurso = "CITA", descripcion = "Reprogramación de cita")
     public CitaDto.Response reprogramar(Long id, CitaDto.ReprogramarRequest r) {
         Cita c = obtenerEntidad(id);
+        exigirPropiaSiEsPaciente(c);
+        // Antes una cita cancelada o atendida "revivía" al reprogramarla.
+        exigirModificable(c);
+        exigirFechaFutura(r.fecha());
         validarRango(r.horaInicio(), r.horaFin());
 
         if (citaRepository.contarSolapes(c.getOftalmologo().getId(), r.fecha(), r.horaInicio(), r.horaFin(), id) > 0) {
@@ -186,6 +227,8 @@ public class CitaService {
     @Auditado(accion = "CANCELAR", recurso = "CITA", descripcion = "Cancelación de cita")
     public CitaDto.Response cancelar(Long id, CitaDto.CancelarRequest r) {
         Cita c = obtenerEntidad(id);
+        exigirPropiaSiEsPaciente(c);
+        exigirModificable(c);
         EstadoCita cancelada = estadoPorCodigo("CANCELADA");
         if (cancelada != null) c.setEstadoCita(cancelada);
         c.setNotaInterna(r.motivo());

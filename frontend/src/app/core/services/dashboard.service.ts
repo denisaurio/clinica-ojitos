@@ -218,6 +218,7 @@ export class DashboardService {
 
   private aDashboardPaciente(r: DashboardPacienteApi): DashboardPaciente {
     return {
+      pacienteId: r.pacienteId,
       nombre: r.nombre ?? '',
       citas: (r.proximasCitas ?? []).map((c) => this.aCitaDia(c)),
       diagnosticos: (r.diagnosticos ?? []).map((d) => ({
@@ -240,7 +241,9 @@ export class DashboardService {
       estado: (c.estado ?? 'PROGRAMADA') as CitaDia['estado'],
       sala: c.consultorio ?? '',
       pacienteId: c.pacienteId,
-      oftalmologo: c.oftalmologo ?? '',
+      // AgendaDia envía "oftalmologo"; CitaDto.Response, "oftalmologoNombre".
+      oftalmologo: c.oftalmologo ?? c.oftalmologoNombre ?? '',
+      fecha: c.fecha,
     };
   }
 
@@ -296,6 +299,8 @@ interface CitaApi {
   consultorio?: string;
   pacienteId?: number;
   oftalmologo?: string;
+  oftalmologoNombre?: string;
+  fecha?: string;
 }
 
 interface IndicadorApi {
@@ -344,6 +349,7 @@ interface DashboardRecepcionApi {
 }
 
 interface DashboardPacienteApi {
+  pacienteId?: number;
   nombre: string;
   proximasCitas?: (CitaApi & { fecha?: string })[];
   diagnosticos?: {

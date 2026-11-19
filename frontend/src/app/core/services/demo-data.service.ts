@@ -767,10 +767,11 @@ export class DemoDataService {
   };
 
   readonly dashboardPaciente: DashboardPaciente = {
+    pacienteId: 1,
     nombre: 'María',
     citas: [
-      { id: 1, horaInicio: '10:30 AM', horaFin: '', pacienteNombre: '', motivo: 'Revisión General - Glaucoma', tipoConsulta: 'Revisión', estado: 'CONFIRMADA' },
-      { id: 2, horaInicio: '09:00 AM', horaFin: '', pacienteNombre: '', motivo: 'Examen de Retina', tipoConsulta: 'Examen', estado: 'PROGRAMADA' },
+      { id: 1, fecha: '2026-11-24', horaInicio: '10:30', horaFin: '11:00', pacienteNombre: '', oftalmologo: 'Dra. Elena Rodríguez', motivo: 'Revisión General - Glaucoma', tipoConsulta: 'Revisión', estado: 'CONFIRMADA' },
+      { id: 2, fecha: '2026-12-03', horaInicio: '09:00', horaFin: '09:30', pacienteNombre: '', oftalmologo: 'Dr. Marcus Silva', motivo: 'Examen de Retina', tipoConsulta: 'Examen', estado: 'PROGRAMADA' },
     ],
     diagnosticos: [
       { nombre: 'Glaucoma de ángulo abierto', ojo: 'Ojo derecho e izquierdo', ultimaActualizacion: '15 Sep 2023', estado: 'ESTABLE' },

@@ -286,6 +286,12 @@ muestran lado a lado. Al elegir un médico se dibujan sus pausas reales
 
 ### 5.2 Reservar (3.6.9) — asistente de 3 pasos
 
+**El paciente también reserva (RF3.1).** Desde su portal, **Programar nueva cita**
+abre el mismo asistente con su ficha fija: elige médico, día y turno libre. El
+backend solo le permite reservar, ver, reprogramar o cancelar **sus propias**
+citas (403 en cualquier otra). Para todos los roles: no se agenda en días pasados
+(el calendario los atenúa) y una cita cancelada o atendida ya no se modifica.
+
 ```
  /citas/reservar
    │

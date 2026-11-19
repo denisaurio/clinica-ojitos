@@ -40,6 +40,8 @@ export interface TarjetaCita {
   pacienteId?: number;
   /** Profesional que atiende la cita. */
   oftalmologo?: string;
+  /** AAAA-MM-DD; el portal del paciente la necesita para mostrar el día real. */
+  fecha?: string;
 }
 
 /** Tarea pendiente del panel médico. */
@@ -111,6 +113,8 @@ export interface DiagnosticoPortal {
 }
 
 export interface DashboardPaciente {
+  /** Id de la ficha propia: para reservar y abrir su historial. */
+  pacienteId?: number;
   nombre: string;
   citas: TarjetaCita[];
   diagnosticos: DiagnosticoPortal[];

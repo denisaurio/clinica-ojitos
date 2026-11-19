@@ -98,7 +98,9 @@ public final class DashboardDto {
             String mensaje,
             List<CitaDto.Response> proximasCitas,
             List<ConsultaDto.DiagnosticoVigente> diagnosticos,
-            List<ConsultaDto.Evolución> evolucion
+            List<ConsultaDto.Evolución> evolucion,
+            /** Id de la ficha propia: el portal lo usa para reservar y ver su historial. */
+            Long pacienteId
     ) {
     }
 

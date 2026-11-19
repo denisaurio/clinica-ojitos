@@ -24,4 +24,16 @@ class CitasApiTest extends BaseIntegracionTest {
     void pacienteNoVeAgenda() throws Exception {
         mvc.perform(get("/api/v1/citas/agenda")).andExpect(status().isForbidden());
     }
+
+    @Test
+    @WithMockUser(username = "paciente.ajeno", roles = "PACIENTE")
+    @DisplayName("RF3.1: un PACIENTE no puede reservar una cita para otro paciente (403)")
+    void pacienteNoReservaParaOtro() throws Exception {
+        String manana = java.time.LocalDate.now().plusDays(1).toString();
+        mvc.perform(post("/api/v1/citas")
+                        .contentType("application/json")
+                        .content("{\"pacienteId\":999,\"oftalmologoId\":1,\"fecha\":\"" + manana
+                                + "\",\"horaInicio\":\"09:00\",\"horaFin\":\"09:30\"}"))
+                .andExpect(status().isForbidden());
+    }
 }

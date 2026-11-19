@@ -57,6 +57,14 @@ export class OftalmologoService {
     );
   }
 
+  /** GET /oftalmologos/activos: la única lista de médicos que puede pedir un paciente. */
+  activos(): Observable<Oftalmologo[]> {
+    if (environment.useMockApi) {
+      return of(this.demo.oftalmologos.filter((o) => o.activo)).pipe(delay(100));
+    }
+    return this.http.get<Oftalmologo[]>(`${this.base}/activos`);
+  }
+
   obtener(id: number): Observable<Oftalmologo> {
     if (environment.useMockApi) {
       return of(this.demo.oftalmologos.find((o) => o.id === id) ?? this.demo.oftalmologos[0]).pipe(

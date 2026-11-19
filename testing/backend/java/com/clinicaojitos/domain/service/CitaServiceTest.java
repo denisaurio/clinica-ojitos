@@ -244,4 +244,44 @@ class CitaServiceTest {
 
         assertThat(cita.getBloqueo()).isFalse();
     }
+
+    @Test
+    @DisplayName("Una cita cancelada no se reprograma (antes volvía a PROGRAMADA)")
+    void noReprogramaCancelada() {
+        Cita cita = new Cita();
+        cita.setId(1L);
+        cita.setOftalmologo(oftalmologo);
+        cita.setEstadoCita(EstadoCita.builder().id(6).codigo("CANCELADA").build());
+        when(citaRepository.findById(1L)).thenReturn(Optional.of(cita));
+
+        assertThatThrownBy(() -> servicio.reprogramar(1L, new CitaDto.ReprogramarRequest(
+                hoy.plusDays(1), LocalTime.of(11, 0), LocalTime.of(11, 30), "Reintento")))
+                .isInstanceOf(OperacionInvalidaException.class)
+                .hasMessageContaining("cancelada");
+        verify(citaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Una cita completada no se cancela")
+    void noCancelaCompletada() {
+        Cita cita = new Cita();
+        cita.setId(1L);
+        cita.setEstadoCita(EstadoCita.builder().id(5).codigo("COMPLETADA").build());
+        when(citaRepository.findById(1L)).thenReturn(Optional.of(cita));
+
+        assertThatThrownBy(() -> servicio.cancelar(1L, new CitaDto.CancelarRequest("El paciente no vendrá")))
+                .isInstanceOf(OperacionInvalidaException.class);
+        verify(citaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("No se programan citas en una fecha pasada")
+    void noAgendaEnElPasado() {
+        CitaDto.Request ayer = new CitaDto.Request(
+                1L, 1L, 1, "C-01", hoy.minusDays(1), LocalTime.of(9, 0), LocalTime.of(9, 30), null, "Control", null);
+
+        assertThatThrownBy(() -> servicio.registrar(ayer))
+                .isInstanceOf(OperacionInvalidaException.class)
+                .hasMessageContaining("pasada");
+    }
 }
