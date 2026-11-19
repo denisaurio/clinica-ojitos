@@ -262,6 +262,11 @@ mmHg, el tratamiento está funcionando.
 
 ### 5.1 Agenda semanal (3.6.7)
 
+Los botones ‹ **Hoy** › cambian de semana. Cada bloque muestra hora, tipo de
+consulta y paciente, con un color por estado; las citas que se cruzan se
+muestran lado a lado. Al elegir un médico se dibujan sus pausas reales
+(bloques `DESCANSO` de su horario).
+
 ```
  /citas/agenda
    │
@@ -320,6 +325,12 @@ mmHg, el tratamiento está funcionando.
 ```
 
 ### 5.4 Reprogramar y cancelar (3.6.8)
+
+El modal se cierra con la **X**, el fondo o **Conservar original**, y al
+confirmar o cancelar vuelve a la agenda en la semana de la cita
+(`/citas/agenda?semana=AAAA-MM-DD`). Las horas disponibles salen de
+`GET /citas/disponibilidad`, que divide el horario del médico en turnos de
+30 minutos y marca como ocupados los que se cruzan con otra cita.
 
 ```
  Modal de reprogramación

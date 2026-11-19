@@ -10,7 +10,7 @@
     { "id": "oftalmologos", "nombre": "Oftalmólogos",         "rf": "RF-05", "depende": ["catalogo", "auth"],
       "tests": ["OftalmologoServiceTest", "OftalmologosApiTest"] },
     { "id": "citas",        "nombre": "Citas",                "rf": "RF-03", "depende": ["pacientes", "oftalmologos"],
-      "tests": ["CitaServiceTest", "CitasApiTest"] },
+      "tests": ["CitaServiceTest", "CitaDisponibilidadTest", "CitasApiTest"] },
     { "id": "historial",    "nombre": "Historial clínico",    "rf": "RF-02", "depende": ["auth", "pacientes"],
       "tests": ["HistorialApiTest"] },
     { "id": "tratamientos", "nombre": "Tratamientos y cirugías", "rf": "RF-04", "depende": ["auth", "pacientes"],

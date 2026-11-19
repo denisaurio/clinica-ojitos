@@ -78,21 +78,37 @@ public class CitaService {
         DiaSemana dia = diaSemanaRepository.findByCodigo(codigoDia).orElse(null);
         if (dia == null) return List.of();
 
-        var reservados = citaRepository.agendaDelDia(oftalmologoId, f).stream()
-                .map(c -> c.getHoraInicio())
-                .collect(java.util.stream.Collectors.toSet());
+        List<Cita> ocupadas = citaRepository.agendaDelDia(oftalmologoId, f);
 
-        return horarioLaboralRepository
+        // Cada bloque del horario (p. ej. 08:00-13:00) se divide en turnos de
+        // DURACION_TURNO_MIN; antes se devolvía el bloque entero como una sola
+        // franja y la pantalla no podía ofrecer horas concretas.
+        List<CitaDto.Franja> franjas = new java.util.ArrayList<>();
+        horarioLaboralRepository
                 .findByOftalmologoIdAndActivoTrue(oftalmologoId).stream()
                 .filter(h -> dia.getId().equals(h.getDiaSemana().getId()))
-                .filter(h -> !"DESCANSO".equals(h.getTipoBloque().getCodigo()))
+                .filter(h -> h.getTipoBloque() == null || !"DESCANSO".equals(h.getTipoBloque().getCodigo()))
                 .sorted(java.util.Comparator.comparing(HorarioLaboral::getHoraInicio))
-                .map(h -> new CitaDto.Franja(
-                        h.getHoraInicio(),
-                        h.getHoraFin(),
-                        reservados.contains(h.getHoraInicio()) ? "BOOKED" : "FREE",
-                        h.getTipoBloque() != null ? h.getTipoBloque().getNombre() : "Consulta"))
-                .toList();
+                .forEach(h -> {
+                    String tipo = h.getTipoBloque() != null ? h.getTipoBloque().getNombre() : "Consulta";
+                    for (LocalTime inicio = h.getHoraInicio();
+                         !inicio.plusMinutes(DURACION_TURNO_MIN).isAfter(h.getHoraFin());
+                         inicio = inicio.plusMinutes(DURACION_TURNO_MIN)) {
+                        LocalTime fin = inicio.plusMinutes(DURACION_TURNO_MIN);
+                        franjas.add(new CitaDto.Franja(inicio, fin,
+                                seSolapa(ocupadas, inicio, fin) ? "BOOKED" : "FREE", tipo));
+                    }
+                });
+        return franjas;
+    }
+
+    /** Duración de un turno ofrecido en la agenda (RF-03). */
+    static final int DURACION_TURNO_MIN = 30;
+
+    /** RF3.2 — un turno está ocupado si se cruza con alguna cita activa. */
+    static boolean seSolapa(List<Cita> citas, LocalTime inicio, LocalTime fin) {
+        return citas.stream().anyMatch(c ->
+                c.getHoraInicio().isBefore(fin) && c.getHoraFin().isAfter(inicio));
     }
 
     @Transactional(readOnly = true)
