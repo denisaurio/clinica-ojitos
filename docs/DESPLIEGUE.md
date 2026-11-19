@@ -168,6 +168,7 @@ JWT_EXPIRATION_MINUTES=480
 JWT_SECRET=REEMPLAZA_SECRETO_JWT
 CORS_ALLOWED_ORIGINS=
 
+DATA_ENCRYPTION_KEY=REEMPLAZA_CLAVE_AES_BASE64
 ADMIN_USERNAME=administrador
 ADMIN_PASSWORD=REEMPLAZA_CLAVE_ADMIN
 ADMIN_EMAIL=admin@clinicaojitos.pe
@@ -204,7 +205,11 @@ Reglas:
 - `DB_URL` se completa en el paso 4, cuando conozcas el host interno de MySQL.
   Deja el marcador por ahora.
 - Marca como **Locked** `MYSQL_PASSWORD`, `MYSQL_ROOT_PASSWORD`, `DB_PASSWORD`,
-  `JWT_SECRET` y `ADMIN_PASSWORD`.
+  `JWT_SECRET`, `DATA_ENCRYPTION_KEY` y `ADMIN_PASSWORD`.
+- `DATA_ENCRYPTION_KEY` (RNF-01): `openssl rand -base64 32`. Cifra en la base los
+  textos clínicos. Guarda una copia fuera del VPS: sin ella esos textos no se
+  pueden leer. Los datos antiguos en texto plano se siguen leyendo y se cifran
+  la próxima vez que se guardan.
 - `CORS_ALLOWED_ORIGINS` se queda vacío: todo pasa por el mismo dominio.
   Si usas **dos subdominios** (frontend y backend separados), mira el paso 6.4.
 - Si tu proyecto usa otro dominio, cambia `APP_DOMAIN` y `APP_URL`.
@@ -365,6 +370,7 @@ JPA_SHOW_SQL={{environment.JPA_SHOW_SQL}}
 JWT_SECRET={{environment.JWT_SECRET}}
 JWT_EXPIRATION_MINUTES={{environment.JWT_EXPIRATION_MINUTES}}
 CORS_ALLOWED_ORIGINS={{environment.CORS_ALLOWED_ORIGINS}}
+DATA_ENCRYPTION_KEY={{environment.DATA_ENCRYPTION_KEY}}
 ADMIN_USERNAME={{environment.ADMIN_USERNAME}}
 ADMIN_PASSWORD={{environment.ADMIN_PASSWORD}}
 ADMIN_EMAIL={{environment.ADMIN_EMAIL}}

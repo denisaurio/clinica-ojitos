@@ -164,6 +164,7 @@ lista completa, con ejemplos y comentarios, está en
 | `JWT_SECRET` | *(vacío → aleatoria)* | Firma de los tokens (mínimo 32 caracteres) |
 | `JWT_EXPIRATION_MINUTES` | `60` | Vigencia del token |
 | `CORS_ALLOWED_ORIGINS` | *(vacío)* | Orígenes permitidos; vacío en producción |
+| `DATA_ENCRYPTION_KEY` | *(vacío → sin cifrado)* | Clave AES-256 en Base64 que cifra los textos clínicos en la base (RNF-01) |
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | *(vacío)* | Cuenta ADMINISTRADOR que se crea al arrancar si no existe (`config/AdministradorInicial`) |
 | `ADMIN_EMAIL` | *(usuario@clinicaojitos.pe)* | Correo de esa cuenta |
 | `ADMIN_FORZAR_CLAVE` | `false` | `true` restablece la clave del admin en cada arranque |

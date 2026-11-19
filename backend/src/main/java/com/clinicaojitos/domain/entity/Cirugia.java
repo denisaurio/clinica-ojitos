@@ -1,5 +1,7 @@
 package com.clinicaojitos.domain.entity;
 
+import com.clinicaojitos.security.CampoClinicoConverter;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -48,10 +50,12 @@ public class Cirugia {
     @Column(length = 60)
     private String anestesia;
 
+    @Convert(converter = CampoClinicoConverter.class)
     @Lob
     @Column(columnDefinition = "TEXT")
     private String tecnica;
 
+    @Convert(converter = CampoClinicoConverter.class)
     @Lob
     @Column(columnDefinition = "TEXT")
     private String incidencias;

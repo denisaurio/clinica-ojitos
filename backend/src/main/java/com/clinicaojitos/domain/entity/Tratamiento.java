@@ -1,5 +1,7 @@
 package com.clinicaojitos.domain.entity;
 
+import com.clinicaojitos.security.CampoClinicoConverter;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -81,6 +83,7 @@ public class Tratamiento {
     @Column(name = "fecha_control")
     private LocalDate fechaControl;
 
+    @Convert(converter = CampoClinicoConverter.class)
     @Lob
     @Column(columnDefinition = "TEXT")
     private String indicaciones;

@@ -79,6 +79,12 @@ app:
     # Ejemplo: https://app.midominio.com,http://localhost:4200
     allowed-origins: ${CORS_ALLOWED_ORIGINS:}
 
+  cifrado:
+    # RNF-01: clave AES-256 (32 bytes en Base64) para cifrar los textos clínicos en
+    # la base. Generar: openssl rand -base64 32. Vacía = sin cifrado (solo local).
+    # Si se pierde, los textos ya cifrados no se pueden leer: guárdela aparte.
+    clave: ${DATA_ENCRYPTION_KEY:}
+
   admin:
     # Cuenta ADMINISTRADOR que el backend garantiza al arrancar (RF-06), con la
     # clave en BCrypt. Si ADMIN_USERNAME o ADMIN_PASSWORD están vacíos, no hace
