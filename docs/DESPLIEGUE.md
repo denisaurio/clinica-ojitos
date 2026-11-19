@@ -817,16 +817,16 @@ docker compose down -v
 
 ## Anexo — Error `lstat …/backend/backend: no such file or directory`
 
-En Coolify v4.7.5 la carpeta del *Base directory* se suma dos veces al
-construir, aunque la pantalla muestre "Resolved file: /backend/Dockerfile".
-Para evitarlo, cada servicio tiene un Dockerfile que construye desde la raíz
-del repositorio:
+El asistente de Coolify v4.7.5 guarda el Dockerfile como `backend/Dockerfile` y,
+como el *Base directory* ya es `/backend`, la ruta se repite
+(`/backend/backend/Dockerfile`). Coolify lo avisa con «Base directory is repeated».
+
+Solución: en **Configuration → General → Build & deploy** deja
 
 | Servicio | Base directory | Dockerfile location |
 |---|---|---|
-| Backend | `/` | `/backend/Dockerfile.coolify` |
-| Frontend | `/` | `/frontend/Dockerfile.coolify` |
+| Backend | `/backend` | `/Dockerfile` |
+| Frontend | `/frontend` | `/Dockerfile` |
 
-Son idénticos a `backend/Dockerfile` y `frontend/Dockerfile`, salvo que copian
-`backend/…` y `frontend/…`. Los archivos `*.coolify.dockerignore` limitan el
-contexto a la carpeta de cada servicio.
+y comprueba que *Resolved file* muestre `/backend/Dockerfile` o `/frontend/Dockerfile`.
+Guarda, recarga la página para verificar que se guardó y vuelve a desplegar.
