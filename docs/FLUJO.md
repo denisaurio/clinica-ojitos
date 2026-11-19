@@ -477,11 +477,21 @@ PATCH /api/v1/tratamientos/:id/seguimiento { fecha, resultado, pioOd, pioOi, obs
 
 ### 7.4 Perfil con métricas (3.6.18)
 
+Desde el perfil, el administrador puede:
+
+- **Editar perfil** (`/oftalmologos/editar/{id}`): no cambia el estado ni la contraseña.
+- **Generar nuevas credenciales** (`POST /oftalmologos/{id}/credenciales`): la clave se muestra una sola vez.
+- **Desactivar**: pide confirmación y desactiva también la cuenta de acceso del médico.
+- **Reactivar** un perfil desactivado.
+
+El horario y las métricas son los reales. Un médico desactivado o un paciente dado
+de baja no reciben citas nuevas.
+
 ```
  /oftalmologos/perfil/:id
    │
    ├─ Identidad, subespecialidad, estado, correo, colegiado, turnos
-   ├─ Tres tarjetas: pacientes atendidos · carga de la semana · satisfacción
+   ├─ Cuatro tarjetas: pacientes atendidos · citas de la semana · horas semanales · cirugías
    └─ Tabla de próximas citas: paciente · horario · tipo · confirmación
 ```
 

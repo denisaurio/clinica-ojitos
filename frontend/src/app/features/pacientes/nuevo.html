@@ -223,6 +223,7 @@
 
   @if (credenciales(); as cred) {
     <ui-modal
+      [abierto]="true"
       [titulo]="'Acceso creado para ' + cred.nombreCompleto"
       (cerrar)="continuar()"
     >
@@ -246,7 +247,7 @@
         </p>
       </div>
 
-      <ng-container pie>
+      <ng-container slot="pie">
         <ui-button variante="contorno" tipo="button" (click)="continuar()">
           Cerrar
         </ui-button>

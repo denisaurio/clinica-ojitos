@@ -86,7 +86,7 @@ export class OftalmologoService {
         },
       }).pipe(delay(200));
     }
-    return this.http.post<AltaOftalmologo>(this.base, this.aPeticion(peticion));
+    return this.http.post<AltaOftalmologo>(this.base, this.aPeticion(peticion, true));
   }
 
   /**
@@ -117,17 +117,19 @@ export class OftalmologoService {
       subespecialidad: p.subespecialidad || null,
       sedeId: p.sedeId ?? null,
       sede: p.sede || null,
-      activo: activo ?? true,
+      // Sin valor explícito no se envía: editar a un médico desactivado no lo
+      // reactiva (antes se mandaba siempre true).
+      ...(activo === undefined ? {} : { activo }),
     };
   }
 
-  actualizar(id: number, peticion: OftalmologoRequest): Observable<Oftalmologo> {
+  /** `activo` solo se envía cuando se quiere cambiar (reactivar); al editar se omite. */
+  actualizar(id: number, peticion: OftalmologoRequest, activo?: boolean): Observable<Oftalmologo> {
     if (environment.useMockApi) {
       const actual = this.demo.oftalmologos.find((o) => o.id === id);
-      return of({ ...actual!, ...peticion }).pipe(delay(180));
+      return of({ ...actual!, ...peticion, ...(activo === undefined ? {} : { activo }) }).pipe(delay(180));
     }
-    // `activo` se omite para no reactivar a un profesional suspendido al editarlo.
-    return this.http.put<Oftalmologo>(`${this.base}/${id}`, this.aPeticion(peticion));
+    return this.http.put<Oftalmologo>(`${this.base}/${id}`, this.aPeticion(peticion, activo));
   }
 
   desactivar(id: number): Observable<Oftalmologo> {
@@ -211,7 +213,9 @@ export class OftalmologoService {
         this.demo.metricasPorOftalmologo[id] ?? {
           pacientesAtendidos: 0,
           citasSemana: 0,
-          valoracionMedia: 0,
+          horasSemanales: 0,
+          cirugiasRealizadas: 0,
+          valoracionMedia: null,
         }
       ).pipe(delay(100));
     }
@@ -219,7 +223,9 @@ export class OftalmologoService {
       map((m) => ({
         pacientesAtendidos: m.pacientesAtendidos ?? 0,
         citasSemana: m.citasSemana ?? 0,
-        valoracionMedia: m.satisfaccionMedia ?? 0,
+        horasSemanales: m.horasSemanales ?? 0,
+        cirugiasRealizadas: m.cirugiasRealizadas ?? 0,
+        valoracionMedia: m.satisfaccionMedia ?? null,
       }))
     );
   }
@@ -318,5 +324,7 @@ interface HorarioApi {
 interface MetricasApi {
   pacientesAtendidos?: number;
   citasSemana?: number;
-  satisfaccionMedia?: number;
+  horasSemanales?: number;
+  cirugiasRealizadas?: number;
+  satisfaccionMedia?: number | null;
 }

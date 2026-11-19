@@ -129,6 +129,14 @@ public class AuthService {
                 () -> log.info("Recuperación solicitada para un correo no registrado"));
     }
 
+    /** RF6.2 — intentos que le quedan a la cuenta antes del bloqueo. */
+    @Transactional(readOnly = true)
+    public int intentosRestantes(String username) {
+        return usuarioRepository.findByUsernameIgnoreCase(username)
+                .map(u -> Math.max(0, MAX_INTENTOS - (u.getIntentosFallidos() == null ? 0 : u.getIntentosFallidos())))
+                .orElse(0);
+    }
+
     /** Identificador del oftalmólogo asociado a la cuenta, si lo hay. */
     @Transactional(readOnly = true)
     public Long oftalmologoIdDe(String username) {

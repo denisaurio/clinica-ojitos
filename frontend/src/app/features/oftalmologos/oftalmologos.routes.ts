@@ -10,6 +10,11 @@ export const OFTALMOLOGOS_ROUTES: Routes = [
     loadComponent: () => import('./registro').then((m) => m.OftalmologoRegistroComponent),
   },
   {
+    // RF5.5 — edición del médico (antes "Editar perfil" abría un alta nueva).
+    path: 'editar/:id',
+    loadComponent: () => import('./registro').then((m) => m.OftalmologoRegistroComponent),
+  },
+  {
     path: 'horarios/:id',
     loadComponent: () => import('./horarios').then((m) => m.OftalmologoHorariosComponent),
   },

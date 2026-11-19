@@ -60,7 +60,8 @@ public class AuthController {
         return ResponseEntity.ok(Map.of(
                 "username", perfil.username(),
                 "rol", perfil.rol(),
-                "intentosRestantes", AuthService.MAX_INTENTOS,
+                // Antes devolvía siempre MAX_INTENTOS, sin mirar los fallos reales.
+                "intentosRestantes", authService.intentosRestantes(username),
                 "activo", perfil.activo()));
     }
 

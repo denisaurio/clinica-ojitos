@@ -425,12 +425,12 @@ export class DemoDataService {
   ];
 
   readonly metricasPorOftalmologo: Record<number, MetricasOftalmologo> = {
-    1: { pacientesAtendidos: 1240, citasSemana: 48, valoracionMedia: 4.9 },
-    2: { pacientesAtendidos: 980, citasSemana: 41, valoracionMedia: 4.7 },
-    3: { pacientesAtendidos: 610, citasSemana: 0, valoracionMedia: 4.4 },
-    4: { pacientesAtendidos: 730, citasSemana: 35, valoracionMedia: 4.8 },
-    5: { pacientesAtendidos: 1105, citasSemana: 46, valoracionMedia: 4.6 },
-    6: { pacientesAtendidos: 845, citasSemana: 38, valoracionMedia: 4.8 },
+    1: { pacientesAtendidos: 1240, citasSemana: 48, horasSemanales: 36, cirugiasRealizadas: 12, valoracionMedia: null },
+    2: { pacientesAtendidos: 980, citasSemana: 41, horasSemanales: 36, cirugiasRealizadas: 12, valoracionMedia: null },
+    3: { pacientesAtendidos: 610, citasSemana: 0, horasSemanales: 36, cirugiasRealizadas: 12, valoracionMedia: null },
+    4: { pacientesAtendidos: 730, citasSemana: 35, horasSemanales: 36, cirugiasRealizadas: 12, valoracionMedia: null },
+    5: { pacientesAtendidos: 1105, citasSemana: 46, horasSemanales: 36, cirugiasRealizadas: 12, valoracionMedia: null },
+    6: { pacientesAtendidos: 845, citasSemana: 38, horasSemanales: 36, cirugiasRealizadas: 12, valoracionMedia: null },
   };
 
   /** Matriz de disponibilidad semanal usada por la pantalla de horarios (imagen 40). */

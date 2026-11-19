@@ -133,7 +133,8 @@ public final class OftalmologoDto {
             long citasSemana,
             double horasSemanales,
             long cirugiasRealizadas,
-            double satisfaccionMedia
+            /** Sin encuestas en el sistema: siempre null, no se inventa (antes 4.3 + pacientes × 0.05). */
+            Double satisfaccionMedia
     ) {
     }
 

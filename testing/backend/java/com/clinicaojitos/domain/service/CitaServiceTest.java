@@ -90,6 +90,30 @@ class CitaServiceTest {
     }
 
     @Test
+    @DisplayName("No agenda citas con un oftalmólogo desactivado")
+    void rechazaMedicoInactivo() {
+        oftalmologo.setActivo(Boolean.FALSE);
+        when(citaRepository.contarSolapes(anyLong(), any(), any(), any(), any())).thenReturn(0L);
+
+        assertThatThrownBy(() -> servicio.registrar(request(LocalTime.of(9, 0), LocalTime.of(9, 30))))
+                .isInstanceOf(OperacionInvalidaException.class)
+                .hasMessageContaining("desactivado");
+        verify(citaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("No agenda citas a un paciente dado de baja")
+    void rechazaPacienteDeBaja() {
+        paciente.setActivo(Boolean.FALSE);
+        when(citaRepository.contarSolapes(anyLong(), any(), any(), any(), any())).thenReturn(0L);
+
+        assertThatThrownBy(() -> servicio.registrar(request(LocalTime.of(9, 0), LocalTime.of(9, 30))))
+                .isInstanceOf(OperacionInvalidaException.class)
+                .hasMessageContaining("baja");
+        verify(citaRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("Registra una cita como PROGRAMADA")
     void registraCita() {
         when(citaRepository.contarSolapes(anyLong(), any(), any(), any(), any())).thenReturn(0L);

@@ -194,13 +194,24 @@ public class OftalmologoService {
         o.setEmail(r.email().trim());
         o.setTelefono(r.telefono());
         o.setNumeroColegiatura(colegiatura);
-        o.setSubespecialidad(subespecialidadRepository.findById(r.subespecialidadId())
-                .orElseThrow(() -> new OperacionInvalidaException("La subespecialidad no es válida.")));
+        // Igual que en el alta: del catálogo o escrita a mano. Antes se hacía
+        // findById(subespecialidadId) y una subespecialidad nueva (id null)
+        // terminaba en un error 500.
+        Subespecialidad subespecialidad = resolverSubespecialidad(
+                r.subespecialidadId(), r.subespecialidad());
+        if (subespecialidad == null) {
+            throw new OperacionInvalidaException("Seleccione o escriba una subespecialidad.");
+        }
+        o.setSubespecialidad(subespecialidad);
         o.setFotoUrl(r.fotoUrl());
-        if (r.activo() != null) o.setActivo(r.activo());
+        if (r.activo() != null) {
+            o.setActivo(r.activo());
+            sincronizarCuenta(o.getId(), r.activo());
+        }
 
-        if (r.sedeId() != null) {
-            sedeRepository.findById(r.sedeId()).ifPresent(o::setSede);
+        Sede sede = resolverSede(r.sedeId(), r.sede());
+        if (sede != null) {
+            o.setSede(sede);
         }
 
         return mapeador.aOftalmologo(oftalmologoRepository.save(o));
@@ -215,7 +226,21 @@ public class OftalmologoService {
     public OftalmologoDto.Response desactivar(Long id) {
         Oftalmologo o = obtenerEntidad(id);
         o.setActivo(Boolean.FALSE);
+        // Su cuenta también se desactiva: antes el médico dado de baja podía
+        // seguir iniciando sesión.
+        sincronizarCuenta(id, false);
         return mapeador.aOftalmologo(oftalmologoRepository.save(o));
+    }
+
+    /** Activa o desactiva la cuenta de usuario enlazada al médico, si tiene. */
+    private void sincronizarCuenta(Long oftalmologoId, boolean activo) {
+        usuarioOftalmologoRepository.findByOftalmologoId(oftalmologoId)
+                .flatMap(enlace -> usuarioRepository.findById(enlace.getUsuarioId()))
+                .ifPresent(usuario -> {
+                    usuario.setActivo(activo);
+                    if (activo) usuario.setIntentosFallidos(0);
+                    usuarioRepository.save(usuario);
+                });
     }
 
     // ------------------------- Horarios (RF-05.4) -------------------------
@@ -273,7 +298,10 @@ public class OftalmologoService {
         obtenerEntidad(id);
 
         long pacientes = citaRepository.countDistinctPacientesPorOftalmologo(id);
-        long citasHoy = citaRepository.countByOftalmologoYFecha(id, LocalDate.now());
+        // "Citas esta semana" = lunes a domingo de la semana actual. Antes se
+        // enviaba el conteo de HOY con la etiqueta de la semana.
+        LocalDate lunes = LocalDate.now().with(DayOfWeek.MONDAY);
+        long citasSemana = citaRepository.countByOftalmologoEntreFechas(id, lunes, lunes.plusDays(6));
         long cirugias = cirugiaRepository.countByOftalmologoIdAndEstado(id, "REALIZADA");
 
         double horas = horarioRepository.findByOftalmologoIdAndActivoTrue(id).stream()
@@ -282,10 +310,10 @@ public class OftalmologoService {
                 .mapToDouble(h -> java.time.Duration.between(h.getHoraInicio(), h.getHoraFin()).toMinutes() / 60.0)
                 .sum();
 
-        double satisfaccion = 4.3 + Math.min(0.6, pacientes * 0.05);
-
-        return new OftalmologoDto.Metricas(pacientes, citasHoy, horas, cirugias,
-                Math.round(satisfaccion * 10) / 10.0);
+        // La valoración de pacientes no tiene fuente de datos (no hay encuestas):
+        // se devuelve null en vez de una cifra calculada a partir de la cantidad
+        // de pacientes, que parecía real y no lo era.
+        return new OftalmologoDto.Metricas(pacientes, citasSemana, horas, cirugias, null);
     }
 
     @Transactional(readOnly = true)

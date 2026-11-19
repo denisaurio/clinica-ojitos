@@ -105,6 +105,17 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
             """)
     long countByOftalmologo(@Param("oftalmologoId") Long oftalmologoId);
 
+    /** Citas activas (no canceladas) del profesional en un rango de fechas. */
+    @Query("""
+            SELECT COUNT(c) FROM Cita c
+            WHERE c.oftalmologo.id = :oftalmologoId
+              AND c.fecha BETWEEN :desde AND :hasta
+              AND c.bloqueo = true
+            """)
+    long countByOftalmologoEntreFechas(@Param("oftalmologoId") Long oftalmologoId,
+                                       @Param("desde") LocalDate desde,
+                                       @Param("hasta") LocalDate hasta);
+
     @Query("""
             SELECT COUNT(c) FROM Cita c
             WHERE c.oftalmologo.id = :oftalmologoId

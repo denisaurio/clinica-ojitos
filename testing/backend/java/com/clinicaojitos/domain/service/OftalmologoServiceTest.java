@@ -128,4 +128,25 @@ class OftalmologoServiceTest {
         assertThat(o.getActivo()).isFalse();
         verify(oftalmologoRepository, never()).delete(any());
     }
+
+    @Test
+    @DisplayName("RF5.5 — Desactivar al médico también desactiva su cuenta de acceso")
+    void desactivarDesactivaCuenta() {
+        Oftalmologo medico = Oftalmologo.builder().id(1L).nombres("Elena").apellidos("Rostova")
+                .numeroColegiatura("COP-38472").activo(Boolean.TRUE).build();
+        com.clinicaojitos.domain.entity.Usuario cuenta = com.clinicaojitos.domain.entity.Usuario.builder()
+                .id(7L).username("dra.rostova").activo(Boolean.TRUE).intentosFallidos(0).build();
+        com.clinicaojitos.domain.entity.UsuarioOftalmologo enlace = mock(com.clinicaojitos.domain.entity.UsuarioOftalmologo.class);
+        when(enlace.getUsuarioId()).thenReturn(7L);
+        when(oftalmologoRepository.findById(1L)).thenReturn(Optional.of(medico));
+        when(oftalmologoRepository.save(any(Oftalmologo.class))).thenAnswer(i -> i.getArgument(0));
+        when(usuarioOftalmologoRepository.findByOftalmologoId(1L)).thenReturn(Optional.of(enlace));
+        when(usuarioRepository.findById(7L)).thenReturn(Optional.of(cuenta));
+
+        servicio.desactivar(1L);
+
+        assertThat(medico.getActivo()).isFalse();
+        assertThat(cuenta.getActivo()).isFalse();
+        verify(usuarioRepository).save(cuenta);
+    }
 }

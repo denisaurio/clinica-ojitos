@@ -127,10 +127,19 @@ public class CitaService {
         }
 
         Cita c = new Cita();
-        c.setPaciente(pacienteRepository.findById(r.pacienteId())
-                .orElseThrow(() -> new RecursoNoEncontradoException("El paciente no existe.")));
-        c.setOftalmologo(oftalmologoRepository.findById(r.oftalmologoId())
-                .orElseThrow(() -> new RecursoNoEncontradoException("El oftalmólogo no existe.")));
+        Paciente paciente = pacienteRepository.findById(r.pacienteId())
+                .orElseThrow(() -> new RecursoNoEncontradoException("El paciente no existe."));
+        Oftalmologo oftalmologo = oftalmologoRepository.findById(r.oftalmologoId())
+                .orElseThrow(() -> new RecursoNoEncontradoException("El oftalmólogo no existe."));
+        // Un médico desactivado o un paciente dado de baja no reciben citas nuevas.
+        if (Boolean.FALSE.equals(oftalmologo.getActivo())) {
+            throw new OperacionInvalidaException("El oftalmólogo está desactivado y no recibe citas nuevas.");
+        }
+        if (Boolean.FALSE.equals(paciente.getActivo())) {
+            throw new OperacionInvalidaException("El paciente está dado de baja; reactívelo antes de agendar.");
+        }
+        c.setPaciente(paciente);
+        c.setOftalmologo(oftalmologo);
         c.setConsultorio(r.consultorio());
         c.setFecha(r.fecha());
         c.setHoraInicio(r.horaInicio());

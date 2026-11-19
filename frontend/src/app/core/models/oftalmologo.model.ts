@@ -62,7 +62,11 @@ export interface HorarioSemanal {
 export interface MetricasOftalmologo {
   pacientesAtendidos: number;
   citasSemana: number;
-  valoracionMedia: number;
+  /** Horas de atención por semana según su horario (sin descansos). */
+  horasSemanales: number;
+  cirugiasRealizadas: number;
+  /** Sin fuente de datos real (no hay encuestas): llega vacío y no se muestra. */
+  valoracionMedia: number | null;
 }
 
 export interface ExisteColegiaturaResponse {
