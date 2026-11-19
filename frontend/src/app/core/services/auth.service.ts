@@ -41,18 +41,22 @@ export class AuthService {
   /** `true` cuando el usuario solo puede leer su propia información. */
   readonly esPaciente = computed(() => this.rol() === 'PACIENTE');
 
-  login(credentials: LoginRequest): Observable<AuthResponse> {
+  /**
+   * @param recordar `true` guarda la sesión en localStorage (sobrevive al cerrar
+   *   el navegador); `false` en sessionStorage (se borra al cerrar la pestaña).
+   */
+  login(credentials: LoginRequest, recordar = true): Observable<AuthResponse> {
     if (environment.useMockApi) {
       // `defer` convierte el error del mock en una notificacion del observable.
       // Sin el, `loginEnMock` lanzaria de forma sincrona antes de crearse el
       // observable, el `error` del componente no se ejecutaria nunca y el
       // boton se quedaria cargando indefinidamente.
-      return defer(() => of(this.loginEnMock(credentials))).pipe(delay(350));
+      return defer(() => of(this.loginEnMock(credentials, recordar))).pipe(delay(350));
     }
 
     return this.http
       .post<AuthResponse>(`${environment.apiUrl}/auth/login`, credentials)
-      .pipe(tap((respuesta) => this.persistir(respuesta)));
+      .pipe(tap((respuesta) => this.persistir(respuesta, recordar)));
   }
 
   me(): Observable<PerfilUsuario> {
@@ -102,16 +106,16 @@ export class AuthService {
 
   /** Borra la sesión local y regresa al login (lo usa el interceptor ante un 401). */
   limpiar(): void {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(USUARIO_KEY);
+    for (const almacen of almacenes()) {
+      almacen.removeItem(TOKEN_KEY);
+      almacen.removeItem(USUARIO_KEY);
     }
     this._usuario.set(null);
   }
 
   // ------------------------------------------------------------- Interno
 
-  private loginEnMock(credenciales: LoginRequest): AuthResponse {
+  private loginEnMock(credenciales: LoginRequest, recordar: boolean): AuthResponse {
     const usuario = this.demo.usuarios[credenciales.username.toLowerCase()];
     if (!usuario || usuario.password !== credenciales.password) {
       throw new Error('Credenciales inválidas');
@@ -120,25 +124,28 @@ export class AuthService {
       accessToken: `mock-token-${usuario.auth.id}-${Date.now()}`,
       ...usuario.auth,
     };
-    this.persistir(respuesta);
+    this.persistir(respuesta, recordar);
     return respuesta;
   }
 
-  private persistir(respuesta: AuthResponse): void {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(TOKEN_KEY, respuesta.accessToken);
-      localStorage.setItem(USUARIO_KEY, JSON.stringify(respuesta));
+  private persistir(respuesta: AuthResponse, recordar = true): void {
+    // Una sola copia: se borra la anterior para no mezclar sesiones.
+    for (const almacen of almacenes()) {
+      almacen.removeItem(TOKEN_KEY);
+      almacen.removeItem(USUARIO_KEY);
+    }
+    const destino = recordar ? globalThis.localStorage : globalThis.sessionStorage;
+    if (destino) {
+      destino.setItem(TOKEN_KEY, respuesta.accessToken);
+      destino.setItem(USUARIO_KEY, JSON.stringify(respuesta));
     }
     this._usuario.set(respuesta);
   }
 
   private leerDeAlmacenamiento(): AuthResponse | null {
-    if (typeof localStorage === 'undefined') {
-      return null;
-    }
-    const token = localStorage.getItem(TOKEN_KEY);
-    const crudo = localStorage.getItem(USUARIO_KEY);
-    if (!token || !crudo) {
+    const almacen = almacenes().find((a) => a.getItem(TOKEN_KEY) && a.getItem(USUARIO_KEY));
+    const crudo = almacen?.getItem(USUARIO_KEY);
+    if (!crudo) {
       return null;
     }
     try {
@@ -148,4 +155,11 @@ export class AuthService {
       return null;
     }
   }
+}
+
+/** localStorage (sesión recordada) y sessionStorage (solo esta pestaña), si existen. */
+function almacenes(): Storage[] {
+  return [globalThis.localStorage, globalThis.sessionStorage].filter(
+    (a): a is Storage => typeof a !== 'undefined' && a !== null
+  );
 }
