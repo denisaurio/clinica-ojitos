@@ -4,7 +4,7 @@
     { "id": "catalogo",     "nombre": "Catálogos",            "rf": "—",     "depende": [],
       "tests": ["CatalogoApiTest"] },
     { "id": "auth",         "nombre": "Autenticación y JWT",  "rf": "RF-06", "depende": [],
-      "tests": ["JwtServiceTest", "AuthApiTest", "AdministradorInicialTest"] },
+      "tests": ["JwtServiceTest", "AuthApiTest", "AdministradorInicialTest", "DiagnosticoArranqueTest"] },
     { "id": "pacientes",    "nombre": "Pacientes",            "rf": "RF-01", "depende": ["auth"],
       "tests": ["PacienteServiceTest", "AutorizacionPacienteServiceTest", "PacientesApiTest"] },
     { "id": "oftalmologos", "nombre": "Oftalmólogos",         "rf": "RF-05", "depende": ["catalogo", "auth"],
