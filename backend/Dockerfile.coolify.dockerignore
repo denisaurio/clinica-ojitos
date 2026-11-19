@@ -1,0 +1,4 @@
+# Contexto = raíz del repo: solo entra lo que necesita el build del backend.
+*
+!backend/pom.xml
+!backend/src/

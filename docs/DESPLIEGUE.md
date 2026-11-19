@@ -812,3 +812,21 @@ docker compose down -v
 - [ ] `node testing/run.mjs` termina sin fallos en rojo.
 - [ ] Hay un respaldo descargado fuera del VPS.
 - [ ] Las contraseñas demo fueron cambiadas.
+
+---
+
+## Anexo — Error `lstat …/backend/backend: no such file or directory`
+
+En Coolify v4.7.5 la carpeta del *Base directory* se suma dos veces al
+construir, aunque la pantalla muestre "Resolved file: /backend/Dockerfile".
+Para evitarlo, cada servicio tiene un Dockerfile que construye desde la raíz
+del repositorio:
+
+| Servicio | Base directory | Dockerfile location |
+|---|---|---|
+| Backend | `/` | `/backend/Dockerfile.coolify` |
+| Frontend | `/` | `/frontend/Dockerfile.coolify` |
+
+Son idénticos a `backend/Dockerfile` y `frontend/Dockerfile`, salvo que copian
+`backend/…` y `frontend/…`. Los archivos `*.coolify.dockerignore` limitan el
+contexto a la carpeta de cada servicio.

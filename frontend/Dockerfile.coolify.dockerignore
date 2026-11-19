@@ -1,0 +1,9 @@
+# Contexto = raíz del repo: solo entra la carpeta frontend, sin artefactos.
+*
+!frontend/
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/tmp/
+frontend/out-tsc/
+frontend/*.log
