@@ -1,4 +1,10 @@
 <div class="barra">
+  @if (conMenu()) {
+    <button type="button" class="barra__icono barra__menu" aria-label="Abrir menú" (click)="abrirMenu.emit()">
+      <ui-icon nombre="menu" [tamano]="20" />
+    </button>
+  }
+
   @if (antetitulo()) {
     <span class="antetitulo">{{ antetitulo() }}</span>
   }
@@ -29,7 +35,7 @@
 
   <ng-content select="[slot=acciones]" />
 
-  <a class="barra__icono" routerLink="/configuracion" title="Ayuda">
+  <a class="barra__icono barra__ayuda" routerLink="/configuracion" title="Ayuda">
     <ui-icon nombre="helpCircle" [tamano]="17" />
   </a>
 
@@ -66,11 +72,15 @@
         <span class="usuario__nombre">{{ nombre() }}</span>
         <span class="usuario__rol">{{ rolLegible() }}</span>
       </span>
-      <ui-icon nombre="chevron-down" [tamano]="14" />
+      <ui-icon class="usuario__flecha" nombre="chevron-down" [tamano]="14" />
     </button>
 
     @if (menuAbierto()) {
       <div class="menu-usuario">
+        <a class="menu-usuario__opcion" routerLink="/configuracion" (click)="menuAbierto.set(false)">
+          <ui-icon nombre="lock" [tamano]="15" />
+          <span>Mi cuenta y contraseña</span>
+        </a>
         <button type="button" class="menu-usuario__opcion" (click)="cerrarSesion()">
           <ui-icon nombre="logOut" [tamano]="15" />
           <span>Cerrar sesión</span>

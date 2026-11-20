@@ -137,7 +137,9 @@ public final class CitaDto {
             String estado,
             String estadoNombre,
             String consultorio,
-            String tipoConsulta
+            String tipoConsulta,
+            Long pacienteId,
+            String oftalmologo
     ) {
     }
 }

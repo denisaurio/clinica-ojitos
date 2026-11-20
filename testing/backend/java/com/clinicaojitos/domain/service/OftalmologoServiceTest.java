@@ -56,7 +56,7 @@ class OftalmologoServiceTest {
     private OftalmologoDto.Request requestValido() {
         return new OftalmologoDto.Request(
                 "Elena", "Rostova", "e.rostova@clinicaojitos.pe", "987654321",
-                "COP-38472", 1, null, 1, null, null, null, Boolean.TRUE);
+                "COP-38472", 1, null, 1, null, null, null, Boolean.TRUE, null);
     }
 
     @Test
@@ -73,6 +73,37 @@ class OftalmologoServiceTest {
         servicio.registrar(requestValido());
 
         verify(oftalmologoRepository).save(any(Oftalmologo.class));
+    }
+
+    @Test
+    @DisplayName("Usa la contraseña que escribe el administrador en el alta")
+    void registraConClaveElegida() {
+        when(oftalmologoRepository.existsByNumeroColegiatura("COP-38472")).thenReturn(false);
+        when(subespecialidadRepository.findById(1)).thenReturn(Optional.of(
+                Subespecialidad.builder().id(1).codigo("GLAUCOMA").nombre("Glaucoma").build()));
+        when(oftalmologoRepository.save(any(Oftalmologo.class))).thenAnswer(inv -> {
+            Oftalmologo o = inv.getArgument(0);
+            o.setId(5L);
+            return o;
+        });
+        when(usuarioOftalmologoRepository.findByOftalmologoId(5L)).thenReturn(Optional.empty());
+        when(usuarioRepository.findByUsernameIgnoreCase("e.rostova")).thenReturn(Optional.empty());
+        when(rolRepository.findByCodigo("OFTALMOLOGO")).thenReturn(Optional.of(
+                com.clinicaojitos.domain.entity.Rol.builder().id(2).codigo("OFTALMOLOGO").build()));
+        when(passwordEncoder.encode("ClaveDelAdmin2026")).thenReturn("hash");
+        when(usuarioRepository.save(any(com.clinicaojitos.domain.entity.Usuario.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        var base = requestValido();
+        var conClave = new OftalmologoDto.Request(base.nombres(), base.apellidos(), base.email(),
+                base.telefono(), base.numeroColegiatura(), base.subespecialidadId(), null,
+                null, null, null, null, Boolean.TRUE, "ClaveDelAdmin2026");
+
+        var alta = servicio.registrar(conClave);
+
+        assertThat(alta.credenciales().username()).isEqualTo("e.rostova");
+        assertThat(alta.credenciales().password()).isEqualTo("ClaveDelAdmin2026");
+        verify(generador, never()).nuevaPassword();
     }
 
     @Test
@@ -127,5 +158,26 @@ class OftalmologoServiceTest {
 
         assertThat(o.getActivo()).isFalse();
         verify(oftalmologoRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("RF5.5 — Desactivar al médico también desactiva su cuenta de acceso")
+    void desactivarDesactivaCuenta() {
+        Oftalmologo medico = Oftalmologo.builder().id(1L).nombres("Elena").apellidos("Rostova")
+                .numeroColegiatura("COP-38472").activo(Boolean.TRUE).build();
+        com.clinicaojitos.domain.entity.Usuario cuenta = com.clinicaojitos.domain.entity.Usuario.builder()
+                .id(7L).username("dra.rostova").activo(Boolean.TRUE).intentosFallidos(0).build();
+        com.clinicaojitos.domain.entity.UsuarioOftalmologo enlace = mock(com.clinicaojitos.domain.entity.UsuarioOftalmologo.class);
+        when(enlace.getUsuarioId()).thenReturn(7L);
+        when(oftalmologoRepository.findById(1L)).thenReturn(Optional.of(medico));
+        when(oftalmologoRepository.save(any(Oftalmologo.class))).thenAnswer(i -> i.getArgument(0));
+        when(usuarioOftalmologoRepository.findByOftalmologoId(1L)).thenReturn(Optional.of(enlace));
+        when(usuarioRepository.findById(7L)).thenReturn(Optional.of(cuenta));
+
+        servicio.desactivar(1L);
+
+        assertThat(medico.getActivo()).isFalse();
+        assertThat(cuenta.getActivo()).isFalse();
+        verify(usuarioRepository).save(cuenta);
     }
 }

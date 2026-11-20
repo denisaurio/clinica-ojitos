@@ -425,12 +425,12 @@ export class DemoDataService {
   ];
 
   readonly metricasPorOftalmologo: Record<number, MetricasOftalmologo> = {
-    1: { pacientesAtendidos: 1240, citasSemana: 48, valoracionMedia: 4.9 },
-    2: { pacientesAtendidos: 980, citasSemana: 41, valoracionMedia: 4.7 },
-    3: { pacientesAtendidos: 610, citasSemana: 0, valoracionMedia: 4.4 },
-    4: { pacientesAtendidos: 730, citasSemana: 35, valoracionMedia: 4.8 },
-    5: { pacientesAtendidos: 1105, citasSemana: 46, valoracionMedia: 4.6 },
-    6: { pacientesAtendidos: 845, citasSemana: 38, valoracionMedia: 4.8 },
+    1: { pacientesAtendidos: 1240, citasSemana: 48, horasSemanales: 36, cirugiasRealizadas: 12, valoracionMedia: null },
+    2: { pacientesAtendidos: 980, citasSemana: 41, horasSemanales: 36, cirugiasRealizadas: 12, valoracionMedia: null },
+    3: { pacientesAtendidos: 610, citasSemana: 0, horasSemanales: 36, cirugiasRealizadas: 12, valoracionMedia: null },
+    4: { pacientesAtendidos: 730, citasSemana: 35, horasSemanales: 36, cirugiasRealizadas: 12, valoracionMedia: null },
+    5: { pacientesAtendidos: 1105, citasSemana: 46, horasSemanales: 36, cirugiasRealizadas: 12, valoracionMedia: null },
+    6: { pacientesAtendidos: 845, citasSemana: 38, horasSemanales: 36, cirugiasRealizadas: 12, valoracionMedia: null },
   };
 
   /** Matriz de disponibilidad semanal usada por la pantalla de horarios (imagen 40). */
@@ -738,8 +738,8 @@ export class DemoDataService {
       { id: 2, horaInicio: '10:30', horaFin: '11:00', pacienteNombre: 'Carlos Mendoza', motivo: 'Consulta General - Presbicia', tipoConsulta: 'Consulta', estado: 'EN_ESPERA', sala: 'Sala 2' },
     ],
     pendientes: [
-      { id: 1, titulo: 'Revisar OCT - L. Gómez', detalle: 'Miopatía diabética · sospechosa', icono: 'clipboard-list' },
-      { id: 2, titulo: 'Renovar Receta - J. Silva', detalle: 'Gotas Glaucoma', icono: 'clipboard-list' },
+      { id: 1, titulo: 'Revisar OCT - L. Gómez', detalle: 'Miopatía diabética · sospechosa', icono: 'clipboardList' },
+      { id: 2, titulo: 'Renovar Receta - J. Silva', detalle: 'Gotas Glaucoma', icono: 'clipboardList' },
     ],
     historialesRecientes: [
       { id: 1, iniciales: 'AM', pacienteNombre: 'Ana M.', hora: '09:15' },
@@ -762,15 +762,16 @@ export class DemoDataService {
     ],
     avisos: [
       { icono: 'info', texto: 'El equipo OCT en sala 2 está en mantenimiento hasta las 11:00 AM.' },
-      { icono: 'alert-triangle', texto: '2 pacientes requieren actualización de seguro médico hoy.' },
+      { icono: 'alertTriangle', texto: '2 pacientes requieren actualización de seguro médico hoy.' },
     ],
   };
 
   readonly dashboardPaciente: DashboardPaciente = {
+    pacienteId: 1,
     nombre: 'María',
     citas: [
-      { id: 1, horaInicio: '10:30 AM', horaFin: '', pacienteNombre: '', motivo: 'Revisión General - Glaucoma', tipoConsulta: 'Revisión', estado: 'CONFIRMADA' },
-      { id: 2, horaInicio: '09:00 AM', horaFin: '', pacienteNombre: '', motivo: 'Examen de Retina', tipoConsulta: 'Examen', estado: 'PROGRAMADA' },
+      { id: 1, fecha: '2026-11-24', horaInicio: '10:30', horaFin: '11:00', pacienteNombre: '', oftalmologo: 'Dra. Elena Rodríguez', motivo: 'Revisión General - Glaucoma', tipoConsulta: 'Revisión', estado: 'CONFIRMADA' },
+      { id: 2, fecha: '2026-12-03', horaInicio: '09:00', horaFin: '09:30', pacienteNombre: '', oftalmologo: 'Dr. Marcus Silva', motivo: 'Examen de Retina', tipoConsulta: 'Examen', estado: 'PROGRAMADA' },
     ],
     diagnosticos: [
       { nombre: 'Glaucoma de ángulo abierto', ojo: 'Ojo derecho e izquierdo', ultimaActualizacion: '15 Sep 2023', estado: 'ESTABLE' },

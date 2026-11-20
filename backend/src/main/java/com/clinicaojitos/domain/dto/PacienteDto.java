@@ -141,6 +141,14 @@ public final class PacienteDto {
     /**
      * Ficha del paciente recién creado junto con sus credenciales de acceso.
      */
+    /** Contraseña que fija el administrador o recepción; vacía = generar una. */
+    public record ClaveRequest(
+            @jakarta.validation.constraints.Size(min = 8, max = 100,
+                    message = "La contraseña debe tener entre 8 y 100 caracteres")
+            String password
+    ) {
+    }
+
     public record AltaConCredenciales(
             Response paciente,
             CredencialesDto credenciales

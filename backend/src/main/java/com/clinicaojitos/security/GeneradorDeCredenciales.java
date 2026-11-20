@@ -19,10 +19,10 @@ import java.security.SecureRandom;
 @Component
 public class GeneradorDeCredenciales {
 
-    private static final String CONJUNTO =
-            "ABCDEFGHJKLMNPQRSTUVWXYZ"   // sin I ni O: se confunden con 1 y 0
-            + "abcdefghijkmnopqrstuvwxyz"  // sin l
-            + "23456789";                   // sin 0 ni 1
+    private static final String MAYUSCULAS = "ABCDEFGHJKLMNPQRSTUVWXYZ"; // sin I ni O
+    private static final String MINUSCULAS = "abcdefghijkmnpqrstuvwxyz"; // sin l ni o
+    private static final String DIGITOS = "23456789";                    // sin 0 ni 1
+    private static final String CONJUNTO = MAYUSCULAS + MINUSCULAS + DIGITOS;
 
     private static final String SIMBOLOS = "!@#$%&*?";
 
@@ -36,9 +36,12 @@ public class GeneradorDeCredenciales {
     public String nuevaPassword() {
         StringBuilder clave = new StringBuilder(12);
 
-        clave.append(aleatorio.nextInt(2) == 0 ? 'A' : 'a');
-        clave.append(aleatorio.nextInt(2) == 0 ? 'A' : 'a');
-        clave.append((char) ('0' + aleatorio.nextInt(10)));
+        // Al menos una mayúscula, una minúscula, un dígito y un símbolo, todos
+        // del conjunto sin caracteres ambiguos (antes el dígito podía ser 0 o 1,
+        // que al copiarlo a mano se confunden con O y l).
+        clave.append(MAYUSCULAS.charAt(aleatorio.nextInt(MAYUSCULAS.length())));
+        clave.append(MINUSCULAS.charAt(aleatorio.nextInt(MINUSCULAS.length())));
+        clave.append(DIGITOS.charAt(aleatorio.nextInt(DIGITOS.length())));
         clave.append(SIMBOLOS.charAt(aleatorio.nextInt(SIMBOLOS.length())));
 
         while (clave.length() < 12) {

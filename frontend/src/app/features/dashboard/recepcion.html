@@ -1,56 +1,86 @@
 <div class="page">
-  <div class="encabezado">
+  <header class="page-head">
     <div>
       <h1 class="page-title">Recepción</h1>
       <p class="page-subtitle">Visión general operativa de hoy</p>
     </div>
-    <ui-button
-      [enlace]="true"
-      destino="/pacientes/nuevo"
-      variante="primario"
-      icono="userPlus"
-    >
-      Registro Rápido de Paciente
+    <ui-button [enlace]="true" destino="/pacientes/nuevo" variante="primario" icono="user-plus">
+      Registro rápido de paciente
     </ui-button>
-  </div>
+  </header>
 
   @if (datos(); as d) {
+    <div class="stats">
+      <ui-stat tono="azul" icono="calendar" [valor]="d.totalCitas" etiqueta="Citas de hoy" />
+      <ui-stat tono="ambar" icono="clock" [valor]="d.enEspera" etiqueta="Pacientes en espera" />
+      <ui-stat tono="verde" icono="user-check" [valor]="atendidas()" etiqueta="Atendidos" />
+      <ui-stat
+        tono="violeta"
+        icono="briefcase"
+        [valor]="medicosLibres() + ' / ' + d.medicos.length"
+        etiqueta="Consultorios disponibles"
+      />
+    </div>
+
     <div class="rejilla">
-      <ui-card titulo="Citas de Hoy" class="tabla-card">
+      <ui-card titulo="Citas de Hoy" subtitulo="Registra el ingreso cuando el paciente llegue" icono="list">
         <ng-container slot="accion">
-          <ui-badge variante="neutro">{{ d.totalCitas }} Totales</ui-badge>
-          <ui-badge variante="primario">{{ d.enEspera }} En Espera</ui-badge>
+          <ui-button [enlace]="true" destino="/citas/agenda" variante="contorno" tamano="sm" icono="calendar">
+            Agenda completa
+          </ui-button>
         </ng-container>
 
-        <ui-table [columnas]="columnas">
-          @for (cita of d.citasHoy; track cita.id) {
-            <tr>
-              <td class="hora">{{ cita.horaInicio }}</td>
-              <td class="paciente">{{ cita.pacienteNombre }}</td>
-              <td>{{ cita.motivo }}</td>
-              <td class="doctor">Dr. Vega</td>
-              <td>
-                <ui-badge [variante]="variante(cita.estado)">
-                  {{ etiqueta(cita.estado) }}
-                </ui-badge>
-              </td>
-              <td>
-                @if (cita.estado === 'PROGRAMADA') {
-                  <ui-button variante="contorno" tamano="sm">Registrar Ingreso</ui-button>
-                } @else {
-                  <ui-button variante="enlace" tamano="sm">Ver Perfil</ui-button>
-                }
-              </td>
-            </tr>
-          }
-        </ui-table>
+        @if (errorIngreso()) {
+          <p class="error" role="alert">{{ errorIngreso() }}</p>
+        }
 
-        <a class="tabla-card__pie" routerLink="/citas/agenda">Ver agenda completa</a>
+        @if (d.citasHoy.length === 0) {
+          <div class="vacio">
+            <ui-icon nombre="calendar" [tamano]="26" />
+            <span>No hay citas programadas para hoy.</span>
+          </div>
+        } @else {
+          <ui-table [columnas]="columnas">
+            @for (cita of d.citasHoy; track cita.id) {
+              <tr>
+                <td class="hora">{{ cita.horaInicio }}</td>
+                <td class="paciente">{{ cita.pacienteNombre }}</td>
+                <td class="motivo">{{ cita.motivo || cita.tipoConsulta }}</td>
+                <td class="doctor">{{ cita.oftalmologo || '—' }}</td>
+                <td>
+                  <ui-badge [variante]="variante(cita.estado)">{{ etiqueta(cita.estado) }}</ui-badge>
+                </td>
+                <td class="accion">
+                  @if (cita.estado === 'PROGRAMADA' || cita.estado === 'CONFIRMADA') {
+                    <ui-button
+                      variante="contorno"
+                      tamano="sm"
+                      icono="log-in"
+                      [deshabilitado]="registrando() === cita.id"
+                      (click)="registrarIngreso(cita)"
+                    >
+                      {{ registrando() === cita.id ? 'Registrando…' : 'Registrar ingreso' }}
+                    </ui-button>
+                  } @else if (cita.pacienteId) {
+                    <ui-button
+                      [enlace]="true"
+                      [destino]="'/pacientes/perfil/' + cita.pacienteId"
+                      variante="enlace"
+                      tamano="sm"
+                    >
+                      Ver perfil
+                    </ui-button>
+                  }
+                </td>
+              </tr>
+            }
+          </ui-table>
+        }
       </ui-card>
 
       <div class="columna">
-        <ui-card titulo="Disponibilidad Médica" icono="clock" class="medicos">
-          <ul class="medicos__lista">
+        <ui-card titulo="Disponibilidad Médica" icono="clock">
+          <ul class="medicos">
             @for (medico of d.medicos; track medico.id) {
               <li class="medico">
                 <ui-avatar [iniciales]="medico.iniciales" [nombre]="medico.nombreCompleto" tamano="md" />
@@ -58,29 +88,32 @@
                   <span class="medico__nombre">{{ medico.nombreCompleto }}</span>
                   <span class="medico__sub">{{ medico.subespecialidad }}</span>
                 </span>
-                <span class="medico__estado">
-                  @if (medico.estado === 'OCUPADO') {
-                    <ui-badge variante="danger">{{ medico.detalle }}</ui-badge>
-                  } @else {
-                    <ui-badge variante="success">{{ medico.detalle }}</ui-badge>
-                  }
-                </span>
+                <ui-badge [variante]="medico.estado === 'OCUPADO' ? 'danger' : 'success'">
+                  {{ medico.detalle }}
+                </ui-badge>
               </li>
+            } @empty {
+              <li class="vacio vacio--compacto">No hay consultorios configurados.</li>
             }
           </ul>
         </ui-card>
 
-        <div class="avisos">
-          <h2 class="avisos__titulo">Avisos Operativos</h2>
-          <ul class="avisos__lista">
-            @for (aviso of d.avisos; track aviso.texto) {
-              <li class="aviso">
-                <ui-icon [nombre]="aviso.icono" [tamano]="15" />
-                <span>{{ aviso.texto }}</span>
-              </li>
-            }
-          </ul>
-        </div>
+        @if (d.avisos.length) {
+          <section class="avisos">
+            <h2 class="avisos__titulo">
+              <ui-icon nombre="bell" [tamano]="17" />
+              Avisos operativos
+            </h2>
+            <ul class="avisos__lista">
+              @for (aviso of d.avisos; track aviso.texto) {
+                <li class="aviso">
+                  <ui-icon [nombre]="aviso.icono" [tamano]="16" />
+                  <span>{{ aviso.texto }}</span>
+                </li>
+              }
+            </ul>
+          </section>
+        }
       </div>
     </div>
   } @else {

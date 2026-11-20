@@ -155,6 +155,8 @@ export const ICONOS: Record<string, string[]> = {
   'trending-down': ['M23 18l-9.5-9.5-5 5L1 6', 'M17 18h6v-6'],
 
   // ---------------------------------------------------------------- Layout
+  hash: ['M4 9h16', 'M4 15h16', 'M10 3 8 21', 'M16 3l-2 18'],
+  zap: ['M13 2 3 14h9l-1 8 10-12h-9l1-8Z'],
   grid: ['M3 3h7v7H3Z', 'M14 3h7v7h-7Z', 'M14 14h7v7h-7Z', 'M3 14h7v7H3Z'],
   briefcase: [
     'M4 7h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z',
@@ -167,6 +169,7 @@ export const ICONOS: Record<string, string[]> = {
     'M3.27 6.96 12 12.01l8.73-5.05',
     'M12 22.08V12',
   ],
+  menu: ['M4 6h16', 'M4 12h16', 'M4 18h16'],
   list: ['M8 6h13', 'M8 12h13', 'M8 18h13', 'M3 6h.01', 'M3 12h.01', 'M3 18h.01'],
   folder: [
     'M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z',

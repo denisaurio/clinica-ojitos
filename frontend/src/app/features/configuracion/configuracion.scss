@@ -46,3 +46,21 @@ dd {
     grid-template-columns: 1fr;
   }
 }
+
+.clave {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.clave__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+@media (max-width: 900px) {
+  .configuracion__rejilla {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

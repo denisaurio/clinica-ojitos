@@ -40,7 +40,10 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 300px;
+  // Se encoge con la pantalla: antes medía siempre 300 px y en el celular
+  // empujaba la barra (y toda la página) fuera del margen.
+  flex: 0 1 300px;
+  min-width: 0;
   height: 30px;
   padding: 0 12px;
   background: $sidebar-bg;
@@ -183,4 +186,59 @@
   &:hover {
     background: $sidebar-bg;
   }
+}
+/* ----------------------------------------------------------- Responsive */
+.barra__menu {
+  display: none;
+}
+
+.barra {
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  .barra__enlace,
+  .barra__separador,
+  .insignia {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .barra {
+    gap: 6px;
+    padding: 0 10px;
+  }
+
+  .barra__menu {
+    display: inline-flex;
+    flex-shrink: 0;
+    color: $text;
+  }
+
+  .antetitulo,
+  .barra__ayuda,
+  .usuario__datos,
+  .usuario__flecha {
+    display: none;
+  }
+
+  .buscador {
+    flex: 1 1 auto;
+  }
+
+  // El botón de acción ("Nuevo Registro") queda como icono.
+  .barra__accion ::ng-deep .btn__texto {
+    display: none;
+  }
+
+  .usuario__boton {
+    padding: 2px;
+  }
+}
+
+// El enlace "Mi cuenta" del menú del avatar se ve igual que los botones.
+a.menu-usuario__opcion {
+  text-decoration: none;
+  box-sizing: border-box;
 }

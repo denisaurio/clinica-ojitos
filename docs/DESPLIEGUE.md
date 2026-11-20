@@ -164,9 +164,25 @@ SPRING_PROFILES_ACTIVE=prod
 SERVER_PORT=8080
 JPA_DDL_AUTO=validate
 JPA_SHOW_SQL=false
+FLYWAY_ENABLED=true
 JWT_EXPIRATION_MINUTES=480
 JWT_SECRET=REEMPLAZA_SECRETO_JWT
 CORS_ALLOWED_ORIGINS=
+
+DATA_ENCRYPTION_KEY=REEMPLAZA_CLAVE_AES_BASE64
+ADMIN_USERNAME=administrador
+ADMIN_PASSWORD=REEMPLAZA_CLAVE_ADMIN
+ADMIN_EMAIL=admin@clinicaojitos.pe
+ADMIN_FORZAR_CLAVE=false
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=REEMPLAZA_CUENTA@gmail.com
+SMTP_PASSWORD=REEMPLAZA_CONTRASENA_DE_APLICACION
+SMTP_AUTH=true
+SMTP_STARTTLS=true
+SMTP_SSL=false
+MAIL_FROM=
 
 DB_URL=jdbc:mysql://REEMPLAZA_HOST_INTERNO:3306/clinica_ojitos?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Lima
 DB_USER=clinica
@@ -198,10 +214,26 @@ Reglas:
 - `MYSQL_PASSWORD` y `DB_PASSWORD` deben ser **el mismo valor**.
 - `DB_URL` se completa en el paso 4, cuando conozcas el host interno de MySQL.
   Deja el marcador por ahora.
-- Marca como **Locked** `MYSQL_PASSWORD`, `MYSQL_ROOT_PASSWORD`, `DB_PASSWORD`
-  y `JWT_SECRET`.
+- Marca como **Locked** `MYSQL_PASSWORD`, `MYSQL_ROOT_PASSWORD`, `DB_PASSWORD`,
+  `JWT_SECRET`, `DATA_ENCRYPTION_KEY` y `ADMIN_PASSWORD`.
+- `DATA_ENCRYPTION_KEY` (RNF-01): `openssl rand -base64 32`. Cifra en la base los
+  textos clínicos. Guarda una copia fuera del VPS: sin ella esos textos no se
+  pueden leer. Los datos antiguos en texto plano se siguen leyendo y se cifran
+  la próxima vez que se guardan.
+- `SMTP_*` (RF3.5 y RF6.4): correo de avisos de citas y del enlace "olvidé mi
+  contraseña". Con Gmail usa una **contraseña de aplicación** (Cuenta de Google →
+  Seguridad → Verificación en 2 pasos → Contraseñas de aplicación), no la clave
+  normal. Si dejas `SMTP_HOST` vacío todo funciona, pero no se envían correos.
+  Marca `SMTP_PASSWORD` como **Locked**. El backend arma los enlaces con
+  `APP_URL`, así que debe ser la dirección pública del **frontend**.
 - `CORS_ALLOWED_ORIGINS` se queda vacío: todo pasa por el mismo dominio.
+  Si usas **dos subdominios** (frontend y backend separados), mira el paso 6.4.
 - Si tu proyecto usa otro dominio, cambia `APP_DOMAIN` y `APP_URL`.
+- `ADMIN_USERNAME` / `ADMIN_PASSWORD`: el backend crea esa cuenta
+  `ADMINISTRADOR` al arrancar si no existe (clave de 8+ caracteres, en BCrypt).
+  Úsala en producción en lugar de `admin/admin123`, que es pública. Si pierdes
+  el acceso, pon `ADMIN_FORZAR_CLAVE=true`, reinicia el backend y vuelve a
+  dejarla en `false`.
 
 ---
 
@@ -351,9 +383,24 @@ DB_POOL_NAME={{environment.DB_POOL_NAME}}
 
 JPA_DDL_AUTO={{environment.JPA_DDL_AUTO}}
 JPA_SHOW_SQL={{environment.JPA_SHOW_SQL}}
+FLYWAY_ENABLED={{environment.FLYWAY_ENABLED}}
 JWT_SECRET={{environment.JWT_SECRET}}
 JWT_EXPIRATION_MINUTES={{environment.JWT_EXPIRATION_MINUTES}}
 CORS_ALLOWED_ORIGINS={{environment.CORS_ALLOWED_ORIGINS}}
+DATA_ENCRYPTION_KEY={{environment.DATA_ENCRYPTION_KEY}}
+APP_URL={{environment.APP_URL}}
+SMTP_HOST={{environment.SMTP_HOST}}
+SMTP_PORT={{environment.SMTP_PORT}}
+SMTP_USER={{environment.SMTP_USER}}
+SMTP_PASSWORD={{environment.SMTP_PASSWORD}}
+SMTP_AUTH={{environment.SMTP_AUTH}}
+SMTP_STARTTLS={{environment.SMTP_STARTTLS}}
+SMTP_SSL={{environment.SMTP_SSL}}
+MAIL_FROM={{environment.MAIL_FROM}}
+ADMIN_USERNAME={{environment.ADMIN_USERNAME}}
+ADMIN_PASSWORD={{environment.ADMIN_PASSWORD}}
+ADMIN_EMAIL={{environment.ADMIN_EMAIL}}
+ADMIN_FORZAR_CLAVE={{environment.ADMIN_FORZAR_CLAVE}}
 
 LOG_LEVEL_ROOT={{environment.LOG_LEVEL_ROOT}}
 LOG_LEVEL_APP={{environment.LOG_LEVEL_APP}}
@@ -476,6 +523,43 @@ Pulsa **Deploy**.
 > Si cambias `APP_URL`, `APP_NAME` o `API_URL`, basta con **Restart**; no hace
 > falta recompilar Angular.
 
+### 6.4 Variante: dos subdominios (frontend y backend separados)
+
+Es la configuración de producción de la clínica:
+
+| Servicio | URL pública |
+|---|---|
+| Frontend (web) | `https://ojitos.hellosaurio.com` |
+| Backend (api) | `https://api-ojitos.hellosaurio.com` · Swagger en `/swagger-ui.html` |
+
+Diferencias con el despliegue de un solo dominio:
+
+1. **DNS**: dos registros `A` al VPS, `ojitos` y `api-ojitos`.
+2. **Backend** (paso 5.1): en **Domains** pon `https://api-ojitos.hellosaurio.com`
+   (puerto `8080`) en vez de dejarlo privado.
+3. **Shared Variables**:
+
+   ```dotenv
+   APP_DOMAIN=ojitos.hellosaurio.com
+   APP_URL=https://ojitos.hellosaurio.com
+   # El navegador llama directo al backend…
+   API_URL=https://api-ojitos.hellosaurio.com/api/v1
+   # …así que el backend debe aceptar el origen del frontend.
+   CORS_ALLOWED_ORIGINS=https://ojitos.hellosaurio.com
+   ```
+
+4. `API_PROXY_TARGET` se mantiene (`http://clinica-api:8080`): nginx sigue
+   reenviando `/api`, `/uploads` y Swagger, así que el frontend funciona aunque
+   `API_URL` vuelva a ser `/api/v1`.
+
+Comprobación rápida del CORS (debe devolver la cabecera con el dominio web):
+
+```bash
+curl -si -X OPTIONS https://api-ojitos.hellosaurio.com/api/v1/pacientes \
+  -H "Origin: https://ojitos.hellosaurio.com" \
+  -H "Access-Control-Request-Method: GET" | grep -i access-control-allow-origin
+```
+
 ---
 
 ## 7. Verificación de punta a punta
@@ -573,16 +657,18 @@ Más detalles en [`testing/README.md`](../testing/README.md).
 1. Haz commit y push de tus cambios (con autorización).
 2. En Coolify, cada aplicación tiene **Automatic Deployment** si conectaste el
    webhook de GitHub; si no, pulsa **Redeploy** en la aplicación afectada.
-3. Si el cambio incluye un script SQL nuevo (`sql/07_...sql`), ejecútalo en
-   MySQL **antes** de desplegar el backend, usando la misma función `sql()` del
-   paso 4.2.
+3. Los cambios de esquema **se aplican solos**: el backend usa Flyway
+   (`backend/src/main/resources/db/migration`). En el primer arranque toma la
+   base existente (la de `sql/01`) como versión 1, aplica V2, V3... y recién
+   después Hibernate valida. No hay que ejecutar SQL a mano. El historial queda
+   en la tabla `flyway_schema_history`. (`FLYWAY_ENABLED=false` lo desactiva.)
 4. Si cambiaste solo variables de entorno, usa **Restart**; si cambiaste
    código, **Redeploy**.
 
 Orden recomendado:
 
 ```
-MySQL (migración) → API → Web
+API (migra la base al arrancar) → Web
 ```
 
 La API arranca con `validate`: si el esquema está incompleto, falla rápido y
@@ -760,3 +846,21 @@ docker compose down -v
 - [ ] `node testing/run.mjs` termina sin fallos en rojo.
 - [ ] Hay un respaldo descargado fuera del VPS.
 - [ ] Las contraseñas demo fueron cambiadas.
+
+---
+
+## Anexo — Error `lstat …/backend/backend: no such file or directory`
+
+El asistente de Coolify v4.7.5 guarda el Dockerfile como `backend/Dockerfile` y,
+como el *Base directory* ya es `/backend`, la ruta se repite
+(`/backend/backend/Dockerfile`). Coolify lo avisa con «Base directory is repeated».
+
+Solución: en **Configuration → General → Build & deploy** deja
+
+| Servicio | Base directory | Dockerfile location |
+|---|---|---|
+| Backend | `/backend` | `/Dockerfile` |
+| Frontend | `/frontend` | `/Dockerfile` |
+
+y comprueba que *Resolved file* muestre `/backend/Dockerfile` o `/frontend/Dockerfile`.
+Guarda, recarga la página para verificar que se guardó y vuelve a desplegar.

@@ -1,5 +1,7 @@
 package com.clinicaojitos.domain.entity;
 
+import com.clinicaojitos.security.CampoClinicoConverter;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -62,10 +64,12 @@ public class Consulta {
     @Column(length = 80)
     private String pupilas;
 
+    @Convert(converter = CampoClinicoConverter.class)
     @Lob
     @Column(columnDefinition = "TEXT")
     private String biomicroscopia;
 
+    @Convert(converter = CampoClinicoConverter.class)
     @Lob
     @Column(name = "fondo_ojo", columnDefinition = "TEXT")
     private String fondoOjo;
@@ -78,28 +82,48 @@ public class Consulta {
     private String cie10;
 
     // --- Notas SOAP ---
+    @Convert(converter = CampoClinicoConverter.class)
     @Lob
     @Column(name = "soap_subjetivo", columnDefinition = "TEXT")
     private String soapSubjetivo;
 
+    @Convert(converter = CampoClinicoConverter.class)
     @Lob
     @Column(name = "soap_objetivo", columnDefinition = "TEXT")
     private String soapObjetivo;
 
+    @Convert(converter = CampoClinicoConverter.class)
     @Lob
     @Column(name = "soap_evaluacion", columnDefinition = "TEXT")
     private String soapEvaluacion;
 
+    @Convert(converter = CampoClinicoConverter.class)
     @Lob
     @Column(name = "soap_plan", columnDefinition = "TEXT")
     private String soapPlan;
 
+    @Convert(converter = CampoClinicoConverter.class)
     @Lob
     @Column(columnDefinition = "TEXT")
     private String observaciones;
 
     @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
+
+    /**
+     * Firma del médico encargado. Firmada, la consulta queda cerrada y puede
+     * respaldar la indicación de una cirugía (V2__firma_consulta...).
+     */
+    @Column(name = "firmada_en")
+    private LocalDateTime firmadaEn;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "firmada_por")
+    private Oftalmologo firmadaPor;
+
+    public boolean estaFirmada() {
+        return firmadaEn != null;
+    }
 
     @PrePersist
     void alCrear() {

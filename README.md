@@ -685,6 +685,9 @@ El sistema de diseño se centraliza en `src/styles/`:
 | `--color-danger` | `#DC2626` | Alertas de error y validaciones |
 | `--radius` | `10px` | Tarjetas y botones |
 | `--radius-sm` | `6px` | Campos de formulario |
+| `$brand-deep` · `$brand-teal` | `#0B2545` · `#2A8A8A` | Panel de marca del login y avisos destacados |
+| `$violet` · `$teal-bg` | `#6D28D9` · `#D5F0EE` | Tonos de las tarjetas de métricas (`ui-stat`) |
+| `$page-max` | `1480px` | Ancho máximo del contenido, centrado |
 
 Dos variantes de navegación lateral coexisten según el contexto: la compacta del
 módulo de pacientes y la extendida del portal clínico con barra superior,

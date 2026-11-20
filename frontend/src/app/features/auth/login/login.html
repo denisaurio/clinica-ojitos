@@ -1,93 +1,160 @@
-<div class="acceso">
-  <span class="acceso__mancha acceso__mancha--una"></span>
-  <span class="acceso__mancha acceso__mancha--dos"></span>
-  <span class="acceso__mancha acceso__mancha--tres"></span>
+<main class="acceso">
+  <!-- ------------------------------------------------ Panel de marca -->
+  <section class="marca" aria-label="Clínica Ojitos">
+    <svg class="marca__ondas" viewBox="0 0 800 900" preserveAspectRatio="none" aria-hidden="true">
+      @for (i of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; track i) {
+        <path [attr.d]="'M-50 ' + (520 + i * 14) + ' C 180 ' + (430 + i * 18) + ', 420 ' + (760 - i * 10) + ', 850 ' + (600 + i * 12)" />
+      }
+    </svg>
+    <svg class="marca__ondas marca__ondas--arriba" viewBox="0 0 800 300" preserveAspectRatio="none" aria-hidden="true">
+      @for (i of [0, 1, 2, 3, 4, 5, 6, 7]; track i) {
+        <path [attr.d]="'M420 ' + (20 + i * 9) + ' C 520 ' + (-10 + i * 12) + ', 640 ' + (90 + i * 8) + ', 820 ' + (30 + i * 10)" />
+      }
+    </svg>
+    <span class="marca__mancha marca__mancha--grande" aria-hidden="true"></span>
+    <span class="marca__mancha marca__mancha--baja" aria-hidden="true"></span>
+    <span class="marca__gota marca__gota--a" aria-hidden="true"></span>
+    <span class="marca__gota marca__gota--b" aria-hidden="true"></span>
+    <span class="marca__puntos" aria-hidden="true"></span>
+    <svg class="marca__tilde marca__tilde--a" viewBox="0 0 60 14" aria-hidden="true"><path d="M2 10 C 10 0, 16 0, 22 8 S 34 16, 40 6 S 52 0, 58 8" /></svg>
+    <svg class="marca__tilde marca__tilde--b" viewBox="0 0 60 14" aria-hidden="true"><path d="M2 10 C 10 0, 16 0, 22 8 S 34 16, 40 6 S 52 0, 58 8" /></svg>
 
-  <div class="acceso__tarjeta">
-    <div class="acceso__marca">
-      <span class="acceso__logo">
-        <ui-icon nombre="eye" [tamano]="22" />
-      </span>
-      <h1 class="acceso__titulo">Ojitos</h1>
-      <p class="acceso__subtitulo">Acceso al Portal Clínico</p>
-    </div>
-
-    @if (error()) {
-      <div class="fallo" [class.fallo--servidor]="servidorCaido()">
-        <div class="fallo__cabecera">
-          <ui-icon [nombre]="servidorCaido() ? 'server' : 'alertCircle'" [tamano]="16" />
-          <span class="fallo__titulo">
-            {{ servidorCaido() ? 'Servidor no disponible' : 'Credenciales inválidas' }}
-          </span>
+    <div class="marca__contenido">
+      <div class="marca__logotipo">
+        <span class="marca__icono">
+          <svg viewBox="0 0 64 64" aria-hidden="true">
+            <path class="ojo__blanco" d="M4 32 C 14 14, 50 14, 60 32 C 50 50, 14 50, 4 32 Z" />
+            <circle class="ojo__iris" cx="32" cy="32" r="13" />
+            <circle class="ojo__pupila" cx="32" cy="32" r="7.5" />
+            <circle class="ojo__brillo" cx="28.5" cy="28.5" r="2.6" />
+          </svg>
+        </span>
+        <div class="marca__nombre">
+          <span class="marca__titulo">Ojitos</span>
+          <span class="marca__subtitulo">Portal Clínico</span>
         </div>
-        <p class="fallo__texto">{{ error() }}</p>
-
-        @if (!servidorCaido()) {
-          <div class="fallo__intento">
-            <span>{{ bloqueado() ? 'Cuenta bloqueada' : 'Intento fallido' }}</span>
-            <strong>{{ intentos() }} de {{ maxIntentos }}</strong>
-          </div>
-
-          <div class="fallo__barra">
-            <span class="fallo__relleno" [style.width.%]="progresoIntentos()"></span>
-          </div>
-        }
       </div>
-    }
 
-    <form [formGroup]="formulario" (ngSubmit)="entrar()" novalidate>
-      <ui-input
-        formControlName="username"
-        etiqueta="Usuario Clínico"
-        placeholder="dr.rodriguez"
-        icono="user"
-      />
+      <h2 class="marca__lema">Cuidado visual y gestión médica en un solo lugar</h2>
+      <ul class="marca__lista">
+        <li>Historiales Clínicos</li>
+        <li>Citas y Agenda</li>
+        <li>Gestión de Recetas</li>
+      </ul>
+    </div>
+  </section>
 
-      <div class="acceso__contrasena">
-        <ui-input
-          formControlName="password"
-          etiqueta="Contraseña"
-          [tipo]="passwordVisible ? 'text' : 'password'"
-          icono="lock"
-          [error]="
-            passwordControl.invalid && passwordControl.touched
-              ? 'La contraseña es obligatoria.'
-              : ''
-          "
-        />
-        <button
-          type="button"
-          class="acceso__ver"
-          (click)="alternarVisibilidad()"
-          [attr.aria-label]="passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-        >
-          <ui-icon [nombre]="passwordVisible ? 'eye' : 'eye-off'" [tamano]="15" />
+  <!-- ------------------------------------------------ Formulario -->
+  <section class="panel">
+    <div class="panel__contenido">
+      <header class="panel__cabecera">
+        <h1 class="panel__titulo">Iniciar Sesión</h1>
+        <p class="panel__subtitulo">Accede al portal para gestionar tu día a día</p>
+      </header>
+
+      @if (fallo(); as f) {
+        <div [class]="'aviso aviso--' + f.tipo" role="alert">
+          <ui-icon
+            class="aviso__icono"
+            [nombre]="f.tipo === 'red' || f.tipo === 'servidor' ? 'server' : 'alertCircle'"
+            [tamano]="18"
+          />
+          <div class="aviso__cuerpo">
+            <p class="aviso__titulo">{{ f.titulo }}</p>
+            <p class="aviso__texto">{{ f.mensaje }}</p>
+            @if (f.tipo === 'credenciales' || f.tipo === 'bloqueo') {
+              <div class="aviso__intentos">
+                <span>{{ bloqueado() ? 'Cuenta bloqueada' : 'Intento fallido' }}</span>
+                <strong>{{ intentos() }} de {{ maxIntentos }}</strong>
+              </div>
+              <div class="aviso__barra"><span [style.width.%]="progresoIntentos()"></span></div>
+            }
+          </div>
+        </div>
+      }
+
+      <form class="formulario" [formGroup]="formulario" (ngSubmit)="entrar()" novalidate>
+        <label class="campo">
+          <span class="campo__etiqueta">Usuario Clínico</span>
+          <span class="campo__caja" [class.campo__caja--error]="errorUsuario()">
+            <ui-icon class="campo__icono" nombre="user" [tamano]="18" />
+            <input
+              class="campo__input"
+              type="text"
+              formControlName="username"
+              placeholder="ej. dr.rodriguez"
+              autocomplete="username"
+              autocapitalize="none"
+              spellcheck="false"
+            />
+          </span>
+          @if (errorUsuario()) {
+            <span class="campo__error">{{ errorUsuario() }}</span>
+          }
+        </label>
+
+        <label class="campo">
+          <span class="campo__etiqueta">Contraseña</span>
+          <span class="campo__caja" [class.campo__caja--error]="errorClave()">
+            <ui-icon class="campo__icono" nombre="lock" [tamano]="18" />
+            <input
+              #campoClave
+              class="campo__input"
+              [type]="claveVisible() ? 'text' : 'password'"
+              formControlName="password"
+              autocomplete="current-password"
+            />
+            <button
+              type="button"
+              class="campo__ver"
+              (click)="alternarClave()"
+              [attr.aria-label]="claveVisible() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              [attr.aria-pressed]="claveVisible()"
+            >
+              <ui-icon [nombre]="claveVisible() ? 'eye' : 'eye-off'" [tamano]="18" />
+            </button>
+          </span>
+          @if (errorClave()) {
+            <span class="campo__error">{{ errorClave() }}</span>
+          }
+        </label>
+
+        <div class="formulario__fila">
+          <label class="recordar">
+            <input type="checkbox" formControlName="recordar" />
+            <span>Recordar sesión</span>
+          </label>
+          <a class="enlace" routerLink="/recuperar-clave">¿Olvidaste tu contraseña?</a>
+        </div>
+
+        <button class="boton" type="submit" [disabled]="enviando() || bloqueado()">
+          @if (enviando()) {
+            <span class="boton__giro" aria-hidden="true"></span>
+            Ingresando…
+          } @else if (bloqueado()) {
+            Cuenta bloqueada temporalmente
+          } @else {
+            Iniciar Sesión
+          }
         </button>
+      </form>
+
+      <div class="demo">
+        <p class="demo__titulo">Accesos Demo Rápidos:</p>
+        <div class="demo__chips">
+          @for (cuenta of cuentasDemo; track cuenta.usuario) {
+            <button type="button" class="chip" (click)="usarDemo(cuenta)" [disabled]="bloqueado()">
+              {{ cuenta.etiqueta }}
+            </button>
+          }
+        </div>
       </div>
 
-      <a class="acceso__enlace" routerLink="/recuperar-clave">¿Olvidaste tu contraseña?</a>
-
-      <ui-button
-        tipo="submit"
-        class="acceso__enviar"
-        variante="primario"
-        [deshabilitado]="submitting() || bloqueado()"
-      >
-        {{ bloqueado() ? 'Cuenta bloqueada temporalmente' : 'Iniciar Sesión' }}
-        <ui-icon nombre="logIn" [tamano]="15" />
-      </ui-button>
-    </form>
-
-    <div class="acceso__separador"></div>
-
-    <p class="acceso__ayuda">
-      <ui-icon nombre="helpCircle" [tamano]="13" />
-      ¿Necesitas ayuda técnica?
-      <a href="mailto:soporte@ojitos.com">Contactar Soporte IT</a>
-    </p>
-
-    <p class="acceso__demo">
-      Administrador: <b>admin</b> / <b>admin123</b> · Demo: <b>recepcion</b> · <b>paciente</b>
-    </p>
-  </div>
-</div>
+      <footer class="ayuda">
+        <ui-icon nombre="helpCircle" [tamano]="16" />
+        <span>¿Necesitas ayuda técnica?</span>
+        <a href="mailto:soporte@ojitos.com">Contactar Soporte IT</a>
+      </footer>
+    </div>
+  </section>
+</main>

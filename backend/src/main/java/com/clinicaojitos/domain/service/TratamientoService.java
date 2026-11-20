@@ -152,6 +152,23 @@ public class TratamientoService {
             ojoRepository.findById(r.ojoId()).ifPresent(s::setOjo);
         }
 
+        // La cirugía nace de una o varias consultas firmadas del mismo paciente.
+        for (Long consultaId : r.consultaIds()) {
+            Consulta c = consultaRepository.findById(consultaId)
+                    .orElseThrow(() -> new RecursoNoEncontradoException(
+                            "La consulta " + consultaId + " no existe."));
+            if (c.getPaciente() == null || !c.getPaciente().getId().equals(r.pacienteId())) {
+                throw new OperacionInvalidaException(
+                        "La consulta " + consultaId + " pertenece a otro paciente.");
+            }
+            if (!c.estaFirmada()) {
+                throw new OperacionInvalidaException(
+                        "La consulta del " + c.getFecha().toLocalDate()
+                                + " aún no está firmada por el médico encargado.");
+            }
+            s.getConsultas().add(c);
+        }
+
         return mapeador.aCirugia(cirugiaRepository.save(s));
     }
 

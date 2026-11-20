@@ -14,8 +14,71 @@
   gap: 12px;
 }
 
-.encabezado__sede {
-  width: 240px;
+.aviso {
+  display: block;
+  margin-top: 16px;
+}
+
+/* ------------------------------------------------------------ Modos */
+.modos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+  background: $surface;
+  color: $text;
+  font: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: $sidebar-bg;
+  }
+}
+
+.modo--activo {
+  border-color: $primary;
+  box-shadow: inset 0 0 0 1px $primary;
+  font-weight: 600;
+}
+
+.leyenda__nota {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 14px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: $text-muted;
+}
+
+.resumen__dias {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  li {
+    display: flex;
+    flex-direction: column;
+    font-size: 12.5px;
+    color: $text;
+  }
+
+  small {
+    color: $text-muted;
+  }
 }
 
 .rejilla {
@@ -67,7 +130,7 @@
 }
 
 .muestra--quirurgico {
-  background: $primary-light;
+  background: $warning;
 }
 
 /* ------------------------------------------------------------ Resumen */
@@ -100,7 +163,7 @@
 }
 
 .resumen__relleno--quirurgico {
-  background: $primary-light;
+  background: $warning;
 }
 
 /* ------------------------------------------------------------ Matriz */
@@ -110,8 +173,10 @@
 
 .matriz__rejilla {
   display: grid;
-  grid-template-columns: 72px repeat(5, 1fr);
-  min-width: 620px;
+  grid-template-columns: 64px repeat(6, 1fr);
+  min-width: 640px;
+  user-select: none;
+  touch-action: none;
 }
 
 .matriz__esquina {
@@ -123,6 +188,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 4px;
   height: 44px;
   font-size: 10px;
   font-weight: 700;
@@ -132,11 +198,25 @@
   color: $text-muted;
 }
 
+.matriz__limpiar {
+  border: 0;
+  background: transparent;
+  color: $text-muted;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+
+  &:hover {
+    color: $danger;
+  }
+}
+
 .matriz__hora {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 56px;
+  height: 36px;
   font-size: 11.5px;
   color: $text-muted;
   border-bottom: 1px solid $border;
@@ -144,7 +224,7 @@
 }
 
 .matriz__celda {
-  height: 56px;
+  height: 36px;
   border-bottom: 1px solid $border;
   border-right: 1px solid $border;
   background: $surface;
@@ -165,13 +245,17 @@
   }
 }
 
+// Cirugía en ámbar: antes era casi del mismo azul que las horas de consulta.
 .matriz__celda--quirurgica {
-  background: $primary-light;
+  background: $warning;
+  border-color: $warning;
+
+  &:hover {
+    background: #b45309;
+  }
 }
 
-.matriz__celda--arrastrando {
-  box-shadow: inset 0 0 0 2px $primary-light;
-}
+
 
 @media (max-width: 1040px) {
   .rejilla {
@@ -180,5 +264,16 @@
 
   .lateral {
     flex-direction: row;
+  }
+}
+
+@media (max-width: 720px) {
+  .lateral {
+    flex-direction: column;
+  }
+
+  // En pantalla táctil: tocar pinta una hora y arrastrar desplaza la tabla.
+  .matriz__rejilla {
+    touch-action: pan-x pan-y;
   }
 }

@@ -1,22 +1,14 @@
 @use 'variables' as *;
 
-.encabezado {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
 .rejilla {
   display: grid;
-  grid-template-columns: 1.6fr 1fr;
+  grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
   gap: 20px;
-  margin-top: 24px;
-  align-items: start;
+  margin-top: 20px;
 }
 
 .columna {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -24,56 +16,61 @@
 
 /* -------------------------------------------------------------- Tabla */
 .hora {
-  font-weight: 600;
+  font-weight: 700;
+  color: $primary;
   white-space: nowrap;
 }
 
 .paciente {
   font-weight: 600;
+  color: $text;
+}
+
+.motivo {
+  color: $text-muted;
 }
 
 .doctor {
   white-space: nowrap;
 }
 
-.tabla-card__pie {
-  display: block;
-  padding: 12px 20px;
-  border-top: 1px solid $border;
-  text-align: center;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: $primary;
-  text-decoration: none;
-
-  &:hover {
-    background: $page-bg;
-    text-decoration: none;
-  }
+.accion {
+  text-align: right;
+  white-space: nowrap;
 }
 
-/* ---------------------------------------------------------- Médicos */
+.error {
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  border: 1px solid $danger-border;
+  border-radius: $radius-sm;
+  background: $danger-bg;
+  font-size: 13.5px;
+  color: $danger;
+}
+
+/* ------------------------------------------------------------ Médicos */
 .medicos {
-  position: relative;
-  overflow: hidden;
-}
-
-.medicos__lista {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 4px;
 }
 
 .medico {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px;
-  border: 1px solid $border;
+  padding: 10px 8px;
+  margin: 0 -8px;
   border-radius: $radius-sm;
+  transition: background $transition;
+
+  &:hover {
+    background: $page-bg;
+  }
 }
 
 .medico__datos {
@@ -83,39 +80,39 @@
 
 .medico__nombre {
   display: block;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
+  color: $text;
 }
 
 .medico__sub {
   display: block;
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: $text-muted;
 }
 
-.medico__estado {
-  flex-shrink: 0;
-  text-align: right;
-}
-
-/* ----------------------------------------------------------- Avisos */
+/* ------------------------------------------------------------- Avisos */
 .avisos {
-  padding: 18px 20px 20px;
-  background: $primary;
+  padding: 22px 24px;
+  border-radius: $radius-card;
+  background: linear-gradient(135deg, $brand-deep 0%, $primary 60%, $brand-teal 140%);
   color: $text-invert;
-  border-radius: $radius;
-  box-shadow: $shadow-sm;
+  box-shadow: $shadow-md;
 }
 
 .avisos__titulo {
-  font-size: 17px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  font-size: 16px;
   font-weight: 700;
   color: $text-invert;
 }
 
 .avisos__lista {
   list-style: none;
-  margin: 14px 0 0;
+  margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -125,18 +122,36 @@
 .aviso {
   display: flex;
   gap: 10px;
-  font-size: 12.5px;
+  font-size: 13.5px;
   line-height: 1.5;
-  color: rgba(255, 255, 255, 0.85);
+  opacity: 0.95;
+
+  ui-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
 }
 
-.aviso ui-icon {
-  flex-shrink: 0;
-  margin-top: 2px;
+/* ------------------------------------------------------------- Vacío */
+.vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 40px 16px;
+  border: 1px dashed $border-strong;
+  border-radius: $radius;
+  font-size: 14px;
+  text-align: center;
+  color: $text-muted;
 }
 
-@media (max-width: 1000px) {
+.vacio--compacto {
+  padding: 18px 12px;
+}
+
+@media (max-width: 1100px) {
   .rejilla {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }

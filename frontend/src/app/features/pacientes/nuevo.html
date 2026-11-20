@@ -132,6 +132,7 @@
               formControlName="password"
               etiqueta="Contraseña"
               tipo="password"
+              autocompletar="new-password"
               icono="lock"
               [requerido]="true"
               [error]="
@@ -144,6 +145,7 @@
               formControlName="repetirPassword"
               etiqueta="Repetir contraseña"
               tipo="password"
+              autocompletar="new-password"
               icono="lock"
               [requerido]="true"
               [error]="
@@ -170,7 +172,7 @@
     }
 
     @case (3) {
-      <ui-card titulo="Revise los datos antes de guardar" icono="userCheck">
+      <ui-card titulo="Revise los datos antes de guardar" icono="user-check">
         <div class="resumen">
           <ui-avatar [iniciales]="inicial()" [nombre]="nombreCompleto()" tamano="lg" />
           <div class="resumen__datos">
@@ -223,6 +225,7 @@
 
   @if (credenciales(); as cred) {
     <ui-modal
+      [abierto]="true"
       [titulo]="'Acceso creado para ' + cred.nombreCompleto"
       (cerrar)="continuar()"
     >
@@ -246,7 +249,7 @@
         </p>
       </div>
 
-      <ng-container pie>
+      <ng-container slot="pie">
         <ui-button variante="contorno" tipo="button" (click)="continuar()">
           Cerrar
         </ui-button>

@@ -8,7 +8,7 @@
   </span>
 </div>
 
-@if (variante() === 'clinico' || variante() === 'operativo') {
+@if ((variante() === 'clinico' || variante() === 'operativo') && puedeReservar()) {
   <div class="accion">
     <ui-button
       [enlace]="true"
@@ -29,6 +29,8 @@
       [routerLink]="entrada.ruta"
       routerLinkActive="activo"
       [routerLinkActiveOptions]="{ exact: entrada.exacta ?? false }"
+      [attr.title]="entrada.etiqueta"
+      [attr.aria-label]="entrada.etiqueta"
     >
       <ui-icon [nombre]="entrada.icono" [tamano]="16" />
       <span>{{ entrada.etiqueta }}</span>
@@ -37,11 +39,11 @@
 </nav>
 
 <div class="pie">
-  <a class="pie__enlace" routerLink="/configuracion">
+  <a class="pie__enlace" routerLink="/configuracion" title="Configuración">
     <ui-icon nombre="settings" [tamano]="16" />
     <span>Configuración</span>
   </a>
-  <button type="button" class="pie__enlace" (click)="cerrarSesion()">
+  <button type="button" class="pie__enlace" title="Cerrar sesión" (click)="cerrarSesion()">
     <ui-icon nombre="logOut" [tamano]="16" />
     <span>Cerrar sesión</span>
   </button>

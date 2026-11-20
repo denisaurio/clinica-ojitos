@@ -12,6 +12,7 @@
 
 .consulta__cabecera {
   position: sticky;
+  flex-wrap: wrap;
   top: 0;
   z-index: 20;
   display: flex;
@@ -41,6 +42,7 @@
 
 .consulta__acciones {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
 }
 

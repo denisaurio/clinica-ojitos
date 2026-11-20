@@ -57,6 +57,14 @@ export class OftalmologoService {
     );
   }
 
+  /** GET /oftalmologos/activos: la única lista de médicos que puede pedir un paciente. */
+  activos(): Observable<Oftalmologo[]> {
+    if (environment.useMockApi) {
+      return of(this.demo.oftalmologos.filter((o) => o.activo)).pipe(delay(100));
+    }
+    return this.http.get<Oftalmologo[]>(`${this.base}/activos`);
+  }
+
   obtener(id: number): Observable<Oftalmologo> {
     if (environment.useMockApi) {
       return of(this.demo.oftalmologos.find((o) => o.id === id) ?? this.demo.oftalmologos[0]).pipe(
@@ -80,29 +88,32 @@ export class OftalmologoService {
         oftalmologo: nuevo,
         credenciales: {
           username: peticion.email.split('@')[0],
-          password: 'Demo9!aZ#2kLq',
+          password: peticion.password || 'Demo9!aZ#2kLq',
           nombreCompleto: nuevo.nombreCompleto,
           textoParaDescargar: 'Credenciales de demostración',
         },
       }).pipe(delay(200));
     }
-    return this.http.post<AltaOftalmologo>(this.base, this.aPeticion(peticion));
+    return this.http.post<AltaOftalmologo>(this.base, this.aPeticion(peticion, true));
   }
 
   /**
-   * Pide nuevas credenciales para un profesional. La contraseña anterior no es
-   * recuperable —solo existe su hash—, así que el backend emite una nueva.
+   * Cambia la contraseña de un profesional: la que escribe el administrador o,
+   * si no se indica, una aleatoria. La anterior no es recuperable (solo hash).
    */
-  credenciales(id: number): Observable<Credenciales> {
+  credenciales(id: number, password?: string): Observable<Credenciales> {
     if (environment.useMockApi) {
       return of({
         username: `demo${id}`,
-        password: 'Demo9!aZ#2kLq',
+        password: password || 'Demo9!aZ#2kLq',
         nombreCompleto: 'Oftalmólogo de demostración',
         textoParaDescargar: 'Credenciales de demostración',
       }).pipe(delay(150));
     }
-    return this.http.post<Credenciales>(`${this.base}/${id}/credenciales`, {});
+    return this.http.post<Credenciales>(
+      `${this.base}/${id}/credenciales`,
+      password ? { password } : {}
+    );
   }
 
   /** El backend guarda `subespecialidad` como id de catálogo, no como texto. */
@@ -117,17 +128,21 @@ export class OftalmologoService {
       subespecialidad: p.subespecialidad || null,
       sedeId: p.sedeId ?? null,
       sede: p.sede || null,
-      activo: activo ?? true,
+      // Solo en el alta: la contraseña inicial que escribió el administrador.
+      ...(p.password ? { password: p.password } : {}),
+      // Sin valor explícito no se envía: editar a un médico desactivado no lo
+      // reactiva (antes se mandaba siempre true).
+      ...(activo === undefined ? {} : { activo }),
     };
   }
 
-  actualizar(id: number, peticion: OftalmologoRequest): Observable<Oftalmologo> {
+  /** `activo` solo se envía cuando se quiere cambiar (reactivar); al editar se omite. */
+  actualizar(id: number, peticion: OftalmologoRequest, activo?: boolean): Observable<Oftalmologo> {
     if (environment.useMockApi) {
       const actual = this.demo.oftalmologos.find((o) => o.id === id);
-      return of({ ...actual!, ...peticion }).pipe(delay(180));
+      return of({ ...actual!, ...peticion, ...(activo === undefined ? {} : { activo }) }).pipe(delay(180));
     }
-    // `activo` se omite para no reactivar a un profesional suspendido al editarlo.
-    return this.http.put<Oftalmologo>(`${this.base}/${id}`, this.aPeticion(peticion));
+    return this.http.put<Oftalmologo>(`${this.base}/${id}`, this.aPeticion(peticion, activo));
   }
 
   desactivar(id: number): Observable<Oftalmologo> {
@@ -148,6 +163,14 @@ export class OftalmologoService {
     }
     const params = new HttpParams().set('numero', numeroColegiatura);
     return this.http.get<ExisteColegiaturaResponse>(`${this.base}/existe-colegiatura`, { params });
+  }
+
+  /** Ficha del oftalmólogo con sesión iniciada (para "Mi horario"). */
+  yo(): Observable<Oftalmologo> {
+    if (environment.useMockApi) {
+      return of(this.demo.oftalmologos[0]).pipe(delay(80));
+    }
+    return this.http.get<Oftalmologo>(`${this.base}/yo`);
   }
 
   horarios(id: number): Observable<HorarioSemanal> {
@@ -211,7 +234,9 @@ export class OftalmologoService {
         this.demo.metricasPorOftalmologo[id] ?? {
           pacientesAtendidos: 0,
           citasSemana: 0,
-          valoracionMedia: 0,
+          horasSemanales: 0,
+          cirugiasRealizadas: 0,
+          valoracionMedia: null,
         }
       ).pipe(delay(100));
     }
@@ -219,7 +244,9 @@ export class OftalmologoService {
       map((m) => ({
         pacientesAtendidos: m.pacientesAtendidos ?? 0,
         citasSemana: m.citasSemana ?? 0,
-        valoracionMedia: m.satisfaccionMedia ?? 0,
+        horasSemanales: m.horasSemanales ?? 0,
+        cirugiasRealizadas: m.cirugiasRealizadas ?? 0,
+        valoracionMedia: m.satisfaccionMedia ?? null,
       }))
     );
   }
@@ -318,5 +345,7 @@ interface HorarioApi {
 interface MetricasApi {
   pacientesAtendidos?: number;
   citasSemana?: number;
-  satisfaccionMedia?: number;
+  horasSemanales?: number;
+  cirugiasRealizadas?: number;
+  satisfaccionMedia?: number | null;
 }

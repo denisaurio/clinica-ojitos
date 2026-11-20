@@ -24,4 +24,14 @@ class PacientesApiTest extends BaseIntegracionTest {
     void pacienteNoLista() throws Exception {
         mvc.perform(get("/api/v1/pacientes")).andExpect(status().isForbidden());
     }
+
+    @Test
+    @org.springframework.security.test.context.support.WithMockUser(roles = "OFTALMOLOGO")
+    @DisplayName("Solo administración y recepción cambian la contraseña de un paciente (403)")
+    void medicoNoCambiaClaveDePaciente() throws Exception {
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .post("/api/v1/pacientes/1/credenciales")
+                        .contentType("application/json").content("{}"))
+                .andExpect(status().isForbidden());
+    }
 }

@@ -27,11 +27,12 @@ class MapaDependenciasTest {
     private static final String PAQUETE = "com.clinicaojitos.domain.service.";
 
     private static final Map<String, Set<String>> ESPERADO = Map.of(
-            "AuthService", Set.of("JwtService", "AuditoriaService", "RegistroAccesoService"),
+            "AuthService", Set.of("JwtService", "AuditoriaService", "RegistroAccesoService",
+                    "NotificacionService"),
             "AutorizacionPacienteService", Set.of(),
             "CatalogoResolutorService", Set.of(),
             "CatalogoService", Set.of(),
-            "CitaService", Set.of("PacienteService"),
+            "CitaService", Set.of("PacienteService", "AutorizacionPacienteService", "NotificacionService"),
             "ConsultaService", Set.of("AuthService", "AutorizacionPacienteService"),
             "DashboardService", Set.of("PacienteService", "CitaService", "ConsultaService",
                     "TratamientoService", "AuthService"),

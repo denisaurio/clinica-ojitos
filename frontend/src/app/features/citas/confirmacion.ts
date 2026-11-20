@@ -4,6 +4,7 @@ import { ButtonComponent } from '../../shared/components/ui-button';
 import { IconComponent } from '../../shared/components/ui-icon';
 import { ContextoPaginaService } from '../../core/services/contexto-pagina.service';
 import { CitaService } from '../../core/services/cita.service';
+import { AuthService } from '../../core/services/auth.service';
 
 /**
  * Confirmación de cita (imagen 33). Se muestra tras completar el asistente de
@@ -19,6 +20,9 @@ import { CitaService } from '../../core/services/cita.service';
 export class CitaConfirmacionComponent implements OnInit, OnDestroy {
   private readonly contexto = inject(ContextoPaginaService);
   private readonly citas = inject(CitaService);
+
+  /** El paciente vuelve a su portal; el personal, a la agenda. */
+  protected readonly esPaciente = inject(AuthService).esPaciente;
 
   protected readonly cita = this.citas.ultimaCita;
 

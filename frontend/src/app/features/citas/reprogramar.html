@@ -1,4 +1,4 @@
-<ui-modal [abierto]="true" titulo="Reprogramar Cita" icono="calendar" tamano="md">
+<ui-modal [abierto]="true" titulo="Reprogramar Cita" icono="calendar" tamano="md" (cerrar)="volver()">
   <form [formGroup]="formulario" (ngSubmit)="confirmar()" novalidate class="reprogramar">
     @if (cita(); as c) {
       <section class="actual">
@@ -62,6 +62,9 @@
     </p>
 
     <div class="slots">
+      @if (cargandoSlots()) {
+        <p class="slots__aviso">Cargando horarios…</p>
+      }
       @for (slot of slots(); track slot.horaInicio) {
         <button
           type="button"
@@ -73,8 +76,18 @@
         >
           {{ horaLegible(slot.horaInicio) }}
         </button>
+      } @empty {
+        @if (!cargandoSlots()) {
+          <p class="slots__aviso">
+            El médico no tiene horario de atención este día. Elige otra fecha en el calendario.
+          </p>
+        }
       }
     </div>
+
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
 
     <label class="campo">
       <span class="campo__etiqueta">Nota (Opcional)</span>
@@ -92,7 +105,7 @@
   </form>
 
   <ng-container slot="pie">
-    <ui-button variante="contorno" (click)="confirmarCancelacion.set(false)">
+    <ui-button variante="contorno" (click)="volver()">
       Conservar Original
     </ui-button>
     <ui-button variante="primario" [deshabilitado]="guardando()" (click)="confirmar()">

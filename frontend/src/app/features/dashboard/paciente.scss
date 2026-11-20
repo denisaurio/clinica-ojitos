@@ -194,3 +194,8 @@
     grid-template-columns: 1fr;
   }
 }
+.cita--vacia {
+  justify-content: center;
+  font-size: 13.5px;
+  color: $text-muted;
+}

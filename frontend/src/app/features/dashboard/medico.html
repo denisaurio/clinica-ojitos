@@ -1,39 +1,58 @@
 <div class="page">
-  <h1 class="page-title">Resumen de Hoy</h1>
-  <p class="page-subtitle">{{ datos()?.fecha ?? 'Cargando agenda…' }}</p>
+  <header class="page-head">
+    <div>
+      <h1 class="page-title">Resumen de Hoy</h1>
+      <p class="page-subtitle">Tu agenda, tareas pendientes y pacientes recientes.</p>
+    </div>
+    <span class="fecha">
+      <ui-icon nombre="calendar" [tamano]="16" />
+      {{ hoy }}
+    </span>
+  </header>
 
   @if (datos(); as d) {
+    <div class="stats">
+      @for (kpi of indicadores(); track kpi.etiqueta; let i = $index) {
+        <ui-stat
+          [tono]="tonos[i % tonos.length]"
+          [icono]="iconos[i % iconos.length]"
+          [valor]="kpi.valor"
+          [etiqueta]="kpi.etiqueta"
+          [detalle]="kpi.detalle ?? ''"
+        />
+      }
+    </div>
+
     <div class="rejilla">
-      <ui-card titulo="Agenda del Día" icono="list" class="agenda">
+      <ui-card titulo="Agenda del Día" subtitulo="Citas ordenadas por hora" icono="list" class="agenda">
         <ng-container slot="accion">
-          <ui-button
-            [enlace]="true"
-            destino="/citas/agenda"
-            variante="enlace"
-            tamano="sm"
-            icono="calendar"
-          >
-            Ver Calendario
+          <ui-button [enlace]="true" destino="/citas/agenda" variante="contorno" tamano="sm" icono="calendar">
+            Ver calendario
           </ui-button>
         </ng-container>
 
         <ul class="citas">
           @for (cita of d.citasHoy; track cita.id) {
-            <li class="cita">
+            <li class="cita" [attr.data-estado]="cita.estado">
               <span class="cita__hora">
                 {{ cita.horaInicio }}<small>{{ meridiano(cita.horaInicio) }}</small>
               </span>
               <span class="cita__cuerpo">
                 <span class="cita__paciente">{{ cita.pacienteNombre }}</span>
-                <span class="cita__motivo">{{ cita.motivo }}</span>
+                <span class="cita__motivo">{{ cita.motivo || cita.tipoConsulta }}</span>
               </span>
               <span class="cita__etiquetas">
-                <ui-badge variante="neutro">{{ cita.sala }}</ui-badge>
+                @if (cita.sala) {
+                  <ui-badge variante="neutro">{{ cita.sala }}</ui-badge>
+                }
                 <ui-badge [variante]="variante(cita.estado)">{{ etiqueta(cita.estado) }}</ui-badge>
               </span>
             </li>
           } @empty {
-            <li class="citas__vacio">No hay citas programadas para hoy.</li>
+            <li class="vacio">
+              <ui-icon nombre="calendar" [tamano]="26" />
+              <span>No hay citas programadas para hoy.</span>
+            </li>
           }
         </ul>
       </ui-card>
@@ -43,26 +62,31 @@
           <ul class="pendientes">
             @for (tarea of d.pendientes; track tarea.id) {
               <li class="pendiente">
-                <ui-icon class="pendiente__icono" [nombre]="tarea.icono" [tamano]="17" />
+                <span class="pendiente__icono"><ui-icon [nombre]="tarea.icono" [tamano]="17" /></span>
                 <span>
                   <span class="pendiente__titulo">{{ tarea.titulo }}</span>
                   <span class="pendiente__detalle">{{ tarea.detalle }}</span>
                 </span>
               </li>
+            } @empty {
+              <li class="vacio vacio--compacto">Sin pendientes por ahora. ✓</li>
             }
           </ul>
         </ui-card>
 
-        <ui-card titulo="Historiales Recientes" icono="refresh" class="recientes">
-          <div class="recientes__lista">
+        <ui-card titulo="Historiales Recientes" icono="refresh">
+          <div class="recientes">
             @for (historial of d.historialesRecientes; track historial.id) {
-              <a class="reciente" routerLink="/historial/paciente/5">
+              <a class="reciente" [routerLink]="['/historial/paciente', historial.id]">
                 <ui-avatar [iniciales]="historial.iniciales" tamano="md" />
                 <span class="reciente__datos">
                   <span class="reciente__nombre">{{ historial.pacienteNombre }}</span>
                   <span class="reciente__hora">{{ historial.hora }}</span>
                 </span>
+                <ui-icon class="reciente__flecha" nombre="chevron-right" [tamano]="16" />
               </a>
+            } @empty {
+              <p class="vacio vacio--compacto">Aún no hay historiales recientes.</p>
             }
           </div>
         </ui-card>

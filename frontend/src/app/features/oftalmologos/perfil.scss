@@ -27,6 +27,7 @@
 
 .cabecera__acciones {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
@@ -43,6 +44,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-width: 0;
 }
 
 /* --------------------------------------------------------- Identidad */
@@ -96,7 +98,7 @@
 /* ---------------------------------------------------------- Métricas */
 .metricas {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 20px;
 }
 
@@ -140,10 +142,24 @@
 
 @media (max-width: 1000px) {
   .rejilla {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .metricas {
     grid-template-columns: 1fr;
   }
+}
+.aviso {
+  margin-top: 16px;
+  padding: 10px 14px;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+  background: $info-bg;
+  font-size: 13.5px;
+  color: $info;
+}
+
+.horario__vacio {
+  font-size: 13px;
+  color: $text-muted;
 }

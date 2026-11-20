@@ -1,5 +1,7 @@
 package com.clinicaojitos.domain.entity;
 
+import com.clinicaojitos.security.CampoClinicoConverter;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -62,11 +64,13 @@ public class Paciente {
     private String fotoUrl;
 
     /** Antecedentes visuales del paciente (RF1.3). */
+    @Convert(converter = CampoClinicoConverter.class)
     @Lob
     @Column(name = "historial_ocular", columnDefinition = "TEXT")
     private String historialOcular;
 
     /** Alergias medicamentosas (RF1.3). */
+    @Convert(converter = CampoClinicoConverter.class)
     @Lob
     @Column(columnDefinition = "TEXT")
     private String alergias;

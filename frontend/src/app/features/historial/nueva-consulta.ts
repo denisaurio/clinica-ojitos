@@ -103,7 +103,8 @@ export class NuevaConsultaComponent implements OnInit, OnDestroy {
     this.catalogos
       .tiposConsulta()
       .subscribe((items) =>
-        this.tiposConsulta.set(items.map((i) => ({ valor: i.nombre, etiqueta: i.nombre })))
+        // El valor es el id: es lo que exige el backend (tipoConsultaId).
+        this.tiposConsulta.set(items.map((i) => ({ valor: String(i.id), etiqueta: i.nombre })))
       );
   }
 
@@ -167,7 +168,10 @@ export class NuevaConsultaComponent implements OnInit, OnDestroy {
     const peticion: ConsultaRequest = {
       pacienteId: this.pacienteId(),
       motivo: valores.motivo,
-      tipoConsulta: valores.tipoConsulta,
+      tipoConsulta:
+        this.tiposConsulta().find((t) => t.valor === valores.tipoConsulta)?.etiqueta ??
+        valores.tipoConsulta,
+      tipoConsultaId: Number(valores.tipoConsulta) || null,
       diagnosticoPrincipal: valores.diagnosticoPrincipal,
       agudezaOd: valores.agudezaOd,
       agudezaOi: valores.agudezaOi,

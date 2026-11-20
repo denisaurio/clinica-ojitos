@@ -203,7 +203,8 @@ public class DashboardService {
                 "Bienvenido a tu portal de salud visual.",
                 proximas,
                 consultaService.diagnosticosVigentes(paciente.getId()),
-                consultaService.evolucion(paciente.getId()));
+                consultaService.evolucion(paciente.getId()),
+                paciente.getId());
     }
 
     /** Ficha del paciente a la que pertenece la cuenta indicada. */

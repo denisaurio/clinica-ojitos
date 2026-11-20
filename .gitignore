@@ -71,3 +71,7 @@ fix-*.js
 
 # --- Reporte generado por testing/run-tests.mjs ---
 testing/reporte/
+
+# Reportes generados por los runners de testing/
+testing/reporte/
+testing/reportes/

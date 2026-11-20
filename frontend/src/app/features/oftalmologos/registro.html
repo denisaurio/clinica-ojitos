@@ -1,8 +1,11 @@
-<div class="page">
-  <h1 class="page-title">Registro de Nuevo Oftalmólogo</h1>
+<div class="page page--estrecha">
+  <h1 class="page-title">{{ editando() ? 'Editar Oftalmólogo' : 'Registro de Nuevo Oftalmólogo' }}</h1>
   <p class="page-subtitle">
-    Ingrese los datos personales y las credenciales profesionales del médico para
-    incorporarlo al sistema.
+    {{
+      editando()
+        ? 'Actualice los datos del médico. Su estado y su contraseña no cambian.'
+        : 'Ingrese los datos del médico y la contraseña con la que entrará al sistema.'
+    }}
   </p>
 
   @if (error()) {
@@ -50,7 +53,7 @@
       </div>
     </ui-card>
 
-    <ui-card titulo="Credenciales Profesionales" icono="badgeCheck" [sinPadding]="true">
+    <ui-card titulo="Credenciales Profesionales" icono="badge-check" [sinPadding]="true">
       <div class="formulario">
         <ui-input
           formControlName="numeroColegiatura"
@@ -105,42 +108,48 @@
       </div>
     </ui-card>
 
+    @if (!editando()) {
+      <ui-card titulo="Acceso al Sistema" icono="lock" [sinPadding]="true">
+        <div class="formulario">
+          <p class="ayuda">
+            El médico entrará con el usuario
+            <strong>{{ usuarioSugerido() || '(parte del correo antes de la @)' }}</strong>
+            y la contraseña que escriba aquí. Después podrá cambiarla en
+            Configuración → Mi cuenta.
+          </p>
+          <div class="grid-2">
+            <ui-input
+              formControlName="password"
+              etiqueta="Contraseña inicial"
+              tipo="password"
+              autocompletar="new-password"
+              icono="lock"
+              [requerido]="true"
+              [error]="errorDe('password', 'Mínimo 8 caracteres.')"
+            />
+            <ui-input
+              formControlName="repetir"
+              etiqueta="Repita la contraseña"
+              tipo="password"
+              autocompletar="new-password"
+              icono="lock"
+              [requerido]="true"
+              [error]="errorRepetir()"
+            />
+          </div>
+        </div>
+      </ui-card>
+    }
+
     <div class="acciones">
       <ui-button variante="contorno" tipo="button" destino="/oftalmologos" [enlace]="true">Cancelar</ui-button>
       <ui-button variante="primario" tipo="submit" icono="save" [deshabilitado]="guardando()">
-        Guardar Médico
+        {{ guardando() ? 'Guardando…' : editando() ? 'Guardar cambios' : 'Guardar Médico' }}
       </ui-button>
     </div>
   </form>
 
   @if (credenciales(); as c) {
-    <ui-modal [titulo]="'Credenciales de ' + c.nombreCompleto" (cerrar)="continuar()">
-      <div class="credenciales">
-        <ui-alert tipo="warning">
-          <strong>Esta contraseña se muestra una sola vez.</strong>
-          Descárguela y entréguesela al profesional: no podrá volver a verla,
-          porque el sistema solo guarda su cifrado.
-        </ui-alert>
-
-        <dl class="credenciales__datos">
-          <dt>Usuario</dt>
-          <dd><code>{{ c.username }}</code></dd>
-          <dt>Contraseña</dt>
-          <dd><code class="credenciales__clave">{{ c.password }}</code></dd>
-        </dl>
-
-        <p class="ayuda">
-          El profesional podrá cambiarla cuando entre en
-          <strong>Configuración → Mi cuenta</strong>.
-        </p>
-      </div>
-
-      <ng-container pie>
-        <ui-button variante="contorno" tipo="button" (click)="continuar()">Cerrar</ui-button>
-        <ui-button variante="primario" tipo="button" icono="download" (click)="descargarCredenciales()">
-          Descargar credenciales
-        </ui-button>
-      </ng-container>
-    </ui-modal>
+    <ui-credenciales [credenciales]="c" (cerrar)="continuar()" />
   }
 </div>

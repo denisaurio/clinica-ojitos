@@ -53,6 +53,15 @@ public class AuthController {
                 "mensaje", "Si el correo está registrado, recibirá las instrucciones de recuperación."));
     }
 
+    @PostMapping("/restablecer-clave")
+    @Operation(summary = "Fija una contraseña nueva con el enlace recibido por correo (RF6.4)")
+    public ResponseEntity<Map<String, String>> restablecer(
+            @Valid @RequestBody AuthDto.RestablecerClaveRequest request) {
+        authService.restablecerClave(request.token(), request.passwordNueva());
+        return ResponseEntity.ok(Map.of(
+                "mensaje", "Contraseña actualizada. Ya puede iniciar sesión."));
+    }
+
     @GetMapping("/intentos")
     @Operation(summary = "Consultas el estado de la cuenta y los intentos disponibles")
     public ResponseEntity<Map<String, Object>> estadoCuenta(@AuthenticationPrincipal String username) {
@@ -60,7 +69,8 @@ public class AuthController {
         return ResponseEntity.ok(Map.of(
                 "username", perfil.username(),
                 "rol", perfil.rol(),
-                "intentosRestantes", AuthService.MAX_INTENTOS,
+                // Antes devolvía siempre MAX_INTENTOS, sin mirar los fallos reales.
+                "intentosRestantes", authService.intentosRestantes(username),
                 "activo", perfil.activo()));
     }
 

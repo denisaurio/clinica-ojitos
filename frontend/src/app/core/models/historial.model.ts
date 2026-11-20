@@ -23,6 +23,9 @@ export interface Consulta {
   oftalmologoNombre: string;
   archivos: ArchivoConsulta[];
   esUltima: boolean;
+  /** Firma del médico encargado ("19 de noviembre de 2026, 10:30"); null = pendiente. */
+  firmadaEn?: string | null;
+  firmadaPor?: string;
 }
 
 export interface ArchivoConsulta {
@@ -55,7 +58,10 @@ export interface RegistroAgudeza {
 export interface ConsultaRequest {
   pacienteId: number;
   motivo: string;
+  /** Nombre legible del tipo (se usa en el modo demostración). */
   tipoConsulta: string;
+  /** Id del catálogo `tipo_consulta`: el backend lo exige (@NotNull). */
+  tipoConsultaId?: number | null;
   diagnosticoPrincipal: string;
   agudezaOd: string;
   agudezaOi: string;

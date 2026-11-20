@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { roleGuard } from '../../core/guards/role.guard';
 
 export const CITAS_ROUTES: Routes = [
   {
@@ -7,6 +8,8 @@ export const CITAS_ROUTES: Routes = [
   },
   {
     path: 'reservar',
+    // El oftalmólogo no crea citas: las reserva el paciente o recepción.
+    canActivate: [roleGuard(['ADMINISTRADOR', 'RECEPCIONISTA', 'PACIENTE'])],
     loadComponent: () => import('./reservar').then((m) => m.CitaReservarComponent),
   },
   {

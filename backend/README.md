@@ -164,6 +164,16 @@ lista completa, con ejemplos y comentarios, está en
 | `JWT_SECRET` | *(vacío → aleatoria)* | Firma de los tokens (mínimo 32 caracteres) |
 | `JWT_EXPIRATION_MINUTES` | `60` | Vigencia del token |
 | `CORS_ALLOWED_ORIGINS` | *(vacío)* | Orígenes permitidos; vacío en producción |
+| `DATA_ENCRYPTION_KEY` | *(vacío → sin cifrado)* | Clave AES-256 en Base64 que cifra los textos clínicos en la base (RNF-01) |
+| `APP_URL` | *(vacío)* | Dirección pública de la web; con ella se arman los enlaces de los correos |
+| `SMTP_HOST` / `SMTP_PORT` | *(vacío)* / `587` | Servidor de correo (RF3.5 avisos de citas, RF6.4 recuperación). Vacío → no se envían correos |
+| `SMTP_USER` / `SMTP_PASSWORD` | *(vacío)* | Cuenta SMTP (en Gmail, contraseña de aplicación) |
+| `SMTP_AUTH` / `SMTP_STARTTLS` / `SMTP_SSL` | `true` / `true` / `false` | Modo de conexión (465 → `SMTP_SSL=true`, `SMTP_STARTTLS=false`) |
+| `MAIL_FROM` | *(SMTP_USER)* | Remitente visible |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | *(vacío)* | Cuenta ADMINISTRADOR que se crea al arrancar si no existe (`config/AdministradorInicial`) |
+| `ADMIN_EMAIL` | *(usuario@clinicaojitos.pe)* | Correo de esa cuenta |
+| `ADMIN_FORZAR_CLAVE` | `false` | `true` restablece la clave del admin en cada arranque |
+| `FLYWAY_ENABLED` | `true` | Aplica al arrancar las migraciones de `db/migration` (V2: firma de consultas y cirugía↔consulta) |
 | `JPA_DDL_AUTO` | `validate` | Validar el esquema, sin modificarlo |
 | `APP_TIMEZONE` | `America/Lima` | Zona horaria de Hibernate y las fechas |
 | `LOG_LEVEL_*` | `INFO` / `WARN` | Niveles de log por paquete |

@@ -51,7 +51,9 @@ export interface OpcionSelect {
         >
           <option value="" disabled>{{ placeholder() }}</option>
           @for (opcion of opciones(); track opcion.valor) {
-            <option [value]="opcion.valor">{{ opcion.etiqueta }}</option>
+            <!-- [selected]: si el valor llega antes que las opciones (p. ej. al cargar
+                 una ficha), el <select> mostraba la primera opción y no la elegida. -->
+            <option [value]="opcion.valor" [selected]="esElegida(opcion.valor)">{{ opcion.etiqueta }}</option>
           }
         </select>
 
@@ -81,6 +83,11 @@ export class SelectComponent implements ControlValueAccessor {
 
   private readonly onChange = signal<(valor: string) => void>(() => undefined);
   private readonly onTouched = signal<() => void>(() => undefined);
+
+  protected esElegida(valor: string | number): boolean {
+    const actual = this.valorActual();
+    return actual !== '' && actual !== null && String(actual) === String(valor);
+  }
 
   writeValue(valor: string | number | null): void {
     this.valorActual.set(valor ?? '');

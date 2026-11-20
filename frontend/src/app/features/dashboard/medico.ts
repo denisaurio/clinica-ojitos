@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { CardComponent } from '../../shared/components/ui-card';
@@ -7,8 +7,9 @@ import { BadgeComponent } from '../../shared/components/ui-badge';
 import { AvatarComponent } from '../../shared/components/ui-avatar';
 import { ButtonComponent } from '../../shared/components/ui-button';
 import { SkeletonComponent } from '../../shared/components/ui-skeleton';
+import { StatComponent, TonoStat } from '../../shared/components/ui-stat';
 import { DashboardService } from '../../core/services/dashboard.service';
-import { DashboardMedico, EstadoCita } from '../../core/models';
+import { DashboardMedico, EstadoCita, IndicadorPanel } from '../../core/models';
 
 /** Panel del oftalmólogo (imagen 45): agenda del día, pendientes y accesos. */
 @Component({
@@ -22,6 +23,7 @@ import { DashboardMedico, EstadoCita } from '../../core/models';
     AvatarComponent,
     ButtonComponent,
     SkeletonComponent,
+    StatComponent,
   ],
   templateUrl: './medico.html',
   styleUrl: './medico.scss',
@@ -30,6 +32,34 @@ export class MedicoDashboardComponent {
   private readonly dashboard = inject(DashboardService);
 
   protected readonly datos = signal<DashboardMedico | null>(null);
+
+  protected readonly tonos: TonoStat[] = ['azul', 'verde', 'violeta', 'ambar'];
+  protected readonly iconos = ['calendar', 'user-check', 'fileText', 'clipboardList'];
+
+  protected readonly hoy = new Intl.DateTimeFormat('es-PE', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  })
+    .format(new Date())
+    .replace(/^./, (letra) => letra.toUpperCase());
+
+  /**
+   * Indicadores del backend; en modo demostración (sin indicadores) se
+   * calculan a partir de la agenda y las listas del propio panel.
+   */
+  protected readonly indicadores = computed<IndicadorPanel[]>(() => {
+    const d = this.datos();
+    if (!d) return [];
+    if (d.indicadores?.length) return d.indicadores;
+    const atendidas = d.citasHoy.filter((c) => c.estado === 'COMPLETADA').length;
+    return [
+      { etiqueta: 'Citas de hoy', valor: String(d.citasHoy.length) },
+      { etiqueta: 'Pacientes atendidos', valor: String(atendidas) },
+      { etiqueta: 'Historiales recientes', valor: String(d.historialesRecientes.length) },
+      { etiqueta: 'Pendientes', valor: String(d.pendientes.length) },
+    ];
+  });
 
   constructor() {
     this.dashboard.medico().subscribe((respuesta) => this.datos.set(respuesta));

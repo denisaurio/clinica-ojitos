@@ -137,9 +137,12 @@ public class GlobalExceptionHandler {
                 "Usuario o contraseña incorrectos.", request);
     }
 
-    @ExceptionHandler(NoHandlerFoundException.class)
+    // Spring Boot 3.2+ lanza NoResourceFoundException para rutas sin controlador
+    // (antes caía en el manejador genérico y respondía 500).
+    @ExceptionHandler({NoHandlerFoundException.class,
+            org.springframework.web.servlet.resource.NoResourceFoundException.class})
     public ResponseEntity<ApiErrorResponse> rutaNoEncontrada(
-            NoHandlerFoundException ex, HttpServletRequest request) {
+            Exception ex, HttpServletRequest request) {
         return construir(HttpStatus.NOT_FOUND,
                 "El recurso solicitado no existe en la API.", request);
     }

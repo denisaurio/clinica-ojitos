@@ -60,18 +60,44 @@ button {
    ========================================================================== */
 
 .page {
-  padding: 24px;
-  max-width: 1180px;
+  width: 100%;
+  max-width: $page-max;
+  margin: 0 auto;
+  padding: clamp(20px, 2.4vw, 36px) clamp(16px, 2.6vw, 40px) 48px;
+}
+
+/* Variante para formularios y fichas de lectura: centrada y más estrecha. */
+.page--estrecha {
+  max-width: 980px;
+}
+
+/* Cabecera de página: título a la izquierda, acciones o fecha a la derecha. */
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* Rejilla de tarjetas de métricas (ui-stat) de los paneles. */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-top: 28px;
 }
 
 .page-title {
-  font-size: 26px;
+  font-size: clamp(24px, 2vw, 30px);
   font-weight: 700;
+  letter-spacing: -0.02em;
+  color: $text;
 }
 
 .page-subtitle {
-  margin-top: 4px;
-  font-size: 13px;
+  margin-top: 6px;
+  font-size: 14.5px;
   color: $text-muted;
 }
 

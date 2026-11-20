@@ -187,6 +187,11 @@ export class DashboardService {
   private aDashboardMedico(r: DashboardMedicoApi): DashboardMedico {
     return {
       fecha: new Date().toISOString().slice(0, 10),
+      indicadores: (r.indicadores ?? []).map((i) => ({
+        etiqueta: i.etiqueta,
+        valor: i.valor,
+        detalle: i.detalle,
+      })),
       citasHoy: (r.agendaHoy ?? []).map((c) => this.aCitaDia(c)),
       pendientes: (r.tareas ?? []).map((t) => this.aTarea(t)),
       historialesRecientes: (r.historialesRecientes ?? []).map((p) => ({
@@ -213,6 +218,7 @@ export class DashboardService {
 
   private aDashboardPaciente(r: DashboardPacienteApi): DashboardPaciente {
     return {
+      pacienteId: r.pacienteId,
       nombre: r.nombre ?? '',
       citas: (r.proximasCitas ?? []).map((c) => this.aCitaDia(c)),
       diagnosticos: (r.diagnosticos ?? []).map((d) => ({
@@ -234,6 +240,10 @@ export class DashboardService {
       tipoConsulta: c.tipoConsulta ?? '',
       estado: (c.estado ?? 'PROGRAMADA') as CitaDia['estado'],
       sala: c.consultorio ?? '',
+      pacienteId: c.pacienteId,
+      // AgendaDia envía "oftalmologo"; CitaDto.Response, "oftalmologoNombre".
+      oftalmologo: c.oftalmologo ?? c.oftalmologoNombre ?? '',
+      fecha: c.fecha,
     };
   }
 
@@ -287,11 +297,16 @@ interface CitaApi {
   tipoConsulta?: string;
   estado?: string;
   consultorio?: string;
+  pacienteId?: number;
+  oftalmologo?: string;
+  oftalmologoNombre?: string;
+  fecha?: string;
 }
 
 interface IndicadorApi {
   etiqueta: string;
   valor: string;
+  detalle?: string;
 }
 
 interface TareaApi {
@@ -334,6 +349,7 @@ interface DashboardRecepcionApi {
 }
 
 interface DashboardPacienteApi {
+  pacienteId?: number;
   nombre: string;
   proximasCitas?: (CitaApi & { fecha?: string })[];
   diagnosticos?: {

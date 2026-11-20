@@ -1,0 +1,108 @@
+@use 'variables' as *;
+
+:host {
+  display: block;
+  height: 100%;
+}
+
+.stat {
+  --tono: #{$primary};
+  --tono-fondo: #{$info-bg};
+
+  position: relative;
+  height: 100%;
+  padding: 22px 24px 20px;
+  overflow: hidden;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-card;
+  box-shadow: $shadow-sm;
+  transition: box-shadow $transition, transform $transition;
+
+  /* Franja superior que identifica la métrica de un vistazo. */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 4px;
+    background: var(--tono);
+  }
+
+  &:hover {
+    box-shadow: $shadow-md;
+  }
+}
+
+.stat--verde {
+  --tono: #{$brand-teal};
+  --tono-fondo: #{$teal-bg};
+}
+
+.stat--violeta {
+  --tono: #{$violet};
+  --tono-fondo: #{$violet-bg};
+}
+
+.stat--ambar {
+  --tono: #{$warning};
+  --tono-fondo: #{$warning-bg};
+}
+
+.stat--rojo {
+  --tono: #{$danger};
+  --tono-fondo: #{$danger-bg};
+}
+
+.stat--gris {
+  --tono: #{$text-muted};
+  --tono-fondo: #{$sidebar-bg};
+}
+
+.stat__cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.stat__icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--tono-fondo);
+  color: var(--tono);
+}
+
+.stat__chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--tono-fondo);
+  color: var(--tono);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.stat__valor {
+  margin-top: 18px;
+  font-size: clamp(30px, 2.5vw, 40px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: $text;
+}
+
+.stat__etiqueta {
+  margin-top: 4px;
+  font-size: 14px;
+  color: $text-muted;
+}
+
+.stat__detalle {
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: $text-faint;
+}

@@ -6,15 +6,26 @@
     </div>
 
     <div class="agenda__controles">
+      <div class="semana" role="group" aria-label="Cambiar de semana">
+        <button type="button" class="semana__boton" (click)="cambiarSemana(-1)" aria-label="Semana anterior">
+          <ui-icon nombre="chevron-left" [tamano]="18" />
+        </button>
+        <button type="button" class="semana__hoy" (click)="irAHoy()" [disabled]="esSemanaActual()">Hoy</button>
+        <button type="button" class="semana__boton" (click)="cambiarSemana(1)" aria-label="Semana siguiente">
+          <ui-icon nombre="chevron-right" [tamano]="18" />
+        </button>
+      </div>
       <ui-select
         class="agenda__medico"
         placeholder="Seleccione médico"
         [opciones]="medicos()"
         (valorCambia)="cambiarMedico($event)"
       />
-      <ui-button variante="primario" icono="plus" destino="/citas/reservar" [enlace]="true">
-        Nueva Cita
-      </ui-button>
+      @if (puedeReservar()) {
+        <ui-button variante="primario" icono="plus" destino="/citas/reservar" [enlace]="true">
+          Nueva Cita
+        </ui-button>
+      }
     </div>
   </header>
 
@@ -42,22 +53,32 @@
             <div class="dia__fila" [style.height.px]="altoHora"></div>
           }
 
-          <!-- Pausa para almuerzo: bloque único sobre todo el ancho -->
-          @if (dia.etiqueta === 'MIÉ') {
-            <div class="almuerzo" [style.top.px]="(12 - 8) * altoHora" [style.height.px]="altoHora">
-              Pausa para Almuerzo
+          @for (pausa of dia.descansos; track pausa.horaInicio) {
+            <div
+              class="pausa"
+              [style.top.px]="desplazamientoHora(pausa.horaInicio) + 2"
+              [style.height.px]="alturaRango(pausa.horaInicio, pausa.horaFin)"
+            >
+              Descanso · {{ pausa.horaInicio }}–{{ pausa.horaFin }}
             </div>
           }
 
           @for (evento of dia.eventos; track evento.id) {
             <a
               class="evento"
-              [class.evento--cancelada]="evento.estadoCita === 'CANCELADA'"
-              [style.top.px]="desplazamiento(evento)"
+              [attr.data-estado]="evento.estadoCita"
+              [class.evento--compacto]="altura(evento) < 44"
+              [style.top.px]="desplazamiento(evento) + 2"
               [style.height.px]="altura(evento)"
+              [style.left]="izquierda(evento)"
+              [style.width]="ancho(evento)"
+              [attr.title]="resumen(evento)"
               [routerLink]="['/citas/reprogramar', evento.id]"
             >
-              <span class="evento__titulo">{{ evento.titulo }}</span>
+              <span class="evento__linea">
+                <span class="evento__hora">{{ evento.horaInicio }}</span>
+                <span class="evento__titulo">{{ evento.titulo || 'Cita' }}</span>
+              </span>
               <span class="evento__detalle">{{ evento.detalle }}</span>
             </a>
           }

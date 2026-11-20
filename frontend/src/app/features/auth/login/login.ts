@@ -1,25 +1,45 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { IconComponent } from '../../../shared/components/ui-icon';
-import { InputComponent } from '../../../shared/components/ui-input';
-import { ButtonComponent } from '../../../shared/components/ui-button';
 import { AuthService } from '../../../core/services/auth.service';
 import { panelDe } from '../../../core/guards/role.guard';
 
 /** RF6.2 — máximo tres intentos fallidos antes del bloqueo temporal. */
 const MAX_INTENTOS = 3;
 
+/** Debe coincidir con `@Size(min = 6)` de AuthDto.LoginRequest en el backend. */
+const MIN_CLAVE = 6;
+
 /**
- * Pantalla de acceso (imagen 42). Muestra el contador de intentos y el mensaje
- * de error tal y como los devuelve el backend, sin inventar mensajes propios.
+ * Cuentas de demostración de `sql/02_datos_prueba.sql` y `sql/04_cuentas_iniciales.sql`.
+ * Son públicas (README) y solo existen si se cargaron los datos demo.
+ */
+const CUENTAS_DEMO = [
+  { etiqueta: 'Administrador', usuario: 'admin', clave: 'admin123' },
+  { etiqueta: 'Recepción', usuario: 'recepcion', clave: 'Ojitos2026*' },
+  { etiqueta: 'Paciente', usuario: 'paciente', clave: 'Ojitos2026*' },
+] as const;
+
+type TipoFallo = 'credenciales' | 'bloqueo' | 'validacion' | 'red' | 'servidor';
+
+interface Fallo {
+  tipo: TipoFallo;
+  titulo: string;
+  mensaje: string;
+}
+
+/**
+ * Pantalla de acceso (RF-06): panel de marca a la izquierda y formulario a la
+ * derecha. Distingue una credencial rechazada de un fallo de red o del
+ * servidor, y muestra el mensaje que devuelve el backend.
  */
 @Component({
   selector: 'app-login',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, RouterLink, IconComponent, InputComponent, ButtonComponent],
+  imports: [ReactiveFormsModule, RouterLink, IconComponent],
   templateUrl: './login.html',
   styleUrl: './login.scss',
 })
@@ -28,96 +48,152 @@ export class LoginComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
-  protected readonly maxIntentos = MAX_INTENTOS;
+  private readonly campoClave = viewChild<ElementRef<HTMLInputElement>>('campoClave');
 
-  protected readonly submitting = signal(false);
-  protected readonly error = signal('');
+  protected readonly maxIntentos = MAX_INTENTOS;
+  protected readonly minClave = MIN_CLAVE;
+  protected readonly cuentasDemo = CUENTAS_DEMO;
+
+  protected readonly enviando = signal(false);
+  protected readonly fallo = signal<Fallo | null>(null);
   protected readonly intentos = signal(0);
   protected readonly bloqueado = signal(false);
-
-  /** `true` cuando el fallo fue de conexión, no de credenciales. */
-  protected readonly servidorCaido = signal(false);
-
-  protected passwordVisible = false;
+  protected readonly claveVisible = signal(false);
 
   protected readonly formulario = this.fb.nonNullable.group({
     username: ['', [Validators.required]],
-    password: ['', [Validators.required, Validators.minLength(4)]],
+    password: ['', [Validators.required, Validators.minLength(MIN_CLAVE)]],
+    recordar: [false],
   });
 
-  protected get usuarioControl() {
+  protected get usuario() {
     return this.formulario.controls.username;
   }
 
-  protected get passwordControl() {
+  protected get clave() {
     return this.formulario.controls.password;
   }
 
-  /** RF6.2 — el progreso se llena a medida que se agotan los intentos. */
-  protected readonly progresoIntentos = () =>
-    Math.min(100, Math.round((this.intentos() / MAX_INTENTOS) * 100));
+  protected errorUsuario(): string {
+    return this.usuario.invalid && this.usuario.touched ? 'Ingresa tu usuario.' : '';
+  }
 
-  protected alternarVisibilidad(): void {
-    this.passwordVisible = !this.passwordVisible;
+  protected errorClave(): string {
+    if (!this.clave.touched || this.clave.valid) return '';
+    return this.clave.hasError('minlength')
+      ? `La contraseña tiene al menos ${MIN_CLAVE} caracteres.`
+      : 'Ingresa tu contraseña.';
+  }
+
+  /** RF6.2 — la barra se llena a medida que se agotan los intentos. */
+  protected progresoIntentos(): number {
+    return Math.min(100, Math.round((this.intentos() / MAX_INTENTOS) * 100));
+  }
+
+  protected alternarClave(): void {
+    this.claveVisible.update((v) => !v);
+  }
+
+  /** Rellena una cuenta demo; el usuario confirma con «Iniciar Sesión». */
+  protected usarDemo(cuenta: (typeof CUENTAS_DEMO)[number]): void {
+    this.formulario.patchValue({ username: cuenta.usuario, password: cuenta.clave });
+    this.fallo.set(null);
+    this.campoClave()?.nativeElement.focus();
   }
 
   protected entrar(): void {
-    if (this.bloqueado()) {
-      return;
-    }
+    if (this.bloqueado() || this.enviando()) return;
 
     if (this.formulario.invalid) {
       this.formulario.markAllAsTouched();
       return;
     }
 
-    this.submitting.set(true);
-    this.error.set('');
+    const { username, password, recordar } = this.formulario.getRawValue();
+    this.enviando.set(true);
+    this.fallo.set(null);
 
-    this.auth.login(this.formulario.getRawValue()).subscribe({
+    this.auth.login({ username: username.trim(), password }, recordar).subscribe({
       next: (respuesta) => {
-        this.submitting.set(false);
+        this.enviando.set(false);
         this.router.navigateByUrl(panelDe(respuesta.rol));
       },
-      error: (fallo: unknown) => {
-        this.submitting.set(false);
+      error: (error: unknown) => {
+        this.enviando.set(false);
+        const fallo = clasificar(error);
+        this.fallo.set(fallo);
 
-        // Un 401 es una credencial rechazada: cuenta como intento (RF6.2).
-        // Cualquier otro fallo —backend apagado, proxy caido, timeout— no es un
-        // intento de acceso, así que no debe gastar un intento nigrow.
-        if (!esCredencialRechazada(fallo)) {
-          this.servidorCaido.set(true);
-          this.error.set(
-            'No se pudo conectar con el servidor. Revisa que el backend esté corriendo en el puerto 8080.'
-          );
-          return;
+        // Solo una credencial rechazada cuenta como intento (RF6.2): un corte de
+        // red o un error del servidor no son intentos de acceso.
+        if (fallo.tipo === 'credenciales') {
+          const intentos = this.intentos() + 1;
+          this.intentos.set(intentos);
+          if (intentos >= MAX_INTENTOS) this.bloqueado.set(true);
         }
-
-        this.servidorCaido.set(false);
-        const intentos = this.intentos() + 1;
-        this.intentos.set(intentos);
-        this.error.set(
-          'El nombre de usuario o la contraseña son incorrectos. Por favor, intente de nuevo.'
-        );
-        if (intentos >= MAX_INTENTOS) {
+        if (fallo.tipo === 'bloqueo') {
+          this.intentos.set(MAX_INTENTOS);
           this.bloqueado.set(true);
         }
-        this.passwordControl.setValue('');
-        this.passwordControl.markAsTouched();
+        if (fallo.tipo === 'credenciales' || fallo.tipo === 'bloqueo') {
+          this.clave.setValue('');
+          this.clave.markAsUntouched();
+          this.campoClave()?.nativeElement.focus();
+        }
       },
     });
   }
 }
 
-/**
- * `true` solo cuando el servidor respondió y rechazó las credenciales (401).
- * Un error de red llega con `status === 0` desde el navegador, y el proxy de
- * Angular devuelve 502/503/504 cuando no alcanza al backend: ninguno de esos
- * casos debe contar como un intento fallido de RF6.2.
- */
-function esCredencialRechazada(fallo: unknown): boolean {
-  if (fallo instanceof HttpErrorResponse) {
-    return fallo.status === 401;
+/** Traduce el error HTTP a un mensaje que el usuario puede entender. */
+export function clasificar(error: unknown): Fallo {
+  if (error instanceof HttpErrorResponse) {
+    const mensajeBackend =
+      typeof error.error === 'object' && error.error !== null && 'message' in error.error
+        ? String((error.error as { message: unknown }).message ?? '')
+        : '';
+
+    if (error.status === 0) {
+      return {
+        tipo: 'red',
+        titulo: 'Sin conexión con el servidor',
+        mensaje:
+          'No pudimos contactar con el servidor. Revisa tu conexión a internet e inténtalo en unos minutos.',
+      };
+    }
+    if (error.status === 401) {
+      const bloqueo = /bloquead|inactiva/i.test(mensajeBackend);
+      return {
+        tipo: bloqueo ? 'bloqueo' : 'credenciales',
+        titulo: bloqueo ? 'Cuenta bloqueada' : 'Credenciales incorrectas',
+        mensaje: mensajeBackend || 'El usuario o la contraseña son incorrectos.',
+      };
+    }
+    if (error.status === 400 || error.status === 422) {
+      return {
+        tipo: 'validacion',
+        titulo: 'Revisa los datos',
+        mensaje: mensajeBackend || 'Los datos enviados no son válidos.',
+      };
+    }
+    if (error.status === 403) {
+      return {
+        tipo: 'servidor',
+        titulo: 'Acceso no permitido desde esta dirección',
+        mensaje:
+          'El servidor rechazó la solicitud de esta página. Avisa al administrador para que revise la configuración (CORS).',
+      };
+    }
+    return {
+      tipo: 'servidor',
+      titulo: 'El servidor tuvo un problema',
+      mensaje: 'No se pudo completar el inicio de sesión. Inténtalo de nuevo en unos minutos.',
+    };
   }
-  return fallo instanceof Error && fallo.message.includes('401');
+
+  // Modo demostración: el mock lanza Error('Credenciales inválidas').
+  return {
+    tipo: 'credenciales',
+    titulo: 'Credenciales incorrectas',
+    mensaje: 'El usuario o la contraseña son incorrectos.',
+  };
 }

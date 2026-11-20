@@ -3,7 +3,7 @@
     <nav class="miga" aria-label="Ruta de navegación">
       <a routerLink="/oftalmologos">Doctores</a>
       <ui-icon nombre="chevron-right" [tamano]="13" />
-      <span>Dra. {{ m.nombres }} {{ m.apellidos }}</span>
+      <span>{{ nombreCompleto() }}</span>
     </nav>
 
     <header class="cabecera">
@@ -13,14 +13,27 @@
       </div>
 
       <div class="cabecera__acciones">
-        <ui-button variante="contorno" icono="pencil" destino="/oftalmologos/nuevo" [enlace]="true">
-          Editar Perfil
+        <ui-button variante="contorno" icono="pencil" [destino]="'/oftalmologos/editar/' + m.id" [enlace]="true">
+          Editar perfil
         </ui-button>
-        <ui-button variante="peligro" icono="userCheck" (click)="desactivar()">
-          Desactivar Perfil
+        <ui-button variante="contorno" icono="lock" [deshabilitado]="procesando()" (click)="cambioClave.set(true)">
+          Cambiar contraseña
         </ui-button>
+        @if (m.activo) {
+          <ui-button variante="peligro" icono="x" [deshabilitado]="procesando()" (click)="confirmarBaja.set(true)">
+            Desactivar
+          </ui-button>
+        } @else {
+          <ui-button variante="primario" icono="user-check" [deshabilitado]="procesando()" (click)="reactivar()">
+            Reactivar
+          </ui-button>
+        }
       </div>
     </header>
+
+    @if (aviso()) {
+      <p class="aviso" role="status">{{ aviso() }}</p>
+    }
 
     <div class="rejilla">
       <div class="columna">
@@ -48,7 +61,7 @@
             </span>
           </div>
           <div class="dato">
-            <ui-icon nombre="badgeCheck" [tamano]="16" />
+            <ui-icon nombre="badge-check" [tamano]="16" />
             <span>
               <span class="dato__etiqueta">Número de Colegiado</span>
               <span class="dato__valor">{{ m.numeroColegiatura }}</span>
@@ -57,8 +70,21 @@
         </ui-card>
 
         <ui-card titulo="Horario de Consulta" class="horario">
-          @for (franja of horario; track franja) {
-            <p class="horario__franja">{{ franja }}</p>
+          <ng-container slot="accion">
+            <ui-button variante="enlace" tamano="sm" [destino]="'/oftalmologos/horarios/' + m.id" [enlace]="true">
+              Configurar
+            </ui-button>
+          </ng-container>
+          @if (horario(); as dias) {
+            @for (d of dias; track d.dia) {
+              <p class="horario__franja"><strong>{{ d.dia }}</strong> {{ d.franjas }}</p>
+            } @empty {
+              <p class="horario__vacio">
+                Sin horario configurado: no se le pueden asignar ni reprogramar citas hasta que se defina.
+              </p>
+            }
+          } @else {
+            <p class="horario__vacio">Cargando horario…</p>
           }
         </ui-card>
       </div>
@@ -80,15 +106,21 @@
           </ui-card>
 
           <ui-card class="metrica">
-            <span class="metrica__icono"><ui-icon nombre="star" [tamano]="20" /></span>
-            <p class="metrica__valor">{{ metricas()?.valoracionMedia ?? '—' }}</p>
-            <p class="metrica__etiqueta">Valoración Media</p>
+            <span class="metrica__icono"><ui-icon nombre="clock" [tamano]="20" /></span>
+            <p class="metrica__valor">{{ metricas()?.horasSemanales ?? '—' }}</p>
+            <p class="metrica__etiqueta">Horas de atención por semana</p>
+          </ui-card>
+
+          <ui-card class="metrica">
+            <span class="metrica__icono"><ui-icon nombre="scissors" [tamano]="20" /></span>
+            <p class="metrica__valor">{{ metricas()?.cirugiasRealizadas ?? '—' }}</p>
+            <p class="metrica__etiqueta">Cirugías realizadas</p>
           </ui-card>
         </div>
 
         <ui-card titulo="Próximas Citas" class="citas">
           <ng-container slot="accion">
-            <ui-button variante="enlace" tamano="sm">Ver todas</ui-button>
+            <ui-button variante="enlace" tamano="sm" destino="/citas/agenda" [enlace]="true">Ver agenda</ui-button>
           </ng-container>
 
           <ui-table [columnas]="columnas">
@@ -98,9 +130,7 @@
                 <td>{{ cita.fecha }}<br />{{ cita.horaInicio }}</td>
                 <td>{{ cita.tipoConsulta }}</td>
                 <td>
-                  <ui-badge [variante]="cita.estadoCita === 'CONFIRMADA' ? 'success' : 'warning'">
-                    {{ cita.estadoCita === 'CONFIRMADA' ? 'Confirmada' : 'Pendiente' }}
-                  </ui-badge>
+                  <ui-badge [variante]="varianteEstado(cita.estadoCita)">{{ etiquetaEstado(cita.estadoCita) }}</ui-badge>
                 </td>
               </tr>
             } @empty {
@@ -112,6 +142,41 @@
         </ui-card>
       </div>
     </div>
+
+    <ui-modal
+      [abierto]="confirmarBaja()"
+      titulo="¿Desactivar a este médico?"
+      tamano="sm"
+      variante="peligro"
+      (cerrar)="confirmarBaja.set(false)"
+    >
+      <p>
+        {{ nombreCompleto() }} dejará de aparecer para nuevas citas y no podrá iniciar sesión.
+        Sus citas y registros clínicos se conservan, y puede reactivarse después.
+      </p>
+      <ng-container slot="pie">
+        <ui-button variante="contorno" (click)="confirmarBaja.set(false)">Volver</ui-button>
+        <ui-button variante="peligro" [deshabilitado]="procesando()" (click)="desactivar()">Desactivar</ui-button>
+      </ng-container>
+    </ui-modal>
+
+    @if (cambioClave()) {
+      <ui-cambiar-clave
+        tipo="oftalmologo"
+        [id]="m.id"
+        [nombre]="nombreCompleto()"
+        (cerrar)="cambioClave.set(false)"
+        (listo)="cambioClave.set(false); credenciales.set($event)"
+      />
+    }
+
+    @if (credenciales(); as c) {
+      <ui-credenciales
+        [credenciales]="c"
+        [titulo]="'Nueva contraseña de ' + nombreCompleto()"
+        (cerrar)="credenciales.set(null)"
+      />
+    }
   } @else {
     <ui-skeleton [lineas]="8" alto="18px" padding="20px 0" />
   }

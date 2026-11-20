@@ -8,6 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 
 import { ButtonComponent } from '../../shared/components/ui-button';
 import { ModalComponent } from '../../shared/components/ui-modal';
@@ -44,6 +45,7 @@ interface DiaMiniCalendario {
 export class CitaReprogramarComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly citas = inject(CitaService);
+  private readonly router = inject(Router);
 
   /** Ruta `citas/reprogramar/:id`. */
   readonly id = input.required<string>();
@@ -54,6 +56,10 @@ export class CitaReprogramarComponent implements OnInit {
   protected readonly confirmarCancelacion = signal(false);
   protected readonly guardando = signal(false);
   protected readonly error = signal('');
+  protected readonly cargandoSlots = signal(false);
+
+  /** Fecha elegida como signal: el mini calendario resalta el día al instante. */
+  protected readonly fechaSeleccionada = signal(this.hoyIso());
 
   protected readonly mes = signal(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
 
@@ -68,6 +74,7 @@ export class CitaReprogramarComponent implements OnInit {
       this.cita.set(cita);
       const fecha = cita.fecha || this.hoyIso();
       this.formulario.controls.fecha.setValue(fecha);
+      this.fechaSeleccionada.set(fecha);
       this.mes.set(new Date(`${fecha}T00:00:00`));
       this.cargarDisponibilidad(fecha);
     });
@@ -95,7 +102,7 @@ export class CitaReprogramarComponent implements OnInit {
         iso,
         numero: dia.getDate(),
         delMes: dia.getMonth() === mes.getMonth(),
-        seleccionado: iso === this.formulario.controls.fecha.value,
+        seleccionado: iso === this.fechaSeleccionada(),
       });
     }
     return celdas;
@@ -113,13 +120,21 @@ export class CitaReprogramarComponent implements OnInit {
 
   protected seleccionarDia(dia: DiaMiniCalendario): void {
     this.formulario.controls.fecha.setValue(dia.iso);
+    this.fechaSeleccionada.set(dia.iso);
+    if (!dia.delMes) {
+      this.mes.set(new Date(`${dia.iso}T00:00:00`));
+    }
     this.slotSeleccionado.set('');
     this.formulario.controls.horaInicio.setValue('');
     this.cargarDisponibilidad(dia.iso);
   }
 
   protected cambiarFecha(fecha: string): void {
+    if (!fecha) return;
     this.formulario.controls.fecha.setValue(fecha);
+    this.fechaSeleccionada.set(fecha);
+    this.mes.set(new Date(`${fecha}T00:00:00`));
+    this.formulario.controls.horaInicio.setValue('');
     this.slotSeleccionado.set('');
     this.cargarDisponibilidad(fecha);
   }
@@ -131,9 +146,24 @@ export class CitaReprogramarComponent implements OnInit {
     if (!cita) {
       return;
     }
-    this.citas
-      .disponibilidad(cita.oftalmologoId, fecha)
-      .subscribe((slots) => this.slots.set(slots));
+    this.cargandoSlots.set(true);
+    this.error.set('');
+    this.citas.disponibilidad(cita.oftalmologoId, fecha).subscribe({
+      next: (slots) => {
+        this.slots.set(slots);
+        this.cargandoSlots.set(false);
+      },
+      error: () => {
+        this.slots.set([]);
+        this.cargandoSlots.set(false);
+        this.error.set('No se pudieron cargar los horarios de ese día.');
+      },
+    });
+  }
+
+  /** Cierra el modal (X, fondo o «Conservar original») y vuelve a la agenda. */
+  protected volver(fecha = this.cita()?.fecha): void {
+    this.router.navigate(['/citas/agenda'], fecha ? { queryParams: { semana: fecha } } : {});
   }
 
   protected seleccionarSlot(slot: SlotDisponibilidad): void {
@@ -161,6 +191,7 @@ export class CitaReprogramarComponent implements OnInit {
   protected confirmar(): void {
     if (this.formulario.invalid) {
       this.formulario.markAllAsTouched();
+      this.error.set('Elige un horario disponible antes de confirmar.');
       return;
     }
 
@@ -179,11 +210,17 @@ export class CitaReprogramarComponent implements OnInit {
       .subscribe({
         next: () => {
           this.guardando.set(false);
-          this.slotSeleccionado.set('');
+          // Vuelve a la semana de la NUEVA fecha para ver la cita movida.
+          this.volver(this.formulario.controls.fecha.value);
         },
-        error: () => {
+        error: (fallo: { status?: number; error?: { message?: string } }) => {
           this.guardando.set(false);
-          this.error.set('El horario seleccionado ya no está disponible.');
+          this.error.set(
+            fallo?.status === 409
+              ? 'El horario seleccionado ya no está disponible. Elige otro.'
+              : fallo?.error?.message || 'No se pudo reprogramar la cita. Inténtalo de nuevo.'
+          );
+          this.cargarDisponibilidad(this.formulario.controls.fecha.value);
         },
       });
   }
@@ -193,9 +230,15 @@ export class CitaReprogramarComponent implements OnInit {
     if (!cita) {
       return;
     }
-    this.citas.cancelar(cita.id, 'Cancelada a petición del paciente').subscribe(() => {
-      this.confirmarCancelacion.set(false);
-      this.cita.set({ ...cita, estadoCita: 'CANCELADA' });
+    this.citas.cancelar(cita.id, 'Cancelada a petición del paciente').subscribe({
+      next: () => {
+        this.confirmarCancelacion.set(false);
+        this.volver();
+      },
+      error: () => {
+        this.confirmarCancelacion.set(false);
+        this.error.set('No se pudo cancelar la cita. Inténtalo de nuevo.');
+      },
     });
   }
 

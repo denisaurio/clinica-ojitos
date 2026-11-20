@@ -1,7 +1,10 @@
 package com.clinicaojitos.controller;
 
 import com.clinicaojitos.domain.dto.OftalmologoDto;
+import com.clinicaojitos.domain.service.AuthService;
 import com.clinicaojitos.domain.service.OftalmologoService;
+import com.clinicaojitos.exception.AccesoDenegadoException;
+import com.clinicaojitos.security.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -24,6 +27,7 @@ import java.util.List;
 public class OftalmologoController {
 
     private final OftalmologoService oftalmologoService;
+    private final AuthService authService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMINISTRADOR','RECEPCIONISTA','OFTALMOLOGO')")
@@ -45,6 +49,14 @@ public class OftalmologoController {
         return oftalmologoService.listarActivos();
     }
 
+    /** Ficha del oftalmólogo que inició sesión (para "Mi horario"). */
+    @GetMapping("/yo")
+    @PreAuthorize("hasRole('OFTALMOLOGO')")
+    @Operation(summary = "Ficha del oftalmólogo con sesión iniciada")
+    public OftalmologoDto.Response yo() {
+        return oftalmologoService.obtener(oftalmologoPropio());
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR','RECEPCIONISTA','OFTALMOLOGO')")
     @Operation(summary = "Ficha del profesional")
@@ -60,14 +72,17 @@ public class OftalmologoController {
     }
 
     /**
-     * Genera una contraseña nueva para el profesional y la devuelve una sola vez.
-     * No existe forma de recuperar la anterior: la base solo guarda el hash BCrypt.
+     * Fija una contraseña nueva para el profesional: la que escribe el
+     * administrador o, si viene vacía, una aleatoria. La anterior no se puede
+     * recuperar: la base solo guarda el hash BCrypt.
      */
     @PostMapping("/{id}/credenciales")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
-    @Operation(summary = "Emite nuevas credenciales de acceso (la contraseña anterior no es recuperable)")
-    public OftalmologoDto.Credenciales credenciales(@PathVariable Long id) {
-        return oftalmologoService.regenerarCredenciales(id);
+    @Operation(summary = "Cambia la contraseña de acceso del profesional (elegida o aleatoria)")
+    public OftalmologoDto.Credenciales credenciales(
+            @PathVariable Long id,
+            @Valid @RequestBody(required = false) OftalmologoDto.ClaveRequest request) {
+        return oftalmologoService.regenerarCredenciales(id, request == null ? null : request.password());
     }
 
     @PutMapping("/{id}")
@@ -95,12 +110,23 @@ public class OftalmologoController {
     }
 
     @PutMapping("/{id}/horarios")
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
-    @Operation(summary = "Reemplaza la matriz de disponibilidad semanal")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR','OFTALMOLOGO')")
+    @Operation(summary = "Reemplaza la matriz de disponibilidad semanal (el médico, solo la suya)")
     public List<OftalmologoDto.HorarioResponse> guardarHorarios(
             @PathVariable Long id,
             @Valid @RequestBody OftalmologoDto.HorariosRequest request) {
+        if (SecurityUtils.esOftalmologo() && !id.equals(oftalmologoPropio())) {
+            throw new AccesoDenegadoException("Solo puede modificar su propio horario.");
+        }
         return oftalmologoService.guardarHorarios(id, request);
+    }
+
+    private Long oftalmologoPropio() {
+        Long propio = SecurityUtils.usernameActual().map(authService::oftalmologoIdDe).orElse(null);
+        if (propio == null) {
+            throw new AccesoDenegadoException("Su cuenta no está vinculada a una ficha de oftalmólogo.");
+        }
+        return propio;
     }
 
     @GetMapping("/{id}/metricas")

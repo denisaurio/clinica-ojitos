@@ -51,6 +51,7 @@ class CitaServiceTest {
     @Mock private TipoBloqueHorarioRepository tipoBloqueRepository;
     @Mock private Mapeador mapeador;
 
+    @Mock private com.clinicaojitos.notificacion.NotificacionService notificaciones;
     @InjectMocks private CitaService servicio;
 
     private LocalDate hoy;
@@ -90,24 +91,64 @@ class CitaServiceTest {
     }
 
     @Test
+    @DisplayName("No agenda citas con un oftalmólogo desactivado")
+    void rechazaMedicoInactivo() {
+        oftalmologo.setActivo(Boolean.FALSE);
+        when(citaRepository.contarSolapes(anyLong(), any(), any(), any(), any())).thenReturn(0L);
+
+        assertThatThrownBy(() -> servicio.registrar(request(LocalTime.of(9, 0), LocalTime.of(9, 30))))
+                .isInstanceOf(OperacionInvalidaException.class)
+                .hasMessageContaining("desactivado");
+        verify(citaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("No agenda citas a un paciente dado de baja")
+    void rechazaPacienteDeBaja() {
+        paciente.setActivo(Boolean.FALSE);
+        when(citaRepository.contarSolapes(anyLong(), any(), any(), any(), any())).thenReturn(0L);
+
+        assertThatThrownBy(() -> servicio.registrar(request(LocalTime.of(9, 0), LocalTime.of(9, 30))))
+                .isInstanceOf(OperacionInvalidaException.class)
+                .hasMessageContaining("baja");
+        verify(citaRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("Registra una cita como PROGRAMADA")
     void registraCita() {
-        when(citaRepository.contarSolapes(anyLong(), any(), any(), any())).thenReturn(0L);
+        when(citaRepository.contarSolapes(anyLong(), any(), any(), any(), any())).thenReturn(0L);
 
         servicio.registrar(request(LocalTime.of(9, 0), LocalTime.of(9, 30)));
 
         verify(citaRepository).save(any(Cita.class));
+        verify(notificaciones).citaProgramada(any(Cita.class));   // RF3.5
     }
 
     @Test
     @DisplayName("RF3.2 — Rechaza una cita en un horario ya ocupado")
     void rechazaCruceDeHorario() {
-        when(citaRepository.contarSolapes(anyLong(), any(), any(), any())).thenReturn(1L);
+        when(citaRepository.contarSolapes(anyLong(), any(), any(), any(), any())).thenReturn(1L);
 
         assertThatThrownBy(() -> servicio.registrar(request(LocalTime.of(9, 0), LocalTime.of(9, 30))))
                 .isInstanceOf(CruceDeHorarioException.class)
                 .hasMessageContaining("ya tiene una cita");
 
+        verify(citaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("RF3.2 — El control de cruce compara el rango completo (inicio y fin)")
+    void cruceComparaRangoCompleto() {
+        // Cita existente 09:00-10:00; la nueva 09:30-10:30 se solapa aunque
+        // empiece a otra hora. El repositorio recibe inicio Y fin del turno.
+        when(citaRepository.contarSolapes(eq(1L), any(), eq(LocalTime.of(9, 30)), eq(LocalTime.of(10, 30)), any()))
+                .thenReturn(1L);
+
+        assertThatThrownBy(() -> servicio.registrar(request(LocalTime.of(9, 30), LocalTime.of(10, 30))))
+                .isInstanceOf(CruceDeHorarioException.class);
+
+        verify(citaRepository).contarSolapes(eq(1L), any(), eq(LocalTime.of(9, 30)), eq(LocalTime.of(10, 30)), any());
         verify(citaRepository, never()).save(any());
     }
 
@@ -137,6 +178,7 @@ class CitaServiceTest {
 
         assertThat(cita.getBloqueo()).isFalse();
         assertThat(cita.getEstadoCita().getCodigo()).isEqualTo("CANCELADA");
+        verify(notificaciones).citaCancelada(cita, "El paciente no puede asistir");   // RF3.5
     }
 
     @Test
@@ -151,7 +193,7 @@ class CitaServiceTest {
         cita.setEstadoCita(EstadoCita.builder().id(1).codigo("PROGRAMADA").build());
 
         when(citaRepository.findById(1L)).thenReturn(Optional.of(cita));
-        when(citaRepository.contarSolapes(eq(1L), any(), any(), eq(1L))).thenReturn(0L);
+        when(citaRepository.contarSolapes(eq(1L), any(), any(), any(), eq(1L))).thenReturn(0L);
         when(mapeador.aCita(any(Cita.class))).thenReturn(null);
 
         LocalDate manana = hoy.plusDays(1);
@@ -161,6 +203,7 @@ class CitaServiceTest {
         assertThat(cita.getFecha()).isEqualTo(manana);
         assertThat(cita.getHoraInicio()).isEqualTo(LocalTime.of(11, 0));
         assertThat(cita.getNotaInterna()).isEqualTo("Cambio de turno");
+        verify(notificaciones).citaReprogramada(any(Cita.class), any(), any());   // RF3.5
     }
 
     @Test
@@ -172,7 +215,7 @@ class CitaServiceTest {
         cita.setFecha(hoy);
 
         when(citaRepository.findById(1L)).thenReturn(Optional.of(cita));
-        when(citaRepository.contarSolapes(eq(1L), any(), any(), eq(1L))).thenReturn(1L);
+        when(citaRepository.contarSolapes(eq(1L), any(), any(), any(), eq(1L))).thenReturn(1L);
 
         assertThatThrownBy(() -> servicio.reprogramar(1L, new CitaDto.ReprogramarRequest(
                 hoy.plusDays(1), LocalTime.of(11, 0), LocalTime.of(11, 30), null)))
@@ -204,5 +247,45 @@ class CitaServiceTest {
         servicio.cambiarEstado(1L, new CitaDto.EstadoRequest("CANCELADA"));
 
         assertThat(cita.getBloqueo()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Una cita cancelada no se reprograma (antes volvía a PROGRAMADA)")
+    void noReprogramaCancelada() {
+        Cita cita = new Cita();
+        cita.setId(1L);
+        cita.setOftalmologo(oftalmologo);
+        cita.setEstadoCita(EstadoCita.builder().id(6).codigo("CANCELADA").build());
+        when(citaRepository.findById(1L)).thenReturn(Optional.of(cita));
+
+        assertThatThrownBy(() -> servicio.reprogramar(1L, new CitaDto.ReprogramarRequest(
+                hoy.plusDays(1), LocalTime.of(11, 0), LocalTime.of(11, 30), "Reintento")))
+                .isInstanceOf(OperacionInvalidaException.class)
+                .hasMessageContaining("cancelada");
+        verify(citaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Una cita completada no se cancela")
+    void noCancelaCompletada() {
+        Cita cita = new Cita();
+        cita.setId(1L);
+        cita.setEstadoCita(EstadoCita.builder().id(5).codigo("COMPLETADA").build());
+        when(citaRepository.findById(1L)).thenReturn(Optional.of(cita));
+
+        assertThatThrownBy(() -> servicio.cancelar(1L, new CitaDto.CancelarRequest("El paciente no vendrá")))
+                .isInstanceOf(OperacionInvalidaException.class);
+        verify(citaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("No se programan citas en una fecha pasada")
+    void noAgendaEnElPasado() {
+        CitaDto.Request ayer = new CitaDto.Request(
+                1L, 1L, 1, "C-01", hoy.minusDays(1), LocalTime.of(9, 0), LocalTime.of(9, 30), null, "Control", null);
+
+        assertThatThrownBy(() -> servicio.registrar(ayer))
+                .isInstanceOf(OperacionInvalidaException.class)
+                .hasMessageContaining("pasada");
     }
 }

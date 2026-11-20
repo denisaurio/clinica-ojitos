@@ -54,7 +54,7 @@ public class CitaController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR','RECEPCIONISTA','OFTALMOLOGO')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR','RECEPCIONISTA','OFTALMOLOGO','PACIENTE')")
     @Operation(summary = "Detalle de una cita")
     public CitaDto.Response obtener(@PathVariable Long id) {
         return citaService.obtener(id);
@@ -62,14 +62,16 @@ public class CitaController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR','RECEPCIONISTA','OFTALMOLOGO')")
+    // El oftalmólogo atiende las citas, pero no las crea: las reserva el
+    // paciente desde su portal, o recepción / administración por él.
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR','RECEPCIONISTA','PACIENTE')")
     @Operation(summary = "Programa una cita (rechaza cruces de horario, RF3.2)")
     public CitaDto.Response registrar(@Valid @RequestBody CitaDto.Request request) {
         return citaService.registrar(request);
     }
 
     @PatchMapping("/{id}/reprogramar")
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR','RECEPCIONISTA','OFTALMOLOGO')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR','RECEPCIONISTA','OFTALMOLOGO','PACIENTE')")
     @Operation(summary = "Reprograma una cita liberando el turno anterior")
     public CitaDto.Response reprogramar(
             @PathVariable Long id, @Valid @RequestBody CitaDto.ReprogramarRequest request) {
@@ -77,7 +79,7 @@ public class CitaController {
     }
 
     @PatchMapping("/{id}/cancelar")
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR','RECEPCIONISTA','OFTALMOLOGO')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR','RECEPCIONISTA','OFTALMOLOGO','PACIENTE')")
     @Operation(summary = "Cancela una cita y libera el horario")
     public CitaDto.Response cancelar(
             @PathVariable Long id, @Valid @RequestBody CitaDto.CancelarRequest request) {

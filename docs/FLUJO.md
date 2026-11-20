@@ -102,6 +102,53 @@ configuración está en [`ESTRUCTURA.md`](ESTRUCTURA.md).
 > el login muestra «Servidor no disponible» en ámbar y **no** consume ninguno de
 > los tres intentos: solo un 401 del servidor cuenta como intento fallido.
 
+### 2.1 Olvidé mi contraseña (RF6.4)
+
+```
+ /recuperar-clave   escribe su correo
+   ▼
+ POST /api/v1/auth/recuperar-clave { email }
+   │  Responde SIEMPRE el mismo mensaje (no revela qué correos existen)
+   │  Solo envía si la cuenta existe, está activa y no está bloqueada
+   ▼
+ Correo con  APP_URL/restablecer-clave?token=...   (vence en 30 min)
+   ▼
+ /restablecer-clave  nueva contraseña + repetirla
+   ▼
+ POST /api/v1/auth/restablecer-clave { token, passwordNueva }
+   ├─ token alterado, vencido o ya usado ──► 400 "El enlace no es válido..."
+   └─ 200 ──► [Ir al inicio de sesión]
+```
+
+El token no se guarda en la base: va firmado con HMAC (clave derivada de
+`JWT_SECRET`) e incluye el hash de la contraseña actual, así que deja de servir
+en cuanto la contraseña cambia. No es un JWT: no sirve para entrar a la API.
+Necesita `SMTP_HOST` y `APP_URL` (ver [DESPLIEGUE.md](DESPLIEGUE.md)); sin SMTP
+la petición responde igual, pero el correo solo queda anotado en el log.
+
+### 2.2 Cambiar contraseñas
+
+```
+ Propia (todos los roles):  avatar ▸ "Mi cuenta y contraseña"  =  /configuracion
+   actual + nueva + repetir  ──► PATCH /api/v1/auth/cambiar-clave
+
+ De un médico (administrador):  Doctores ▸ ⋮ ▸ Cambiar contraseña  (o su perfil)
+   ──► POST /api/v1/oftalmologos/:id/credenciales  { password? }
+
+ De un paciente (administrador y recepción):  Pacientes ▸ candado  (o su ficha)
+   ──► POST /api/v1/pacientes/:id/credenciales  { password? }
+   la cuenta se busca por el correo de la ficha; sin cuenta ──► 400
+```
+
+- `password` vacío = el sistema genera una de 12 caracteres sin letras que se
+  confunden (0 O 1 l I o). El resultado se muestra una vez, con botones
+  **Copiar** y **Descargar**.
+- Todos los campos de contraseña tienen el **ojito** para ver lo escrito y
+  `autocomplete="new-password"`, para que el navegador no rellene la clave
+  guardada de quien está usando el sistema.
+- Los diálogos solo se cierran si el clic empieza y termina en el fondo
+  (antes, seleccionar texto y soltar fuera los cerraba).
+
 ---
 
 ## 3. Pacientes (RF-01)
@@ -182,6 +229,10 @@ reacción adversa en consulta.
 
 ## 4. Historial médico (RF-02)
 
+Al entrar desde el menú **Historial Médico** (`/historial`) se muestra primero un
+buscador de pacientes; al elegir uno se abre su línea de tiempo
+(`/historial/paciente/{id}`). Antes la ruta abría siempre al paciente 5.
+
 ### 4.1 Línea de tiempo (3.6.5)
 
 ```
@@ -258,6 +309,11 @@ mmHg, el tratamiento está funcionando.
 
 ### 5.1 Agenda semanal (3.6.7)
 
+Los botones ‹ **Hoy** › cambian de semana. Cada bloque muestra hora, tipo de
+consulta y paciente, con un color por estado; las citas que se cruzan se
+muestran lado a lado. Al elegir un médico se dibujan sus pausas reales
+(bloques `DESCANSO` de su horario).
+
 ```
  /citas/agenda
    │
@@ -276,6 +332,12 @@ mmHg, el tratamiento está funcionando.
 ```
 
 ### 5.2 Reservar (3.6.9) — asistente de 3 pasos
+
+**El paciente también reserva (RF3.1).** Desde su portal, **Programar nueva cita**
+abre el mismo asistente con su ficha fija: elige médico, día y turno libre. El
+backend solo le permite reservar, ver, reprogramar o cancelar **sus propias**
+citas (403 en cualquier otra). Para todos los roles: no se agenda en días pasados
+(el calendario los atenúa) y una cita cancelada o atendida ya no se modifica.
 
 ```
  /citas/reservar
@@ -311,11 +373,17 @@ mmHg, el tratamiento está funcionando.
    ├─ Encabezado verde: turno registrado
    ├─ Fichas: paciente + nº historia · especialista + subespecialidad
    │          día y hora exactos
-   ├─ Aviso: se enviaría la notificación por WhatsApp y correo
+   ├─ Aviso: el paciente recibe la confirmación por correo (RF3.5)
    └─ [Imprimir comprobante]   [Volver al calendario]
 ```
 
 ### 5.4 Reprogramar y cancelar (3.6.8)
+
+El modal se cierra con la **X**, el fondo o **Conservar original**, y al
+confirmar o cancelar vuelve a la agenda en la semana de la cita
+(`/citas/agenda?semana=AAAA-MM-DD`). Las horas disponibles salen de
+`GET /citas/disponibilidad`, que divide el horario del médico en turnos de
+30 minutos y marca como ocupados los que se cruzan con otra cita.
 
 ```
  Modal de reprogramación
@@ -334,6 +402,11 @@ mmHg, el tratamiento está funcionando.
    └─ PATCH /api/v1/citas/:id/cancelar { motivo }
          └─ la cita pasa a CANCELADA y LIBERA el horario (bloqueo = 0)
 ```
+
+> **Avisos por correo (RF3.5).** Al programar, reprogramar o cancelar, el
+> paciente recibe un correo (si tiene email) con fecha, hora, especialista y sede.
+> Se envía después de guardar y en segundo plano: si el SMTP falla o no está
+> configurado, la cita se guarda igual y el fallo solo queda en el log.
 
 ---
 
@@ -388,20 +461,33 @@ Registrar un control actualiza automáticamente la fecha del próximo:
 PATCH /api/v1/tratamientos/:id/seguimiento { fecha, resultado, pioOd, pioOi, observaciones }
 ```
 
-### 6.3 Cirugía (3.6.13)
+### 6.3 Cirugía (3.6.13) — nace de consultas firmadas
 
 ```
- /cirugias/registro
-   │
-   │  BLOQUE 1 · Paciente y diagnóstico preoperatorio (buscador)
-   │  BLOQUE 2 · Variables técnicas
-   │            tipo de cirugía · fecha programada · ojo · anestesia
-   │  BLOQUE 3 · Detalle
-   │            técnica · incidencias · modelo de LIO o injerto
+ Paciente reserva cita ──► el médico la atiende y registra la consulta
    ▼
- POST /api/v1/tratamientos/cirugias
+ /historial/paciente/:id
+   │  Cada consulta muestra "Firmada" o "Pendiente de firma"
+   │  [Firmar consulta]  solo lo ve el médico ENCARGADO de esa consulta
    ▼
- 201 ──► la cirugía queda en el historial y puede asociarse a un tratamiento
+ PATCH /api/v1/historiales/:id/firmar          (rol OFTALMOLOGO)
+   ├─ otro médico o el administrador ──► 403
+   ├─ ya estaba firmada            ──► 400
+   └─ 200: firmada_en + firmada_por; la consulta queda cerrada
+   ▼
+ [Indicar cirugía]  en la consulta firmada
+   ▼
+ /cirugias/registro?paciente=:id&consulta=:id
+   │  BLOQUE 1 · Paciente, responsable, diagnóstico preoperatorio
+   │  BLOQUE 2 · Consultas que respaldan la cirugía (una o VARIAS)
+   │            solo se listan las firmadas del mismo paciente
+   │  BLOQUE 3 · Tipo · estado (Programada / Realizada) · fecha · ojo · anestesia
+   │  BLOQUE 4 · Reporte operatorio (obligatorio si ya se realizó)
+   ▼
+ POST /api/v1/tratamientos/cirugias { ..., consultaIds: [..] }
+   ├─ sin consultas, de otro paciente o sin firmar ──► 400
+   ▼
+ 201 ──► vuelve al historial del paciente; tabla cirugia_consulta
 ```
 
 ---
@@ -442,31 +528,45 @@ PATCH /api/v1/tratamientos/:id/seguimiento { fecha, resultado, pioOd, pioOi, obs
 ### 7.3 Horarios (3.6.17)
 
 ```
- /oftalmologos/horarios/:id
-   │
-   │  Cuadrícula de arrastrar y soltar: 7 días × franjas
-   │
-   │  Leyenda de colores:
-   │    azul  → Consulta externa
-   │    verde → Bloque quirúrgico
-   │    gris  → Pausa / almuerzo
-   │    blanco→ Fuera de turno
-   │
-   │  Tarjeta de resumen: total de horas asistenciales y quirúrgicas
+ Administrador: Doctores ──► ⋮ ──► Configurar horarios   /oftalmologos/horarios/:id
+ Médico:        menú "Mi Horario"                        /oftalmologos/mi-horario
+   │                                                     (GET /oftalmologos/yo)
+   │  Cuadrícula lunes a sábado, 07:00 a 20:00, una celda por hora
+   │  Clic o arrastre para pintar; el modo elige qué se pinta:
+   │    azul   → Consulta (lo único que el paciente puede reservar)
+   │    ámbar  → Cirugía (no reservable)
+   │    blanco → no atiende
+   │  Resumen: horas de consulta y de cirugía, y el horario de cada día
    ▼
  PUT /api/v1/oftalmologos/:id/horarios  { horarios: [...] }
-   │
-   ├─ Reemplaza la matriz completa
+   ├─ Reemplaza la matriz completa (las horas seguidas se unen en bloques)
+   ├─ un médico que no es el dueño del horario ──► 403
    └─ hora_fin <= hora_inicio ──► 400
+   ▼
+ GET /citas/disponibilidad parte esos bloques de CONSULTA en turnos de 30 min
 ```
 
+> **Permisos de citas.** El oftalmólogo atiende las citas pero **no las crea**
+> (`POST /citas` → 403 y sin botón "Nueva Cita"): las reserva el paciente
+> desde su portal, o recepción y administración por él.
+
 ### 7.4 Perfil con métricas (3.6.18)
+
+Desde el perfil, el administrador puede:
+
+- **Editar perfil** (`/oftalmologos/editar/{id}`): no cambia el estado ni la contraseña.
+- **Generar nuevas credenciales** (`POST /oftalmologos/{id}/credenciales`): la clave se muestra una sola vez.
+- **Desactivar**: pide confirmación y desactiva también la cuenta de acceso del médico.
+- **Reactivar** un perfil desactivado.
+
+El horario y las métricas son los reales. Un médico desactivado o un paciente dado
+de baja no reciben citas nuevas.
 
 ```
  /oftalmologos/perfil/:id
    │
    ├─ Identidad, subespecialidad, estado, correo, colegiado, turnos
-   ├─ Tres tarjetas: pacientes atendidos · carga de la semana · satisfacción
+   ├─ Cuatro tarjetas: pacientes atendidos · citas de la semana · horas semanales · cirugías
    └─ Tabla de próximas citas: paciente · horario · tipo · confirmación
 ```
 

@@ -19,20 +19,25 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
 
     /**
      * RF3.2 — control de cruce de horario.
-     * Busca otra cita del mismo oftalmólogo que ocupe exactamente ese turno.
+     * Busca otra cita activa del mismo oftalmólogo cuyo rango se cruce con el
+     * nuevo: [inicio, fin) se solapa si empieza antes de que el otro termine y
+     * termina después de que el otro empiece. Antes solo comparaba la hora de
+     * inicio exacta y aceptaba 09:00-10:00 junto a 09:30-10:30.
      * La comparación ignora la cita que se está reprogramando ({@code idExcluido}).
      */
     @Query("""
             SELECT COUNT(c) FROM Cita c
             WHERE c.oftalmologo.id = :oftalmologoId
               AND c.fecha       = :fecha
-              AND c.horaInicio = :horaInicio
+              AND c.horaInicio < :horaFin
+              AND c.horaFin    > :horaInicio
               AND c.bloqueo     = true
               AND (:idExcluido IS NULL OR c.id <> :idExcluido)
             """)
     long contarSolapes(@Param("oftalmologoId") Long oftalmologoId,
                        @Param("fecha") LocalDate fecha,
                        @Param("horaInicio") LocalTime horaInicio,
+                       @Param("horaFin") LocalTime horaFin,
                        @Param("idExcluido") Long idExcluido);
 
     /** Agenda de un profesional en un rango de fechas (pantalla 3.6.7). */
@@ -99,6 +104,17 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
             WHERE c.oftalmologo.id = :oftalmologoId AND c.bloqueo = true
             """)
     long countByOftalmologo(@Param("oftalmologoId") Long oftalmologoId);
+
+    /** Citas activas (no canceladas) del profesional en un rango de fechas. */
+    @Query("""
+            SELECT COUNT(c) FROM Cita c
+            WHERE c.oftalmologo.id = :oftalmologoId
+              AND c.fecha BETWEEN :desde AND :hasta
+              AND c.bloqueo = true
+            """)
+    long countByOftalmologoEntreFechas(@Param("oftalmologoId") Long oftalmologoId,
+                                       @Param("desde") LocalDate desde,
+                                       @Param("hasta") LocalDate hasta);
 
     @Query("""
             SELECT COUNT(c) FROM Cita c

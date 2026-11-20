@@ -13,7 +13,10 @@ import { PaginationComponent } from '../../shared/components/ui-pagination';
 import { EmptyStateComponent } from '../../shared/components/ui-empty-state';
 import { SkeletonComponent } from '../../shared/components/ui-skeleton';
 import { PacienteService } from '../../core/services/paciente.service';
-import { PageResponse, Paciente } from '../../core/models';
+import { Credenciales, PageResponse, Paciente } from '../../core/models';
+import { AuthService } from '../../core/services/auth.service';
+import { CambiarClaveComponent } from '../../shared/components/ui-cambiar-clave';
+import { CredencialesComponent } from '../../shared/components/ui-credenciales';
 
 /**
  * Listado de pacientes (imagen 24): buscador, tabla, paginación y el ejemplo de
@@ -33,12 +36,21 @@ import { PageResponse, Paciente } from '../../core/models';
     PaginationComponent,
     EmptyStateComponent,
     SkeletonComponent,
+    CambiarClaveComponent,
+    CredencialesComponent,
   ],
   templateUrl: './lista.html',
   styleUrl: './lista.scss',
 })
 export class PacientesListaComponent implements OnInit {
   private readonly pacientes = inject(PacienteService);
+  private readonly auth = inject(AuthService);
+  /** Administración y recepción cambian la contraseña del portal del paciente. */
+  protected readonly puedeCambiarClave = computed(
+    () => this.auth.rol() === 'ADMINISTRADOR' || this.auth.rol() === 'RECEPCIONISTA'
+  );
+  protected readonly cambioClave = signal<Paciente | null>(null);
+  protected readonly credenciales = signal<Credenciales | null>(null);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 

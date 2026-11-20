@@ -7,6 +7,7 @@ import com.clinicaojitos.domain.entity.Examen;
 import com.clinicaojitos.domain.repository.*;
 import com.clinicaojitos.exception.OperacionInvalidaException;
 import com.clinicaojitos.exception.RecursoNoEncontradoException;
+import com.clinicaojitos.exception.AccesoDenegadoException;
 import com.clinicaojitos.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -127,6 +128,28 @@ public class ConsultaService {
             sedeRepository.findById(r.sedeId()).ifPresent(c::setSede);
         }
 
+        return mapeador.aConsulta(consultaRepository.save(c));
+    }
+
+    /**
+     * Firma de la consulta por el médico encargado. Solo puede firmarla el
+     * oftalmólogo que la atendió; firmada, queda cerrada y puede respaldar una
+     * cirugía.
+     */
+    @Transactional
+    @Auditado(accion = "FIRMAR", recurso = "CONSULTA", descripcion = "Firma de consulta por el médico encargado")
+    public ConsultaDto.Response firmar(Long id) {
+        Consulta c = obtenerEntidad(id);
+        if (c.estaFirmada()) {
+            throw new OperacionInvalidaException("La consulta ya está firmada.");
+        }
+        Long propio = SecurityUtils.usernameActual().map(authService::oftalmologoIdDe).orElse(null);
+        if (propio == null || c.getOftalmologo() == null || !propio.equals(c.getOftalmologo().getId())) {
+            throw new AccesoDenegadoException(
+                    "Solo el médico encargado de esta consulta puede firmarla.");
+        }
+        c.setFirmadaEn(LocalDateTime.now());
+        c.setFirmadaPor(c.getOftalmologo());
         return mapeador.aConsulta(consultaRepository.save(c));
     }
 

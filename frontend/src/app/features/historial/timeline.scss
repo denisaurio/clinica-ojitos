@@ -1,7 +1,7 @@
 @use 'variables' as *;
 
 .historial {
-  max-width: 880px;
+  max-width: 1080px;
 }
 
 /* ------------------------------------------------------------- Resumen */
@@ -188,4 +188,51 @@
     flex-direction: column;
     align-items: flex-start;
   }
+}
+/* ------------------------------------------------- Firma e informe */
+.aviso {
+  display: block;
+  margin-bottom: 16px;
+}
+
+.hito__etiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.informe {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px 18px;
+  margin: 12px 0 0;
+  padding: 14px 16px;
+  background: $sidebar-bg;
+  border-radius: $radius-sm;
+
+  dt {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $text-muted;
+  }
+
+  dd {
+    margin: 2px 0 0;
+    font-size: 13px;
+    color: $text;
+    white-space: pre-line;
+  }
+}
+
+.vacio {
+  padding: 18px 0;
+  color: $text-muted;
+  font-size: 13px;
+}
+
+.hito__pie {
+  flex-wrap: wrap;
 }

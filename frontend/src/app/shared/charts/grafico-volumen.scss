@@ -2,19 +2,35 @@
 
 :host {
   display: block;
+  height: 100%;
 }
 
 .lienzo {
+  position: relative;
   display: flex;
   align-items: flex-end;
-  gap: 10px;
-  height: 210px;
-  padding: 18px 16px 0;
-  background: $page-bg;
-  border-radius: $radius-sm;
+  gap: clamp(8px, 1.4vw, 20px);
+  height: 100%;
+  min-height: 260px;
+  padding: 12px 8px 0;
+}
+
+/* Líneas guía horizontales detrás de las barras. */
+.lienzo__guias {
+  position: absolute;
+  inset: 36px 0 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+
+  span {
+    border-top: 1px dashed $border;
+  }
 }
 
 .columna {
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -23,35 +39,111 @@
   min-width: 0;
 }
 
-.columna__peak {
-  font-size: 10px;
+.columna__valor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 24px;
+  margin-bottom: 6px;
+  font-size: 13px;
   font-weight: 600;
+  line-height: 1.1;
   color: $text-muted;
-  margin-bottom: 4px;
-  white-space: nowrap;
+
+  small {
+    margin-top: 2px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: $brand-teal;
+  }
+}
+
+.columna__valor--pico {
+  color: $text;
 }
 
 .columna__pista {
   flex: 1;
   width: 100%;
+  max-width: 64px;
   display: flex;
   align-items: flex-end;
 }
 
 .columna__barra {
   width: 100%;
-  background: $primary-light;
-  border-radius: 2px 2px 0 0;
-  transition: height 0.25s ease;
+  background: linear-gradient(180deg, $primary-light 0%, $primary 100%);
+  border-radius: 8px 8px 3px 3px;
+  opacity: 0.55;
+  transition: height 0.35s ease, opacity $transition;
+
+  &:hover {
+    opacity: 0.8;
+  }
 }
 
-.columna__barra--peak {
-  background: $primary;
+.columna__barra--pico {
+  background: linear-gradient(180deg, $brand-teal-soft 0%, $brand-teal 100%);
+  opacity: 1;
+
+  &:hover {
+    opacity: 1;
+  }
 }
 
 .columna__etiqueta {
-  margin-top: 8px;
-  font-size: 10.5px;
+  margin-top: 10px;
+  padding-bottom: 4px;
+  font-size: 12.5px;
   color: $text-muted;
+  text-transform: capitalize;
   white-space: nowrap;
+}
+
+/* ---------------------------------------------------------- Estado vacío */
+.vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+  min-height: 260px;
+  padding: 24px;
+  border: 1px dashed $border-strong;
+  border-radius: $radius;
+  background: $page-bg;
+  text-align: center;
+}
+
+.vacio__icono {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: $info-bg;
+
+  svg {
+    width: 26px;
+    height: 26px;
+    fill: none;
+    stroke: $primary;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+}
+
+.vacio__titulo {
+  font-size: 15px;
+  font-weight: 600;
+  color: $text;
+}
+
+.vacio__texto {
+  max-width: 340px;
+  font-size: 13.5px;
+  color: $text-muted;
 }

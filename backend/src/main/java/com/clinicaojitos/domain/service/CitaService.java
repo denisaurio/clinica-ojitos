@@ -2,6 +2,7 @@ package com.clinicaojitos.domain.service;
 
 import com.clinicaojitos.audit.Auditado;
 import com.clinicaojitos.domain.dto.CitaDto;
+import com.clinicaojitos.notificacion.NotificacionService;
 import com.clinicaojitos.domain.entity.*;
 import com.clinicaojitos.domain.repository.*;
 import com.clinicaojitos.exception.CruceDeHorarioException;
@@ -38,6 +39,8 @@ public class CitaService {
     private final DiaSemanaRepository diaSemanaRepository;
     private final TipoBloqueHorarioRepository tipoBloqueRepository;
     private final Mapeador mapeador;
+    private final AutorizacionPacienteService autorizacion;
+    private final NotificacionService notificaciones;
 
     @Transactional(readOnly = true)
     public List<CitaDto.Evento> agenda(Long oftalmologoId, LocalDate desde, LocalDate hasta) {
@@ -78,43 +81,106 @@ public class CitaService {
         DiaSemana dia = diaSemanaRepository.findByCodigo(codigoDia).orElse(null);
         if (dia == null) return List.of();
 
-        var reservados = citaRepository.agendaDelDia(oftalmologoId, f).stream()
-                .map(c -> c.getHoraInicio())
-                .collect(java.util.stream.Collectors.toSet());
+        List<Cita> ocupadas = citaRepository.agendaDelDia(oftalmologoId, f);
 
-        return horarioLaboralRepository
+        // Cada bloque del horario (p. ej. 08:00-13:00) se divide en turnos de
+        // DURACION_TURNO_MIN; antes se devolvía el bloque entero como una sola
+        // franja y la pantalla no podía ofrecer horas concretas.
+        List<CitaDto.Franja> franjas = new java.util.ArrayList<>();
+        horarioLaboralRepository
                 .findByOftalmologoIdAndActivoTrue(oftalmologoId).stream()
                 .filter(h -> dia.getId().equals(h.getDiaSemana().getId()))
-                .filter(h -> !"DESCANSO".equals(h.getTipoBloque().getCodigo()))
+                // Solo los bloques de consulta se ofrecen como cita: los de cirugía y
+                // descanso no son reservables (antes se ofrecían los quirúrgicos).
+                .filter(h -> h.getTipoBloque() == null || "CONSULTA".equals(h.getTipoBloque().getCodigo()))
                 .sorted(java.util.Comparator.comparing(HorarioLaboral::getHoraInicio))
-                .map(h -> new CitaDto.Franja(
-                        h.getHoraInicio(),
-                        h.getHoraFin(),
-                        reservados.contains(h.getHoraInicio()) ? "BOOKED" : "FREE",
-                        h.getTipoBloque() != null ? h.getTipoBloque().getNombre() : "Consulta"))
-                .toList();
+                .forEach(h -> {
+                    String tipo = h.getTipoBloque() != null ? h.getTipoBloque().getNombre() : "Consulta";
+                    for (LocalTime inicio = h.getHoraInicio();
+                         !inicio.plusMinutes(DURACION_TURNO_MIN).isAfter(h.getHoraFin());
+                         inicio = inicio.plusMinutes(DURACION_TURNO_MIN)) {
+                        LocalTime fin = inicio.plusMinutes(DURACION_TURNO_MIN);
+                        franjas.add(new CitaDto.Franja(inicio, fin,
+                                seSolapa(ocupadas, inicio, fin) ? "BOOKED" : "FREE", tipo));
+                    }
+                });
+        return franjas;
+    }
+
+    /** Duración de un turno ofrecido en la agenda (RF-03). */
+    static final int DURACION_TURNO_MIN = 30;
+
+    /** RF3.2 — un turno está ocupado si se cruza con alguna cita activa. */
+    static boolean seSolapa(List<Cita> citas, LocalTime inicio, LocalTime fin) {
+        return citas.stream().anyMatch(c ->
+                c.getHoraInicio().isBefore(fin) && c.getHoraFin().isAfter(inicio));
     }
 
     @Transactional(readOnly = true)
     public CitaDto.Response obtener(Long id) {
-        return mapeador.aCita(obtenerEntidad(id));
+        Cita c = obtenerEntidad(id);
+        exigirPropiaSiEsPaciente(c);
+        return mapeador.aCita(c);
+    }
+
+    /**
+     * RF3.1 — el paciente gestiona solo SUS citas; el resto de roles, todas.
+     * Misma regla de pertenencia que protege su historial (RNF-01).
+     */
+    private void exigirPropiaSiEsPaciente(Cita c) {
+        if (com.clinicaojitos.security.SecurityUtils.esPaciente()) {
+            autorizacion.exigirAcceso(c.getPaciente() != null ? c.getPaciente().getId() : null);
+        }
+    }
+
+    private void exigirPropiaSiEsPaciente(Long pacienteId) {
+        if (com.clinicaojitos.security.SecurityUtils.esPaciente()) {
+            autorizacion.exigirAcceso(pacienteId);
+        }
+    }
+
+    /** Una cita cancelada, atendida o con inasistencia ya no se modifica. */
+    private void exigirModificable(Cita c) {
+        String estado = c.getEstado();
+        if ("CANCELADA".equals(estado) || "COMPLETADA".equals(estado) || "NO_ASISTIO".equals(estado)) {
+            throw new OperacionInvalidaException(
+                    "La cita está " + estado.toLowerCase().replace('_', ' ') + " y ya no se puede modificar.");
+        }
+    }
+
+    /** No se programan ni reprograman citas en días pasados. */
+    private void exigirFechaFutura(LocalDate fecha) {
+        if (fecha != null && fecha.isBefore(LocalDate.now())) {
+            throw new OperacionInvalidaException("No se pueden programar citas en una fecha pasada.");
+        }
     }
 
     @Transactional
     @Auditado(accion = "CREAR", recurso = "CITA", descripcion = "Programación de cita")
     public CitaDto.Response registrar(CitaDto.Request r) {
+        exigirPropiaSiEsPaciente(r.pacienteId());
+        exigirFechaFutura(r.fecha());
         validarRango(r.horaInicio(), r.horaFin());
 
-        if (citaRepository.contarSolapes(r.oftalmologoId(), r.fecha(), r.horaInicio(), null) > 0) {
+        if (citaRepository.contarSolapes(r.oftalmologoId(), r.fecha(), r.horaInicio(), r.horaFin(), null) > 0) {
             throw new CruceDeHorarioException(
                     "El oftalmólogo seleccionado ya tiene una cita registrada en ese horario.");
         }
 
         Cita c = new Cita();
-        c.setPaciente(pacienteRepository.findById(r.pacienteId())
-                .orElseThrow(() -> new RecursoNoEncontradoException("El paciente no existe.")));
-        c.setOftalmologo(oftalmologoRepository.findById(r.oftalmologoId())
-                .orElseThrow(() -> new RecursoNoEncontradoException("El oftalmólogo no existe.")));
+        Paciente paciente = pacienteRepository.findById(r.pacienteId())
+                .orElseThrow(() -> new RecursoNoEncontradoException("El paciente no existe."));
+        Oftalmologo oftalmologo = oftalmologoRepository.findById(r.oftalmologoId())
+                .orElseThrow(() -> new RecursoNoEncontradoException("El oftalmólogo no existe."));
+        // Un médico desactivado o un paciente dado de baja no reciben citas nuevas.
+        if (Boolean.FALSE.equals(oftalmologo.getActivo())) {
+            throw new OperacionInvalidaException("El oftalmólogo está desactivado y no recibe citas nuevas.");
+        }
+        if (Boolean.FALSE.equals(paciente.getActivo())) {
+            throw new OperacionInvalidaException("El paciente está dado de baja; reactívelo antes de agendar.");
+        }
+        c.setPaciente(paciente);
+        c.setOftalmologo(oftalmologo);
         c.setConsultorio(r.consultorio());
         c.setFecha(r.fecha());
         c.setHoraInicio(r.horaInicio());
@@ -125,7 +191,9 @@ public class CitaService {
         aplicarReferencias(c, r.sedeId(), r.tipoConsultaId());
         c.setEstadoCita(estadoPorCodigo("PROGRAMADA"));
 
-        return mapeador.aCita(citaRepository.save(c));
+        Cita guardada = citaRepository.save(c);
+        notificaciones.citaProgramada(guardada);   // RF3.5: se envía tras el commit
+        return mapeador.aCita(guardada);
     }
 
     /**
@@ -137,13 +205,19 @@ public class CitaService {
     @Auditado(accion = "REPROGRAMAR", recurso = "CITA", descripcion = "Reprogramación de cita")
     public CitaDto.Response reprogramar(Long id, CitaDto.ReprogramarRequest r) {
         Cita c = obtenerEntidad(id);
+        exigirPropiaSiEsPaciente(c);
+        // Antes una cita cancelada o atendida "revivía" al reprogramarla.
+        exigirModificable(c);
+        exigirFechaFutura(r.fecha());
         validarRango(r.horaInicio(), r.horaFin());
 
-        if (citaRepository.contarSolapes(c.getOftalmologo().getId(), r.fecha(), r.horaInicio(), id) > 0) {
+        if (citaRepository.contarSolapes(c.getOftalmologo().getId(), r.fecha(), r.horaInicio(), r.horaFin(), id) > 0) {
             throw new CruceDeHorarioException(
                     "El horario elegido ya está ocupado para este oftalmólogo.");
         }
 
+        LocalDate fechaAnterior = c.getFecha();
+        LocalTime horaAnterior = c.getHoraInicio();
         c.setFecha(r.fecha());
         c.setHoraInicio(r.horaInicio());
         c.setHoraFin(r.horaFin());
@@ -153,7 +227,9 @@ public class CitaService {
         EstadoCita reprogramada = estadoPorCodigo("PROGRAMADA");
         if (reprogramada != null) c.setEstadoCita(reprogramada);
 
-        return mapeador.aCita(citaRepository.save(c));
+        Cita guardada = citaRepository.save(c);
+        notificaciones.citaReprogramada(guardada, fechaAnterior, horaAnterior);
+        return mapeador.aCita(guardada);
     }
 
     /** Cancelación: el turno se libera pero el registro se conserva (RF3.4). */
@@ -161,11 +237,15 @@ public class CitaService {
     @Auditado(accion = "CANCELAR", recurso = "CITA", descripcion = "Cancelación de cita")
     public CitaDto.Response cancelar(Long id, CitaDto.CancelarRequest r) {
         Cita c = obtenerEntidad(id);
+        exigirPropiaSiEsPaciente(c);
+        exigirModificable(c);
         EstadoCita cancelada = estadoPorCodigo("CANCELADA");
         if (cancelada != null) c.setEstadoCita(cancelada);
         c.setNotaInterna(r.motivo());
         c.setBloqueo(Boolean.FALSE);
-        return mapeador.aCita(citaRepository.save(c));
+        Cita guardada = citaRepository.save(c);
+        notificaciones.citaCancelada(guardada, r.motivo());
+        return mapeador.aCita(guardada);
     }
 
     /** Cambio de estado en el flujo de atención: confirmado, en espera, en consulta... */

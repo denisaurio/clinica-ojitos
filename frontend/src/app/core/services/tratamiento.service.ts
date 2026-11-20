@@ -125,7 +125,7 @@ export class TratamientoService {
         lateralidad: peticion.lateralidad,
         tipoAnestesia: peticion.tipoAnestesia,
         reporteOperatorio: peticion.reporteOperatorio,
-        estado: 'FINALIZADA' as const,
+        estado: peticion.estado === 'PROGRAMADA' ? ('PROGRAMADA' as const) : ('FINALIZADA' as const),
       }).pipe(delay(220));
     }
 
@@ -140,10 +140,11 @@ export class TratamientoService {
           tipoCirugia: peticion.tipoCirugia,
           ojoId,
           fechaProgramada: peticion.fecha,
-          fechaRealizada: peticion.fecha,
+          fechaRealizada: peticion.estado === 'REALIZADA' ? peticion.fecha : null,
           anestesia: peticion.tipoAnestesia,
-          tecnica: peticion.reporteOperatorio,
-          estado: 'REALIZADA',
+          tecnica: peticion.reporteOperatorio || null,
+          estado: peticion.estado,
+          consultaIds: peticion.consultaIds,
         };
         return this.http.post<CirugiaApi>(`${this.base}/cirugias`, cuerpo);
       }),
@@ -184,6 +185,12 @@ export class TratamientoService {
       tipoAnestesia: c.anestesia ?? '',
       reporteOperatorio: [c.tecnica, c.incidencias].filter(Boolean).join('\n\n'),
       estado: this.estadoCirugiaDesde(c.estado ?? 'PROGRAMADA'),
+      consultas: (c.consultas ?? []).map((v) => ({
+        id: v.id,
+        fecha: (v.fecha ?? '').slice(0, 10),
+        diagnostico: v.diagnostico ?? '',
+        oftalmologoNombre: v.oftalmologoNombre ?? '',
+      })),
     };
   }
 
@@ -250,4 +257,5 @@ interface CirugiaApi {
   tecnica?: string;
   incidencias?: string;
   estado?: string;
+  consultas?: { id: number; fecha?: string; diagnostico?: string; oftalmologoNombre?: string }[];
 }

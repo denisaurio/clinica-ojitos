@@ -45,6 +45,23 @@
       <artifactId>spring-boot-starter-validation</artifactId>
     </dependency>
 
+    <!-- RF3.5 y RF6.4: avisos de citas y enlace de recuperación por correo (SMTP). -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-mail</artifactId>
+    </dependency>
+
+    <!-- Migraciones del esquema: se aplican solas al arrancar, antes de que
+         Hibernate valide (ddl-auto=validate). V1 = sql/01_esquema.sql. -->
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-mysql</artifactId>
+    </dependency>
+
     <!-- Seguridad: Spring Security + JWT (Fase 6, RF-06) -->
     <dependency>
       <groupId>org.springframework.boot</groupId>

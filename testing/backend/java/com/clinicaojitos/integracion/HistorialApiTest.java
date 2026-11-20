@@ -24,4 +24,13 @@ class HistorialApiTest extends BaseIntegracionTest {
     void recepcionNoLeeHistorial() throws Exception {
         mvc.perform(get("/api/v1/historiales/paciente/1")).andExpect(status().isForbidden());
     }
+
+    @Test
+    @WithMockUser(username = "admin", roles = "ADMINISTRADOR")
+    @DisplayName("Solo el médico encargado firma: el ADMINISTRADOR recibe 403")
+    void adminNoFirma() throws Exception {
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .patch("/api/v1/historiales/1/firmar"))
+                .andExpect(status().isForbidden());
+    }
 }

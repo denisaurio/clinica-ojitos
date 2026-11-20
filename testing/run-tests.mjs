@@ -51,7 +51,9 @@ let backendSalida = { codigo: 0, ms: 0, log: '' };
 if (!soloReporte) {
   if (existsSync(dirReportes)) rmSync(dirReportes, { recursive: true, force: true });
   const clases = [...new Set(seleccion.flatMap((m) => m.tests))].join(',');
-  const wrapper = esWin ? 'mvnw.cmd' : './mvnw';
+  // Ruta absoluta: en Windows, cmd.exe no siempre busca en la carpeta actual
+  // ("mvnw.cmd no se reconoce como un comando interno o externo").
+  const wrapper = esWin ? `"${join(BACKEND, 'mvnw.cmd')}"` : './mvnw';
   console.log(neg(`\n▶ Backend: ${wrapper} test  (${seleccion.length} módulo/s)\n`));
   const t0 = Date.now();
   const r = spawnSync(wrapper, ['-B', 'test', `-Dtest=${clases}`, '-Dsurefire.failIfNoSpecifiedTests=false'],

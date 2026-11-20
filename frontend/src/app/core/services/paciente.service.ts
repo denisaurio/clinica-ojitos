@@ -78,6 +78,23 @@ export class PacienteService {
     );
   }
 
+  /**
+   * Cambia la contraseña del portal del paciente: la que se escribe o, sin
+   * ella, una aleatoria (POST /pacientes/{id}/credenciales).
+   */
+  credenciales(id: number, password?: string): Observable<Credenciales> {
+    if (environment.useMockApi) {
+      const p = this.demo.pacientes.find((x) => x.id === id);
+      return of({
+        username: p?.nombreCompleto ?? `paciente${id}`,
+        password: password || 'Demo9!aZ#2kLq',
+        nombreCompleto: p?.nombreCompleto ?? 'Paciente de demostración',
+        textoParaDescargar: 'Credenciales de demostración',
+      }).pipe(delay(150));
+    }
+    return this.http.post<Credenciales>(`${this.base}/${id}/credenciales`, password ? { password } : {});
+  }
+
   crear(peticion: PacienteRequest & { password?: string }): Observable<AltaPaciente> {
     if (environment.useMockApi) {
       const usuario = peticion.usuario || `${peticion.nombres} ${peticion.apellidos}`;

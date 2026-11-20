@@ -5,7 +5,7 @@ import { Observable, defer, of, throwError } from 'rxjs';
 import { delay, tap } from 'rxjs/operators';
 
 import { environment } from '../../../environments/environment';
-import { AuthResponse, LoginRequest, MensajeRespuesta, PerfilUsuario, RecuperarClaveRequest, Rol } from '../models';
+import { AuthResponse, LoginRequest, MensajeRespuesta, PerfilUsuario, RecuperarClaveRequest, RestablecerClaveRequest, Rol } from '../models';
 import { DemoDataService } from './demo-data.service';
 
 const TOKEN_KEY = 'ojitos_access_token';
@@ -41,18 +41,25 @@ export class AuthService {
   /** `true` cuando el usuario solo puede leer su propia información. */
   readonly esPaciente = computed(() => this.rol() === 'PACIENTE');
 
-  login(credentials: LoginRequest): Observable<AuthResponse> {
+  /** El oftalmólogo atiende citas pero no las crea (las reserva el paciente o recepción). */
+  readonly puedeReservar = computed(() => this.rol() !== null && this.rol() !== 'OFTALMOLOGO');
+
+  /**
+   * @param recordar `true` guarda la sesión en localStorage (sobrevive al cerrar
+   *   el navegador); `false` en sessionStorage (se borra al cerrar la pestaña).
+   */
+  login(credentials: LoginRequest, recordar = true): Observable<AuthResponse> {
     if (environment.useMockApi) {
       // `defer` convierte el error del mock en una notificacion del observable.
       // Sin el, `loginEnMock` lanzaria de forma sincrona antes de crearse el
       // observable, el `error` del componente no se ejecutaria nunca y el
       // boton se quedaria cargando indefinidamente.
-      return defer(() => of(this.loginEnMock(credentials))).pipe(delay(350));
+      return defer(() => of(this.loginEnMock(credentials, recordar))).pipe(delay(350));
     }
 
     return this.http
       .post<AuthResponse>(`${environment.apiUrl}/auth/login`, credentials)
-      .pipe(tap((respuesta) => this.persistir(respuesta)));
+      .pipe(tap((respuesta) => this.persistir(respuesta, recordar)));
   }
 
   me(): Observable<PerfilUsuario> {
@@ -74,6 +81,17 @@ export class AuthService {
     return this.http.get<PerfilUsuario>(`${environment.apiUrl}/auth/me`);
   }
 
+  /** Cambio de la propia contraseña (exige la actual). */
+  cambiarClave(passwordActual: string, passwordNueva: string): Observable<MensajeRespuesta> {
+    if (environment.useMockApi) {
+      return of({ mensaje: 'Contraseña actualizada correctamente.' }).pipe(delay(200));
+    }
+    return this.http.patch<MensajeRespuesta>(`${environment.apiUrl}/auth/cambiar-clave`, {
+      passwordActual,
+      passwordNueva,
+    });
+  }
+
   recuperarClave(peticion: RecuperarClaveRequest): Observable<MensajeRespuesta> {
     if (environment.useMockApi) {
       return of({
@@ -83,6 +101,17 @@ export class AuthService {
     }
     return this.http.post<MensajeRespuesta>(
       `${environment.apiUrl}/auth/recuperar-clave`,
+      peticion
+    );
+  }
+
+  /** RF6.4: fija la contraseña nueva con el token del enlace del correo. */
+  restablecerClave(peticion: RestablecerClaveRequest): Observable<MensajeRespuesta> {
+    if (environment.useMockApi) {
+      return of({ mensaje: 'Contraseña actualizada. Ya puede iniciar sesión.' }).pipe(delay(200));
+    }
+    return this.http.post<MensajeRespuesta>(
+      `${environment.apiUrl}/auth/restablecer-clave`,
       peticion
     );
   }
@@ -102,16 +131,16 @@ export class AuthService {
 
   /** Borra la sesión local y regresa al login (lo usa el interceptor ante un 401). */
   limpiar(): void {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(USUARIO_KEY);
+    for (const almacen of almacenes()) {
+      almacen.removeItem(TOKEN_KEY);
+      almacen.removeItem(USUARIO_KEY);
     }
     this._usuario.set(null);
   }
 
   // ------------------------------------------------------------- Interno
 
-  private loginEnMock(credenciales: LoginRequest): AuthResponse {
+  private loginEnMock(credenciales: LoginRequest, recordar: boolean): AuthResponse {
     const usuario = this.demo.usuarios[credenciales.username.toLowerCase()];
     if (!usuario || usuario.password !== credenciales.password) {
       throw new Error('Credenciales inválidas');
@@ -120,25 +149,28 @@ export class AuthService {
       accessToken: `mock-token-${usuario.auth.id}-${Date.now()}`,
       ...usuario.auth,
     };
-    this.persistir(respuesta);
+    this.persistir(respuesta, recordar);
     return respuesta;
   }
 
-  private persistir(respuesta: AuthResponse): void {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(TOKEN_KEY, respuesta.accessToken);
-      localStorage.setItem(USUARIO_KEY, JSON.stringify(respuesta));
+  private persistir(respuesta: AuthResponse, recordar = true): void {
+    // Una sola copia: se borra la anterior para no mezclar sesiones.
+    for (const almacen of almacenes()) {
+      almacen.removeItem(TOKEN_KEY);
+      almacen.removeItem(USUARIO_KEY);
+    }
+    const destino = recordar ? globalThis.localStorage : globalThis.sessionStorage;
+    if (destino) {
+      destino.setItem(TOKEN_KEY, respuesta.accessToken);
+      destino.setItem(USUARIO_KEY, JSON.stringify(respuesta));
     }
     this._usuario.set(respuesta);
   }
 
   private leerDeAlmacenamiento(): AuthResponse | null {
-    if (typeof localStorage === 'undefined') {
-      return null;
-    }
-    const token = localStorage.getItem(TOKEN_KEY);
-    const crudo = localStorage.getItem(USUARIO_KEY);
-    if (!token || !crudo) {
+    const almacen = almacenes().find((a) => a.getItem(TOKEN_KEY) && a.getItem(USUARIO_KEY));
+    const crudo = almacen?.getItem(USUARIO_KEY);
+    if (!crudo) {
       return null;
     }
     try {
@@ -148,4 +180,11 @@ export class AuthService {
       return null;
     }
   }
+}
+
+/** localStorage (sesión recordada) y sessionStorage (solo esta pestaña), si existen. */
+function almacenes(): Storage[] {
+  return [globalThis.localStorage, globalThis.sessionStorage].filter(
+    (a): a is Storage => typeof a !== 'undefined' && a !== null
+  );
 }

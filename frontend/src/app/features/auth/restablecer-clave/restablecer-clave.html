@@ -1,0 +1,72 @@
+<div class="recuperar">
+  <div class="recuperar__tarjeta">
+    <div class="recuperar__marca">
+      <h1 class="recuperar__titulo">Ojitos</h1>
+      <p class="recuperar__subtitulo">Gestión Clínica</p>
+    </div>
+
+    <div class="recuperar__cuerpo">
+      <h2 class="recuperar__encabezado">Nueva Contraseña</h2>
+
+      @if (listo()) {
+        <ui-alert tipo="success" titulo="Contraseña actualizada">
+          Ya puede iniciar sesión con su nueva contraseña.
+        </ui-alert>
+        <ui-button [enlace]="true" destino="/login" variante="primario" class="recuperar__enviar">
+          Ir al Inicio de Sesión
+        </ui-button>
+      } @else if (!token()) {
+        <ui-alert tipo="danger">
+          El enlace está incompleto. Ábralo de nuevo desde el correo o solicite uno nuevo.
+        </ui-alert>
+        <ui-button [enlace]="true" destino="/recuperar-clave" variante="primario" class="recuperar__enviar">
+          Solicitar un enlace nuevo
+        </ui-button>
+      } @else {
+        <p class="recuperar__texto">
+          Elija una contraseña nueva de al menos 8 caracteres. El enlace sirve una sola vez.
+        </p>
+
+        @if (error()) {
+          <ui-alert tipo="danger">{{ error() }}</ui-alert>
+        }
+
+        <form [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
+          <ui-input
+            formControlName="passwordNueva"
+            etiqueta="Nueva contraseña"
+            icono="lock"
+            tipo="password"
+            autocompletar="new-password"
+            [error]="nueva.invalid && nueva.touched ? 'Mínimo 8 caracteres.' : ''"
+          />
+          <ui-input
+            formControlName="repetir"
+            etiqueta="Repita la contraseña"
+            icono="lock"
+            tipo="password"
+            autocompletar="new-password"
+            [error]="
+              repetir.touched && (repetir.invalid || formulario.hasError('distintas'))
+                ? 'Las contraseñas no coinciden.'
+                : ''
+            "
+          />
+
+          <ui-button
+            tipo="submit"
+            variante="primario"
+            class="recuperar__enviar"
+            [deshabilitado]="enviando()"
+          >
+            Guardar contraseña
+          </ui-button>
+        </form>
+      }
+
+      <ui-button [enlace]="true" destino="/login" variante="contorno" class="recuperar__volver">
+        Volver al Inicio de Sesión
+      </ui-button>
+    </div>
+  </div>
+</div>

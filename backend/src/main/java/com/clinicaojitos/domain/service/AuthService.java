@@ -9,6 +9,8 @@ import com.clinicaojitos.exception.CredencialesInvalidasException;
 import com.clinicaojitos.exception.OperacionInvalidaException;
 import com.clinicaojitos.security.JwtService;
 import com.clinicaojitos.security.RegistroAccesoService;
+import com.clinicaojitos.security.TokenRecuperacion;
+import com.clinicaojitos.notificacion.NotificacionService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +41,8 @@ public class AuthService {
     private final AuditoriaService auditoriaService;
     private final RegistroAccesoService registroAccesoService;
     private final Mapeador mapeador;
+    private final TokenRecuperacion tokenRecuperacion;
+    private final NotificacionService notificaciones;
 
     @Transactional
     public AuthDto.TokenResponse login(AuthDto.LoginRequest request, HttpServletRequest httpRequest) {
@@ -117,16 +121,71 @@ public class AuthService {
     }
 
     /**
-     * Recuperación de contraseña (RF6.4).
+     * Recuperación de contraseña (RF6.4): envía por correo un enlace de un solo
+     * uso que vence en {@link TokenRecuperacion#MINUTOS} minutos.
      *
-     * <p>Por seguridad responde siempre con éxito: no debe revelar qué correos
-     * están registrados en el sistema.
+     * <p>Por seguridad el endpoint responde siempre lo mismo: no revela qué
+     * correos están registrados. Tampoco envía nada a cuentas inactivas o
+     * bloqueadas por intentos (RF6.2): esas las habilita el administrador.
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public void solicitarRecuperacion(String email) {
-        usuarioRepository.findByEmailIgnoreCase(email).ifPresentOrElse(
-                u -> log.info("Recuperación solicitada para el usuario {}", u.getUsername()),
-                () -> log.info("Recuperación solicitada para un correo no registrado"));
+        String correo = email == null ? "" : email.trim();
+        Usuario u = usuarioRepository.findByEmailIgnoreCase(correo).orElse(null);
+        if (u == null) {
+            log.info("Recuperación solicitada para un correo no registrado");
+            return;
+        }
+        if (!Boolean.TRUE.equals(u.getActivo()) || bloqueada(u)) {
+            log.info("Recuperación solicitada para {}, pero la cuenta está inactiva o bloqueada", u.getUsername());
+            return;
+        }
+        if (notificaciones.appUrl().isEmpty()) {
+            log.warn("APP_URL no está definida: no se puede armar el enlace de recuperación.");
+            return;
+        }
+        String token = tokenRecuperacion.emitir(u.getId(), u.getPasswordHash());
+        String enlace = notificaciones.appUrl() + "/restablecer-clave?token=" + token;
+        notificaciones.enlaceRecuperacion(u, enlace, TokenRecuperacion.MINUTOS);
+        auditoriaService.registrar(u.getUsername(), "RECUPERAR_CLAVE", "USUARIO", u.getId(),
+                "Enlace de recuperación enviado por correo", "EXITOSO");
+    }
+
+    /**
+     * Fija una contraseña nueva con el token del enlace (RF6.4). El token deja
+     * de valer en cuanto la contraseña cambia, así que solo se usa una vez.
+     */
+    @Transactional
+    public void restablecerClave(String token, String passwordNueva) {
+        Usuario u = tokenRecuperacion.usuarioDe(token)
+                .flatMap(usuarioRepository::findById)
+                .filter(x -> tokenRecuperacion.esValido(token, x.getPasswordHash()))
+                .orElseThrow(() -> new OperacionInvalidaException(
+                        "El enlace no es válido o ya venció. Solicite uno nuevo."));
+
+        if (!Boolean.TRUE.equals(u.getActivo()) || bloqueada(u)) {
+            throw new OperacionInvalidaException(
+                    "La cuenta está inactiva o bloqueada. Contacte al administrador.");
+        }
+        if (passwordEncoder.matches(passwordNueva, u.getPasswordHash())) {
+            throw new OperacionInvalidaException(
+                    "La nueva contraseña debe ser distinta de la actual.");
+        }
+        registroAccesoService.cambiarPassword(u.getId(), passwordNueva);
+        auditoriaService.registrar(u.getUsername(), "RESTABLECER_CLAVE", "USUARIO", u.getId(),
+                "Contraseña restablecida con el enlace de recuperación", "EXITOSO");
+    }
+
+    private static boolean bloqueada(Usuario u) {
+        return u.getIntentosFallidos() != null && u.getIntentosFallidos() >= MAX_INTENTOS;
+    }
+
+    /** RF6.2 — intentos que le quedan a la cuenta antes del bloqueo. */
+    @Transactional(readOnly = true)
+    public int intentosRestantes(String username) {
+        return usuarioRepository.findByUsernameIgnoreCase(username)
+                .map(u -> Math.max(0, MAX_INTENTOS - (u.getIntentosFallidos() == null ? 0 : u.getIntentosFallidos())))
+                .orElse(0);
     }
 
     /** Identificador del oftalmólogo asociado a la cuenta, si lo hay. */

@@ -47,6 +47,7 @@ public class SecurityConfig {
             "/api/v1/auth/login",
             "/api/v1/auth/refresh",
             "/api/v1/auth/recuperar-clave",
+            "/api/v1/auth/restablecer-clave",
             "/api/v1/estado",
             "/api/v1/catalogo/**",
             "/v3/api-docs/**",

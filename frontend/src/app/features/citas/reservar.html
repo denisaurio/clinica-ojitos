@@ -60,7 +60,8 @@
                       class="calendario__dia"
                       [class.calendario__dia--fuera]="!dia.delMes"
                       [class.calendario__dia--activo]="dia.seleccionado"
-                      [disabled]="!dia.delMes"
+                      [class.calendario__dia--pasado]="dia.pasado"
+                      [disabled]="!dia.delMes || dia.pasado"
                       (click)="seleccionarDia(dia)"
                     >
                       {{ dia.numero }}
@@ -78,7 +79,7 @@
               <p class="horarios__nota">
                 @if (c.oftalmologoId.value) {
                   Mostrando disponibilidad para el
-                  {{ c.fecha.value | date: 'd \'de\' MMMM \'de\' y' : 'es-ES' : 'UTC' }}
+                  {{ fechaLegible() }}
                 } @else {
                   Elija un especialista para ver las franjas disponibles.
                 }
@@ -133,13 +134,20 @@
             </h2>
 
             <div class="grid-2">
-              <ui-select
-                formControlName="pacienteId"
-                etiqueta="Paciente"
-                placeholder="Seleccione un paciente"
-                [opciones]="pacientesOpciones()"
-                [requerido]="true"
-              />
+              @if (esPaciente()) {
+                <div class="paciente-fijo">
+                  <span class="paciente-fijo__etiqueta">Paciente</span>
+                  <span class="paciente-fijo__nombre">{{ nombrePaciente() }}</span>
+                </div>
+              } @else {
+                <ui-select
+                  formControlName="pacienteId"
+                  etiqueta="Paciente"
+                  placeholder="Seleccione un paciente"
+                  [opciones]="pacientesOpciones()"
+                  [requerido]="true"
+                />
+              }
               <ui-select
                 formControlName="tipoConsultaId"
                 etiqueta="Tipo de Consulta"
@@ -150,7 +158,9 @@
             </div>
 
             <ui-input formControlName="motivo" etiqueta="Motivo de la Consulta (Opcional)" />
-            <ui-input formControlName="notaInterna" etiqueta="Nota Interna (Opcional)" />
+            @if (!esPaciente()) {
+              <ui-input formControlName="notaInterna" etiqueta="Nota Interna (Opcional)" />
+            }
           </div>
         }
 
@@ -171,6 +181,10 @@
                 <dd>{{ nombrePaciente() }}</dd>
               </div>
               <div class="resumen__fila">
+                <dt>Tipo de consulta</dt>
+                <dd>{{ nombreTipo() }}</dd>
+              </div>
+              <div class="resumen__fila">
                 <dt>Fecha</dt>
                 <dd>{{ c.fecha.value }}</dd>
               </div>
@@ -189,7 +203,7 @@
             Atrás
           </ui-button>
         }
-        <ui-button variante="fantasma" tipo="button" destino="/citas/agenda" [enlace]="true">
+        <ui-button variante="fantasma" tipo="button" [destino]="esPaciente() ? '/dashboard/paciente' : '/citas/agenda'" [enlace]="true">
           Cancelar
         </ui-button>
 

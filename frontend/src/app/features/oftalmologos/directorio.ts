@@ -3,6 +3,7 @@ import {
   Component,
   OnDestroy,
   OnInit,
+  HostListener,
   computed,
   inject,
   signal,
@@ -21,7 +22,9 @@ import { EmptyStateComponent } from '../../shared/components/ui-empty-state';
 import { IconComponent } from '../../shared/components/ui-icon';
 import { OftalmologoService } from '../../core/services/oftalmologo.service';
 import { ContextoPaginaService } from '../../core/services/contexto-pagina.service';
-import { Oftalmologo } from '../../core/models';
+import { Credenciales, Oftalmologo } from '../../core/models';
+import { CredencialesComponent } from '../../shared/components/ui-credenciales';
+import { CambiarClaveComponent } from '../../shared/components/ui-cambiar-clave';
 
 /**
  * Directorio de oftalmólogos (imagen 38): buscador, tabla con estado y menú de
@@ -40,6 +43,8 @@ import { Oftalmologo } from '../../core/models';
     PaginationComponent,
     EmptyStateComponent,
     IconComponent,
+    CambiarClaveComponent,
+    CredencialesComponent,
   ],
   templateUrl: './directorio.html',
   styleUrl: './directorio.scss',
@@ -61,6 +66,13 @@ export class OftalmologosDirectorioComponent implements OnInit, OnDestroy {
   protected readonly pagina = signal(0);
   protected readonly tamanoPagina = 3;
   protected readonly menuAbierto = signal<number | null>(null);
+  /** Posición del menú en la ventana, calculada desde el botón de tres puntos. */
+  protected readonly posicionMenu = signal({ top: 0, right: 0 });
+
+  /** Médico al que el administrador le está cambiando la contraseña. */
+  protected readonly cambioClave = signal<Oftalmologo | null>(null);
+  /** Usuario y contraseña recién fijados; se muestran una vez. */
+  protected readonly credenciales = signal<Credenciales | null>(null);
 
   protected readonly buscador = new FormControl('', { nonNullable: true });
 
@@ -106,13 +118,27 @@ export class OftalmologosDirectorioComponent implements OnInit, OnDestroy {
     this.pagina.set(pagina);
   }
 
-  protected alternarMenu(id: number): void {
+  protected alternarMenu(id: number, evento: MouseEvent): void {
+    const boton = (evento.currentTarget as HTMLElement).getBoundingClientRect();
+    this.posicionMenu.set({ top: boton.bottom + 4, right: window.innerWidth - boton.right });
     this.menuAbierto.update((actual) => (actual === id ? null : id));
+  }
+
+  /** El menú es fijo a la ventana: al desplazar o redimensionar se cierra. */
+  @HostListener('window:scroll')
+  @HostListener('window:resize')
+  protected cerrarMenu(): void {
+    if (this.menuAbierto() !== null) this.menuAbierto.set(null);
   }
 
   protected irA(ruta: string): void {
     this.menuAbierto.set(null);
     this.router.navigateByUrl(ruta);
+  }
+
+  protected abrirCambioClave(medico: Oftalmologo): void {
+    this.menuAbierto.set(null);
+    this.cambioClave.set(medico);
   }
 
   protected desactivar(medico: Oftalmologo): void {

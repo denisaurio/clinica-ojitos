@@ -5,6 +5,7 @@ import {
   OnInit,
   computed,
   inject,
+  input,
   signal,
 } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
@@ -16,7 +17,7 @@ import { ButtonComponent } from '../../shared/components/ui-button';
 import { InputComponent } from '../../shared/components/ui-input';
 import { OpcionSelect } from '../../shared/components/ui-select';
 import { CardComponent } from '../../shared/components/ui-card';
-import { ModalComponent } from '../../shared/components/ui-modal';
+import { CredencialesComponent } from '../../shared/components/ui-credenciales';
 import { AlertComponent } from '../../shared/components/ui-alert';
 import { IconComponent } from '../../shared/components/ui-icon';
 import { OftalmologoService } from '../../core/services/oftalmologo.service';
@@ -47,7 +48,7 @@ import { Credenciales } from '../../core/models';
     CardComponent,
     AlertComponent,
     IconComponent,
-    ModalComponent,
+    CredencialesComponent,
   ],
   templateUrl: './registro.html',
   styleUrl: './registro.scss',
@@ -60,6 +61,13 @@ export class OftalmologoRegistroComponent implements OnInit, OnDestroy {
   private readonly contexto = inject(ContextoPaginaService);
 
   private readonly destruido = new Subject<void>();
+
+  /** Ruta `oftalmologos/editar/:id`; vacío = alta nueva. */
+  readonly id = input<string>();
+  protected readonly editando = computed(() => !!this.id());
+
+  /** Colegiatura con la que se abrió la edición: no cuenta como duplicada. */
+  private colegiaturaOriginal = '';
 
   protected readonly subespecialidades = signal<OpcionSelect[]>([]);
 
@@ -84,7 +92,23 @@ export class OftalmologoRegistroComponent implements OnInit, OnDestroy {
     numeroColegiatura: ['', [Validators.required, Validators.minLength(5)]],
     subespecialidad: ['', [Validators.required]],
     sede: ['', [Validators.required]],
+    // Contraseña inicial que elige el administrador (solo en el alta).
+    password: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(100)]],
+    repetir: ['', [Validators.required]],
   });
+
+  /** Usuario con el que entrará el médico: la parte del correo antes de la @. */
+  protected usuarioSugerido(): string {
+    const email = this.formulario.controls.email.value.trim();
+    return email.includes('@') ? email.split('@')[0].replace(/[^A-Za-z0-9._-]/g, '') : '';
+  }
+
+  protected errorRepetir(): string {
+    const c = this.formulario.controls.repetir;
+    if (!c.touched) return '';
+    if (c.hasError('required')) return 'Repita la contraseña.';
+    return c.hasError('distinta') ? 'Las contraseñas no coinciden.' : '';
+  }
 
   /** Valor a guardar: lo elegido del catálogo o lo tecleado a mano. */
   protected readonly subespecialidadElegida = computed<string>(() => {
@@ -96,6 +120,28 @@ export class OftalmologoRegistroComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
+    const id = this.id();
+    if (id) {
+      // Al editar no se toca la contraseña: se cambia desde el directorio o el perfil.
+      this.formulario.controls.password.disable();
+      this.formulario.controls.repetir.disable();
+      this.oftalmologos.obtener(Number(id)).subscribe({
+        next: (m) => {
+          this.colegiaturaOriginal = m.numeroColegiatura;
+          this.formulario.patchValue({
+            nombres: m.nombres,
+            apellidos: m.apellidos,
+            email: m.email,
+            telefono: m.telefono ?? '',
+            numeroColegiatura: m.numeroColegiatura,
+            subespecialidad: m.subespecialidad ?? '',
+            sede: m.sede ?? '',
+          });
+        },
+        error: () => this.error.set('No se pudo cargar el médico que quiere editar.'),
+      });
+    }
+
     this.contexto.configurar({
       placeholder: '',
       textoEnlace: 'Soporte',
@@ -124,7 +170,7 @@ export class OftalmologoRegistroComponent implements OnInit, OnDestroy {
       .pipe(debounceTime(350), distinctUntilChanged(), takeUntil(this.destruido))
       .subscribe((numero) => {
         const control = this.formulario.controls.numeroColegiatura;
-        if (numero.trim().length < 5) {
+        if (numero.trim().length < 5 || (this.editando() && numero.trim() === this.colegiaturaOriginal)) {
           this.colegiaturaDuplicada.set(false);
           return;
         }
@@ -145,10 +191,16 @@ export class OftalmologoRegistroComponent implements OnInit, OnDestroy {
 
   private cargarSedes(texto: string): void {
     this.catalogos.buscarSedes(texto).subscribe({
-      next: (items) =>
-        this.sedes.set(
-          (items ?? []).map((s) => ({ valor: s.nombre, etiqueta: s.nombre }))
-        ),
+      next: (items) => {
+        const lista = items ?? [];
+        this.sedes.set(lista.map((s) => ({ valor: s.nombre, etiqueta: s.nombre })));
+        // Antes este catálogo nunca se llenaba y sedeId iba siempre vacío.
+        this.catalogoSedes.update((previas) => {
+          const porNombre = new Map(previas.map((s) => [s.nombre, s]));
+          lista.forEach((s) => porNombre.set(s.nombre, { id: s.id, nombre: s.nombre }));
+          return [...porNombre.values()];
+        });
+      },
       error: () => this.sedes.set([]),
     });
   }
@@ -191,6 +243,10 @@ export class OftalmologoRegistroComponent implements OnInit, OnDestroy {
   }
 
   protected guardar(): void {
+    const { password, repetir } = this.formulario.controls;
+    if (password.enabled && repetir.value && password.value !== repetir.value) {
+      repetir.setErrors({ distinta: true });
+    }
     if (this.formulario.invalid) {
       this.formulario.markAllAsTouched();
       return;
@@ -199,16 +255,34 @@ export class OftalmologoRegistroComponent implements OnInit, OnDestroy {
     this.guardando.set(true);
     this.error.set('');
 
-    const valores = this.formulario.getRawValue();
+    const { password: clave, repetir: _repetir, ...valores } = this.formulario.getRawValue();
+    const peticion = {
+      ...valores,
+      password: this.editando() ? undefined : clave,
+      subespecialidad: this.subespecialidadElegida(),
+      subespecialidadId: this.idDeSubespecialidad(this.subespecialidadElegida()),
+      sedeId: this.idDeSede(valores.sede),
+      sede: valores.sede,
+    };
+
+    const id = this.id();
+    if (id) {
+      // RF5.5 — editar no cambia el estado activo ni emite credenciales.
+      this.oftalmologos.actualizar(Number(id), peticion).subscribe({
+        next: () => {
+          this.guardando.set(false);
+          this.router.navigate(['/oftalmologos/perfil', id]);
+        },
+        error: (fallo) => {
+          this.guardando.set(false);
+          this.error.set(fallo?.error?.message || 'No se pudieron guardar los cambios.');
+        },
+      });
+      return;
+    }
 
     this.oftalmologos
-      .crear({
-        ...valores,
-        subespecialidad: this.subespecialidadElegida(),
-        subespecialidadId: this.idDeSubespecialidad(this.subespecialidadElegida()),
-        sedeId: this.idDeSede(valores.sede),
-        sede: valores.sede,
-      })
+      .crear(peticion)
       .subscribe({
         next: (respuesta) => {
           this.guardando.set(false);
@@ -232,20 +306,5 @@ export class OftalmologoRegistroComponent implements OnInit, OnDestroy {
   protected continuar(): void {
     this.credenciales.set(null);
     this.router.navigate(['/oftalmologos']);
-  }
-
-  /** Descarga la credencial como archivo de texto para entregarlo impreso. */
-  protected descargarCredenciales(): void {
-    const c = this.credenciales();
-    if (!c) return;
-
-    const contenido = c.textoParaDescargar;
-    const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const enlace = document.createElement('a');
-    enlace.href = url;
-    enlace.download = `credenciales-${c.username}.txt`;
-    enlace.click();
-    URL.revokeObjectURL(url);
   }
 }

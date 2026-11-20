@@ -1,4 +1,5 @@
 @use 'variables' as *;
+@use 'sass:color';
 
 :host {
   display: block;
@@ -6,212 +7,632 @@
 }
 
 .acceso {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 100vh;
+  background: $surface;
+}
+
+// ============================================================== Panel de marca
+.marca {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  padding: 24px;
-  background: $page-bg;
+  padding: 64px 56px;
   overflow: hidden;
+  color: $text-invert;
+  background:
+    radial-gradient(120% 90% at 100% 100%, rgba($brand-teal-soft, 0.55) 0%, transparent 55%),
+    linear-gradient(135deg, $brand-deep 0%, $primary 45%, $brand-teal 100%);
 }
 
-/* Círculos difusos del fondo, tal y como aparecen en el prototipo. */
-.acceso__mancha {
+.marca__ondas {
   position: absolute;
-  border-radius: 50%;
-  background: $info-bg;
-  opacity: 0.55;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: rgba($text-invert, 0.09);
+  stroke-width: 1.2;
   pointer-events: none;
 }
 
-.acceso__mancha--una {
-  width: 360px;
-  height: 360px;
-  top: -140px;
-  left: -120px;
+.marca__ondas--arriba {
+  height: 34%;
+  stroke: rgba($text-invert, 0.12);
 }
 
-.acceso__mancha--dos {
-  width: 220px;
-  height: 220px;
-  top: 40px;
-  left: 60px;
-  opacity: 0.35;
-}
-
-.acceso__mancha--tres {
-  width: 300px;
-  height: 300px;
-  bottom: -140px;
-  right: -80px;
-  opacity: 0.3;
-}
-
-.acceso__tarjeta {
-  position: relative;
-  width: 100%;
-  max-width: 344px;
-  padding: 28px 26px 26px;
-  background: $surface;
-  border: 1px solid $border;
-  border-radius: $radius-lg;
-  box-shadow: $shadow-md;
-}
-
-.acceso__marca {
-  text-align: center;
-  margin-bottom: 22px;
-}
-
-.acceso__logo {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 46px;
-  height: 46px;
-  border-radius: 13px;
-  background: $primary;
-  color: $text-invert;
-  margin-bottom: 12px;
-}
-
-.acceso__titulo {
-  font-size: 30px;
-  font-weight: 700;
-  color: $primary;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-}
-
-.acceso__subtitulo {
-  margin-top: 2px;
-  font-size: 13px;
-  color: $text-muted;
-}
-
-/* ------------------------------------------------------- Error de acceso */
-.fallo {
-  padding: 12px 14px;
-  margin-bottom: 18px;
-  background: $danger-bg;
-  border: 1px solid $danger-border;
-  border-radius: $radius;
-  color: $danger;
-  font-size: 12.5px;
-}
-
-.fallo__cabecera {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 6px;
-}
-
-/* Fallo de conexión: avisa en ámbar porque no es un rechazo de credenciales
-   y no debe confundirse con la cuenta bloqueada por intentos (RF6.2). */
-.fallo--servidor {
-  background: $warning-bg;
-  border-color: $warning;
-  color: $warning;
-}
-
-.fallo__titulo {
-  font-weight: 700;
-}
-
-.fallo__texto {
-  line-height: 1.5;
-}
-
-.fallo__intento {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 12px;
-  padding: 8px 10px;
-  background: $surface;
-  border-radius: $radius-sm;
-  font-size: 11.5px;
-}
-
-.fallo__barra {
-  height: 3px;
-  margin-top: 8px;
-  background: rgba(220, 38, 38, 0.18);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.fallo__relleno {
-  display: block;
-  height: 100%;
-  background: $danger;
-  border-radius: 999px;
-  transition: width 0.2s ease;
-}
-
-/* --------------------------------------------------------------- Campos */
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.acceso__contrasena {
-  position: relative;
-}
-
-.acceso__ver {
+.marca__mancha {
   position: absolute;
-  right: 10px;
-  bottom: 11px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border: 0;
-  background: transparent;
-  color: $text-muted;
-  cursor: pointer;
-  border-radius: 4px;
+  border-radius: 46% 54% 60% 40% / 50% 40% 60% 50%;
+  pointer-events: none;
+}
 
-  &:hover {
-    color: $text;
+.marca__mancha--grande {
+  width: 46%;
+  aspect-ratio: 1;
+  top: -14%;
+  right: -12%;
+  background: radial-gradient(circle at 30% 70%, rgba($brand-teal-soft, 0.35), transparent 70%);
+}
+
+.marca__mancha--baja {
+  width: 58%;
+  aspect-ratio: 1.2;
+  bottom: -26%;
+  left: -18%;
+  background: radial-gradient(circle at 60% 30%, rgba($brand-deep, 0.65), transparent 70%);
+}
+
+.marca__gota {
+  position: absolute;
+  border-radius: 60% 40% 55% 45% / 55% 60% 40% 45%;
+  background: rgba($brand-teal-soft, 0.55);
+  pointer-events: none;
+}
+
+.marca__gota--a {
+  width: 64px;
+  height: 46px;
+  top: 19%;
+  right: 13%;
+  transform: rotate(-24deg);
+}
+
+.marca__gota--b {
+  width: 24px;
+  height: 40px;
+  bottom: 22%;
+  left: 17%;
+  transform: rotate(28deg);
+}
+
+.marca__puntos {
+  position: absolute;
+  right: 5%;
+  bottom: 2%;
+  width: 128px;
+  height: 128px;
+  background-image: radial-gradient(rgba($text-invert, 0.35) 1.6px, transparent 1.8px);
+  background-size: 18px 18px;
+  pointer-events: none;
+}
+
+.marca__tilde {
+  position: absolute;
+  width: 60px;
+  fill: none;
+  stroke: rgba($text-invert, 0.4);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+.marca__tilde--a {
+  top: 12%;
+  left: 24%;
+}
+
+.marca__tilde--b {
+  top: 55%;
+  right: 4%;
+}
+
+.marca__contenido {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 440px;
+}
+
+.marca__logotipo {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 104px;
+}
+
+.marca__icono {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 132px;
+  height: 132px;
+  background: $surface;
+  border-radius: 28px;
+  box-shadow: $shadow-lg;
+
+  svg {
+    width: 92px;
+    height: 92px;
   }
 }
 
-.acceso__enlace {
-  align-self: flex-end;
-  margin-top: -6px;
-  font-size: 12px;
+.ojo__blanco {
+  fill: $brand-iris;
+}
+
+.ojo__iris {
+  fill: $surface;
+}
+
+.ojo__pupila {
+  fill: $brand-deep;
+}
+
+.ojo__brillo {
+  fill: $surface;
+}
+
+.marca__nombre {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1;
+}
+
+.marca__titulo {
+  font-size: clamp(56px, 6vw, 80px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.marca__subtitulo {
+  margin-top: 10px;
+  font-size: clamp(20px, 2vw, 28px);
+  font-weight: 400;
+  opacity: 0.92;
+}
+
+.marca__lema {
+  margin: 0 0 28px;
+  // styles.scss pinta los h2 con $text; aquí va sobre el degradado.
+  color: $text-invert;
+  font-size: clamp(26px, 2.6vw, 36px);
   font-weight: 600;
+  line-height: 1.28;
 }
 
-.acceso__enviar {
-  width: 100%;
-  margin-top: 4px;
+.marca__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding-left: 30px;
+  font-size: clamp(18px, 1.7vw, 25px);
+  opacity: 0.95;
+
+  li::marker {
+    font-size: 0.9em;
+  }
 }
 
-.acceso__separador {
-  height: 1px;
-  margin: 22px 0 14px;
-  background: $border;
-}
-
-.acceso__ayuda {
+// ============================================================== Formulario
+.panel {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  font-size: 11.5px;
+  padding: 48px 32px;
+  background: $surface;
+}
+
+.panel__contenido {
+  width: 100%;
+  max-width: 456px;
+}
+
+.panel__cabecera {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.panel__titulo {
+  margin: 0 0 12px;
+  font-size: clamp(32px, 3vw, 44px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: $brand-deep;
+}
+
+.panel__subtitulo {
+  margin: 0;
+  font-size: 18px;
   color: $text-muted;
 }
 
-.acceso__demo {
+// -------------------------------------------------------------- Aviso de error
+.aviso {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 14px 16px;
+  border: 1px solid $danger-border;
+  border-radius: $radius;
+  background: $danger-bg;
+  color: $danger;
+}
+
+.aviso--red,
+.aviso--servidor {
+  border-color: rgba($warning, 0.4);
+  background: $warning-bg;
+  color: $warning;
+}
+
+.aviso--validacion {
+  border-color: rgba($info, 0.3);
+  background: $info-bg;
+  color: $info;
+}
+
+.aviso__icono {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.aviso__cuerpo {
+  flex: 1;
+  min-width: 0;
+}
+
+.aviso__titulo {
+  margin: 0 0 4px;
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.aviso__texto {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: $text;
+}
+
+.aviso__intentos {
+  display: flex;
+  justify-content: space-between;
   margin-top: 10px;
-  text-align: center;
-  font-size: 10.5px;
-  color: $text-faint;
+  font-size: 12.5px;
+  color: $text-muted;
+
+  strong {
+    color: $danger;
+  }
+}
+
+.aviso__barra {
+  height: 5px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: rgba($danger, 0.15);
+  overflow: hidden;
+
+  span {
+    display: block;
+    height: 100%;
+    background: $danger;
+    transition: width $transition;
+  }
+}
+
+// -------------------------------------------------------------- Campos
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.campo__etiqueta {
+  font-size: 17px;
+  font-weight: 600;
+  color: $text;
+}
+
+.campo__caja {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 54px;
+  padding: 0 16px;
+  background: $surface;
+  border: 1.5px solid $border-strong;
+  border-radius: $radius;
+  transition: border-color $transition, box-shadow $transition;
+
+  &:focus-within {
+    border-color: $brand-teal;
+    box-shadow: 0 0 0 4px rgba($brand-teal, 0.16);
+  }
+}
+
+.campo__caja--error {
+  border-color: $danger;
+
+  &:focus-within {
+    border-color: $danger;
+    box-shadow: 0 0 0 4px rgba($danger, 0.12);
+  }
+}
+
+.campo__icono {
+  flex-shrink: 0;
+  color: $text-muted;
+}
+
+.campo__input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 17px;
+  color: $text;
+
+  &::placeholder {
+    color: $text-faint;
+  }
+}
+
+.campo__ver {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  margin-right: -8px;
+  border: 0;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: $text-muted;
+  cursor: pointer;
+
+  &:hover {
+    background: $sidebar-bg;
+    color: $text;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $brand-teal;
+    outline-offset: 1px;
+  }
+}
+
+.campo__error {
+  font-size: 13px;
+  color: $danger;
+}
+
+.formulario__fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: -4px;
+}
+
+.recordar {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  color: $text;
+  cursor: pointer;
+
+  input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: $primary;
+    cursor: pointer;
+  }
+}
+
+.enlace {
+  font-size: 16px;
+  color: $primary-light;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// -------------------------------------------------------------- Botón
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 56px;
+  margin-top: 4px;
+  border: 0;
+  border-radius: $radius;
+  background: $primary;
+  box-shadow: 0 6px 16px rgba($primary, 0.28);
+  color: $text-invert;
+  font: inherit;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background $transition, transform $transition, box-shadow $transition;
+
+  &:hover:not(:disabled) {
+    background: $primary-hover;
+    box-shadow: 0 8px 20px rgba($primary, 0.34);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  &:focus-visible {
+    outline: 3px solid rgba($brand-teal, 0.5);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+    box-shadow: none;
+  }
+}
+
+.boton__giro {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba($text-invert, 0.35);
+  border-top-color: $text-invert;
+  border-radius: 50%;
+  animation: girar 0.8s linear infinite;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// -------------------------------------------------------------- Demo y ayuda
+.demo {
+  margin-top: 28px;
+  padding: 18px 20px 20px;
+  border: 1px solid $border;
+  border-radius: $radius;
+  background: $page-bg;
+}
+
+.demo__titulo {
+  margin: 0 0 12px;
+  font-size: 17px;
+  font-weight: 600;
+  color: $text;
+}
+
+.demo__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.chip {
+  padding: 8px 14px;
+  border: 1px solid $border-strong;
+  border-radius: 999px;
+  background: $surface;
+  color: $text;
+  font: inherit;
+  font-size: 16px;
+  cursor: pointer;
+  transition: border-color $transition, background $transition, color $transition;
+
+  &:hover:not(:disabled) {
+    border-color: $primary;
+    background: color.mix($primary, $surface, 6%);
+    color: $primary;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $brand-teal;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+.ayuda {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid $border;
+  font-size: 15px;
+  color: $text-muted;
+
+  a {
+    font-weight: 600;
+    color: $brand-deep;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+// ============================================================== Responsive
+@media (max-width: 960px) {
+  .acceso {
+    grid-template-columns: 1fr;
+  }
+
+  .marca {
+    padding: 36px 24px 40px;
+  }
+
+  .marca__logotipo {
+    margin-bottom: 0;
+    justify-content: center;
+  }
+
+  .marca__icono {
+    width: 84px;
+    height: 84px;
+    border-radius: 20px;
+
+    svg {
+      width: 58px;
+      height: 58px;
+    }
+  }
+
+  .marca__titulo {
+    font-size: 48px;
+  }
+
+  .marca__subtitulo {
+    font-size: 18px;
+  }
+
+  .marca__lema,
+  .marca__lista,
+  .marca__tilde,
+  .marca__gota {
+    display: none;
+  }
+
+  .panel {
+    padding: 36px 20px 48px;
+  }
+
+  .panel__cabecera {
+    margin-bottom: 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boton__giro {
+    animation-duration: 2s;
+  }
+
+  .boton,
+  .chip,
+  .campo__caja {
+    transition: none;
+  }
 }

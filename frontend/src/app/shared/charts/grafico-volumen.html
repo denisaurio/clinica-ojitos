@@ -1,18 +1,34 @@
-<div class="lienzo">
-  @for (barra of barras(); track barra.etiqueta) {
-    <div class="columna">
-      @if (barra.destacado) {
-        <span class="columna__peak">Peak</span>
-      }
-      <div class="columna__pista">
-        <div
-          class="columna__barra"
-          [class.columna__barra--peak]="barra.destacado"
-          [style.height.%]="barra.altura"
-          [attr.title]="barra.total + ' pacientes'"
-        ></div>
-      </div>
-      <span class="columna__etiqueta">{{ barra.etiqueta }}</span>
+@if (vacio()) {
+  <div class="vacio">
+    <span class="vacio__icono" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-4M2 20h20" /></svg>
+    </span>
+    <p class="vacio__titulo">Sin atenciones en los últimos 7 días</p>
+    <p class="vacio__texto">Cuando se registren consultas, aquí verás el volumen diario de pacientes.</p>
+  </div>
+} @else {
+  <div class="lienzo" role="img" [attr.aria-label]="descripcion()">
+    <div class="lienzo__guias" aria-hidden="true">
+      <span></span><span></span><span></span><span></span>
     </div>
-  }
-</div>
+    @for (barra of barras(); track barra.etiqueta) {
+      <div class="columna">
+        <span class="columna__valor" [class.columna__valor--pico]="barra.destacado">
+          {{ barra.total }}
+          @if (barra.destacado) {
+            <small>Pico</small>
+          }
+        </span>
+        <div class="columna__pista">
+          <div
+            class="columna__barra"
+            [class.columna__barra--pico]="barra.destacado"
+            [style.height.%]="barra.altura"
+            [attr.title]="barra.total + ' pacientes'"
+          ></div>
+        </div>
+        <span class="columna__etiqueta">{{ barra.etiqueta }}</span>
+      </div>
+    }
+  </div>
+}

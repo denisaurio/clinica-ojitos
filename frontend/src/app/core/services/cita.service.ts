@@ -176,7 +176,8 @@ export class CitaService {
     return {
       id: c.id,
       pacienteId: c.pacienteId,
-      pacienteNombre: c.pacienteNombre ?? '',
+      // Antes solo se leía pacienteNombre y la agenda mostraba bloques vacíos.
+      pacienteNombre: c.pacienteNombre ?? c.paciente ?? '',
       documentoPaciente: c.pacienteDocumento ?? '',
       telefonoPaciente: '',
       oftalmologoId: c.oftalmologoId,
@@ -185,7 +186,7 @@ export class CitaService {
       fecha: c.fecha,
       horaInicio: this.horaCorta(c.horaInicio),
       horaFin: this.horaCorta(c.horaFin),
-      tipoConsulta: c.tipoConsulta ?? '',
+      tipoConsulta: c.tipoConsulta ?? c.tipo ?? '',
       motivo: c.motivo ?? '',
       estadoCita: (c.estado ?? 'PROGRAMADA') as EstadoCita,
       notas: c.notaInterna ?? '',
@@ -239,6 +240,11 @@ interface CitaApi {
   estado?: string;
   motivo?: string;
   notaInterna?: string;
+  // GET /citas (agenda semanal) devuelve CitaDto.Evento, que nombra distinto
+  // algunos campos: paciente, tipo y consultorio.
+  paciente?: string;
+  tipo?: string;
+  consultorio?: string;
 }
 
 interface FranjaApi {

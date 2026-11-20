@@ -152,7 +152,9 @@ public class Mapeador {
                 c.getEstado(),
                 c.getEstadoCita() != null ? c.getEstadoCita().getNombre() : null,
                 c.getConsultorio(),
-                c.getTipoConsulta() != null ? c.getTipoConsulta().getNombre() : null);
+                c.getTipoConsulta() != null ? c.getTipoConsulta().getNombre() : null,
+                c.getPaciente() != null ? c.getPaciente().getId() : null,
+                c.getOftalmologo() != null ? c.getOftalmologo().getNombreCompleto() : null);
     }
 
     public CitaDto.Evento aEvento(Cita c) {
@@ -198,7 +200,9 @@ public class Mapeador {
                 c.getSoapEvaluacion(),
                 c.getSoapPlan(),
                 c.getObservaciones(),
-                (int) adjuntos);
+                (int) adjuntos,
+                c.getFirmadaEn(),
+                c.getFirmadaPor() != null ? c.getFirmadaPor().getNombreCompleto() : null);
     }
 
     public ConsultaDto.Evolución aEvolucion(Consulta c) {
@@ -279,7 +283,12 @@ public class Mapeador {
                 s.getTecnica(),
                 s.getIncidencias(),
                 s.getLenteIntraocular(),
-                s.getEstado());
+                s.getEstado(),
+                s.getConsultas() == null ? java.util.List.of() : s.getConsultas().stream()
+                        .map(c -> new TratamientoDto.ConsultaVinculada(
+                                c.getId(), c.getFecha(), c.getDiagnostico(),
+                                c.getOftalmologo() != null ? c.getOftalmologo().getNombreCompleto() : null))
+                        .toList());
     }
 
     /**

@@ -1,5 +1,7 @@
 package com.clinicaojitos.domain.entity;
 
+import com.clinicaojitos.security.CampoClinicoConverter;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -43,6 +45,7 @@ public class ControlTratamiento {
     @Column(name = "pio_oi", precision = 5, scale = 2)
     private BigDecimal pioOi;
 
+    @Convert(converter = CampoClinicoConverter.class)
     @Lob
     @Column(columnDefinition = "TEXT")
     private String observaciones;

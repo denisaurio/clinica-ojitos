@@ -34,6 +34,7 @@ public interface ConsultaRepository extends JpaRepository<Consulta, Long> {
             JOIN FETCH c.oftalmologo
             LEFT JOIN FETCH c.tipoConsulta
             WHERE c.paciente.id = :pacienteId
+            ORDER BY c.fecha DESC, c.id DESC
             """,
             countQuery = """
             SELECT COUNT(c) FROM Consulta c
