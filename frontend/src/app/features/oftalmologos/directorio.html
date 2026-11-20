@@ -89,8 +89,9 @@
   </ui-card>
 
   @if (cambioClave(); as m) {
-    <app-cambiar-clave-medico
-      [medicoId]="m.id"
+    <ui-cambiar-clave
+      tipo="oftalmologo"
+      [id]="m.id"
       [nombre]="m.nombreCompleto"
       (cerrar)="cambioClave.set(null)"
       (listo)="cambioClave.set(null); credenciales.set($event)"

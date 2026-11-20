@@ -81,6 +81,17 @@ export class AuthService {
     return this.http.get<PerfilUsuario>(`${environment.apiUrl}/auth/me`);
   }
 
+  /** Cambio de la propia contraseña (exige la actual). */
+  cambiarClave(passwordActual: string, passwordNueva: string): Observable<MensajeRespuesta> {
+    if (environment.useMockApi) {
+      return of({ mensaje: 'Contraseña actualizada correctamente.' }).pipe(delay(200));
+    }
+    return this.http.patch<MensajeRespuesta>(`${environment.apiUrl}/auth/cambiar-clave`, {
+      passwordActual,
+      passwordNueva,
+    });
+  }
+
   recuperarClave(peticion: RecuperarClaveRequest): Observable<MensajeRespuesta> {
     if (environment.useMockApi) {
       return of({

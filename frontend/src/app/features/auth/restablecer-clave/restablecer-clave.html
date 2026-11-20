@@ -37,6 +37,7 @@
             etiqueta="Nueva contraseña"
             icono="lock"
             tipo="password"
+            autocompletar="new-password"
             [error]="nueva.invalid && nueva.touched ? 'Mínimo 8 caracteres.' : ''"
           />
           <ui-input
@@ -44,6 +45,7 @@
             etiqueta="Repita la contraseña"
             icono="lock"
             tipo="password"
+            autocompletar="new-password"
             [error]="
               repetir.touched && (repetir.invalid || formulario.hasError('distintas'))
                 ? 'Las contraseñas no coinciden.'

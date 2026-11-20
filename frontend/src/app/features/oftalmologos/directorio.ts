@@ -24,7 +24,7 @@ import { OftalmologoService } from '../../core/services/oftalmologo.service';
 import { ContextoPaginaService } from '../../core/services/contexto-pagina.service';
 import { Credenciales, Oftalmologo } from '../../core/models';
 import { CredencialesComponent } from '../../shared/components/ui-credenciales';
-import { CambiarClaveMedicoComponent } from './cambiar-clave';
+import { CambiarClaveComponent } from '../../shared/components/ui-cambiar-clave';
 
 /**
  * Directorio de oftalmólogos (imagen 38): buscador, tabla con estado y menú de
@@ -43,7 +43,7 @@ import { CambiarClaveMedicoComponent } from './cambiar-clave';
     PaginationComponent,
     EmptyStateComponent,
     IconComponent,
-    CambiarClaveMedicoComponent,
+    CambiarClaveComponent,
     CredencialesComponent,
   ],
   templateUrl: './directorio.html',

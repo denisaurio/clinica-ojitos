@@ -126,6 +126,29 @@ en cuanto la contraseña cambia. No es un JWT: no sirve para entrar a la API.
 Necesita `SMTP_HOST` y `APP_URL` (ver [DESPLIEGUE.md](DESPLIEGUE.md)); sin SMTP
 la petición responde igual, pero el correo solo queda anotado en el log.
 
+### 2.2 Cambiar contraseñas
+
+```
+ Propia (todos los roles):  avatar ▸ "Mi cuenta y contraseña"  =  /configuracion
+   actual + nueva + repetir  ──► PATCH /api/v1/auth/cambiar-clave
+
+ De un médico (administrador):  Doctores ▸ ⋮ ▸ Cambiar contraseña  (o su perfil)
+   ──► POST /api/v1/oftalmologos/:id/credenciales  { password? }
+
+ De un paciente (administrador y recepción):  Pacientes ▸ candado  (o su ficha)
+   ──► POST /api/v1/pacientes/:id/credenciales  { password? }
+   la cuenta se busca por el correo de la ficha; sin cuenta ──► 400
+```
+
+- `password` vacío = el sistema genera una de 12 caracteres sin letras que se
+  confunden (0 O 1 l I o). El resultado se muestra una vez, con botones
+  **Copiar** y **Descargar**.
+- Todos los campos de contraseña tienen el **ojito** para ver lo escrito y
+  `autocomplete="new-password"`, para que el navegador no rellene la clave
+  guardada de quien está usando el sistema.
+- Los diálogos solo se cierran si el clic empieza y termina en el fondo
+  (antes, seleccionar texto y soltar fuera los cerraba).
+
 ---
 
 ## 3. Pacientes (RF-01)

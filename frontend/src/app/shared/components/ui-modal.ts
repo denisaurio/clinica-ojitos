@@ -14,7 +14,13 @@ export type TamanoModal = 'sm' | 'md' | 'lg';
   imports: [IconComponent],
   template: `
     @if (abierto()) {
-      <div class="velo" (click)="cerrar.emit()">
+      <!-- Solo cierra si el clic empieza y termina en el velo: antes, seleccionar
+           texto en un campo y soltar el ratón fuera cerraba el diálogo solo. -->
+      <div
+        class="velo"
+        (pointerdown)="pulsoEnVelo = $event.target === $event.currentTarget"
+        (click)="alHacerClicEnVelo($event)"
+      >
         <div
           [class]="'modal modal--' + tamano() + ' modal--' + variante()"
           role="dialog"
@@ -54,4 +60,13 @@ export class ModalComponent {
   readonly variante = input<'neutro' | 'peligro'>('neutro');
 
   readonly cerrar = output<void>();
+
+  protected pulsoEnVelo = false;
+
+  protected alHacerClicEnVelo(evento: MouseEvent): void {
+    if (this.pulsoEnVelo && evento.target === evento.currentTarget) {
+      this.cerrar.emit();
+    }
+    this.pulsoEnVelo = false;
+  }
 }

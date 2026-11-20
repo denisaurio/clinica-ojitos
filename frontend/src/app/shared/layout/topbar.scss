@@ -236,3 +236,9 @@
     padding: 2px;
   }
 }
+
+// El enlace "Mi cuenta" del menú del avatar se ve igual que los botones.
+a.menu-usuario__opcion {
+  text-decoration: none;
+  box-sizing: border-box;
+}

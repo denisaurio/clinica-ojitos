@@ -49,6 +49,7 @@ public class PacienteService {
     private final RolRepository rolRepository;
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final com.clinicaojitos.security.GeneradorDeCredenciales generador;
 
     @Transactional(readOnly = true)
     public Page<PacienteDto.Resumen> buscar(String buscar, Pageable pageable) {
@@ -188,6 +189,33 @@ public class PacienteService {
                 request.password(),
                 p.getNombreCompleto(),
                 CredencialesDto.formato(username, request.password(), p.getNombreCompleto()));
+    }
+
+    /**
+     * Cambia la contraseña del portal del paciente: la que escribe quien lo
+     * atiende o, si viene vacía, una aleatoria. La cuenta se localiza igual que
+     * al iniciar sesión: por el correo de la ficha.
+     */
+    @Transactional
+    @Auditado(accion = "RESETEAR_CLAVE", recurso = "PACIENTE", descripcion = "Cambio de contraseña del portal")
+    public CredencialesDto cambiarClave(Long id, String passwordElegida) {
+        Paciente p = obtenerEntidad(id);
+        String correo = p.getEmail() != null ? p.getEmail()
+                : (p.getDocumento() + "@sin-correo.clinicaojitos.pe");
+        Usuario cuenta = usuarioRepository.findByEmailIgnoreCase(correo)
+                .filter(u -> "PACIENTE".equals(u.getCodigoRol()))
+                .orElseThrow(() -> new OperacionInvalidaException(
+                        "Este paciente no tiene cuenta en el portal (o cambió su correo)."));
+
+        String clave = passwordElegida == null || passwordElegida.isBlank()
+                ? generador.nuevaPassword()
+                : passwordElegida;
+        cuenta.setPasswordHash(passwordEncoder.encode(clave));
+        cuenta.setIntentosFallidos(0);
+        usuarioRepository.save(cuenta);
+
+        return new CredencialesDto(cuenta.getUsername(), clave, p.getNombreCompleto(),
+                CredencialesDto.formato(cuenta.getUsername(), clave, p.getNombreCompleto()));
     }
 
     @Transactional

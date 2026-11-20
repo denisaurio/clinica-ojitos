@@ -1,28 +1,34 @@
 import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Observable } from 'rxjs';
 
-import { ModalComponent } from '../../shared/components/ui-modal';
-import { InputComponent } from '../../shared/components/ui-input';
-import { ButtonComponent } from '../../shared/components/ui-button';
-import { AlertComponent } from '../../shared/components/ui-alert';
+import { ModalComponent } from './ui-modal';
+import { InputComponent } from './ui-input';
+import { ButtonComponent } from './ui-button';
+import { AlertComponent } from './ui-alert';
 import { OftalmologoService } from '../../core/services/oftalmologo.service';
+import { PacienteService } from '../../core/services/paciente.service';
 import { Credenciales } from '../../core/models';
 
 /**
- * El administrador fija la contraseña de un médico (la escribe él o pide una
- * al azar). Se abre desde los tres puntos del directorio y desde el perfil.
- * Al terminar emite las credenciales para mostrarlas con `<ui-credenciales>`.
+ * Cambio de contraseña de una cuenta ajena (médico o paciente): quien atiende
+ * la escribe —con el ojito para revisarla— o pide una al azar. Al terminar
+ * emite las credenciales para mostrarlas con `<ui-credenciales>`.
+ *
+ * - Médicos: directorio (⋮) y perfil, solo administrador.
+ * - Pacientes: ficha del paciente, administrador y recepción.
  */
 @Component({
-  selector: 'app-cambiar-clave-medico',
+  selector: 'ui-cambiar-clave',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule, ModalComponent, InputComponent, ButtonComponent, AlertComponent],
   template: `
     <ui-modal [abierto]="true" icono="lock" [titulo]="'Cambiar contraseña de ' + nombre()" (cerrar)="cerrar.emit()">
-      <form [formGroup]="formulario" (ngSubmit)="guardar()" novalidate class="clave">
+      <form [formGroup]="formulario" (ngSubmit)="guardar()" novalidate class="clave" autocomplete="off">
         <p class="clave__texto">
-          Escriba la contraseña con la que entrará el médico. La anterior deja de
-          servir. Él podrá cambiarla luego en <strong>Configuración → Mi cuenta</strong>.
+          Escriba la nueva contraseña (use el ojito para revisarla) o genere una al
+          azar. La anterior deja de servir. Después podrá cambiarla en
+          <strong>Configuración → Mi cuenta</strong>.
         </p>
 
         @if (error()) {
@@ -34,6 +40,7 @@ import { Credenciales } from '../../core/models';
           etiqueta="Nueva contraseña"
           tipo="password"
           icono="lock"
+          autocompletar="new-password"
           [requerido]="true"
           [error]="c.password.invalid && c.password.touched ? 'Mínimo 8 caracteres.' : ''"
         />
@@ -42,6 +49,7 @@ import { Credenciales } from '../../core/models';
           etiqueta="Repita la contraseña"
           tipo="password"
           icono="lock"
+          autocompletar="new-password"
           [requerido]="true"
           [error]="c.repetir.touched && distintas() ? 'Las contraseñas no coinciden.' : ''"
         />
@@ -64,11 +72,14 @@ import { Credenciales } from '../../core/models';
     .clave__texto { margin: 0; color: #64748b; font-size: 0.9rem; line-height: 1.5; }
   `,
 })
-export class CambiarClaveMedicoComponent {
+export class CambiarClaveComponent {
   private readonly fb = inject(FormBuilder);
   private readonly oftalmologos = inject(OftalmologoService);
+  private readonly pacientes = inject(PacienteService);
 
-  readonly medicoId = input.required<number>();
+  /** De quién es la cuenta: cambia el endpoint al que se llama. */
+  readonly tipo = input<'oftalmologo' | 'paciente'>('oftalmologo');
+  readonly id = input.required<number>();
   readonly nombre = input('');
   readonly cerrar = output<void>();
   readonly listo = output<Credenciales>();
@@ -101,7 +112,12 @@ export class CambiarClaveMedicoComponent {
   protected enviar(password: string | null): void {
     this.enviando.set(true);
     this.error.set('');
-    this.oftalmologos.credenciales(this.medicoId(), password ?? undefined).subscribe({
+    const clave = password ?? undefined;
+    const peticion: Observable<Credenciales> =
+      this.tipo() === 'paciente'
+        ? this.pacientes.credenciales(this.id(), clave)
+        : this.oftalmologos.credenciales(this.id(), clave);
+    peticion.subscribe({
       next: (cred) => {
         this.enviando.set(false);
         this.listo.emit(cred);

@@ -19,7 +19,7 @@ import { SkeletonComponent } from '../../shared/components/ui-skeleton';
 import { IconComponent } from '../../shared/components/ui-icon';
 import { ModalComponent } from '../../shared/components/ui-modal';
 import { CredencialesComponent } from '../../shared/components/ui-credenciales';
-import { CambiarClaveMedicoComponent } from './cambiar-clave';
+import { CambiarClaveComponent } from '../../shared/components/ui-cambiar-clave';
 import { OftalmologoService } from '../../core/services/oftalmologo.service';
 import { CitaService } from '../../core/services/cita.service';
 import { ContextoPaginaService } from '../../core/services/contexto-pagina.service';
@@ -40,7 +40,7 @@ import { BloqueHorario, Cita, Credenciales, EstadoCita, MetricasOftalmologo, Oft
     IconComponent,
     ModalComponent,
     CredencialesComponent,
-    CambiarClaveMedicoComponent,
+    CambiarClaveComponent,
   ],
   templateUrl: './perfil.html',
   styleUrl: './perfil.scss',

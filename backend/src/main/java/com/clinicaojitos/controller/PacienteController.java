@@ -62,6 +62,16 @@ public class PacienteController {
         return pacienteService.registrar(request);
     }
 
+    /** Cambia la contraseña del portal del paciente (elegida o aleatoria). */
+    @PostMapping("/{id}/credenciales")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR','RECEPCIONISTA')")
+    @Operation(summary = "Cambia la contraseña del portal del paciente")
+    public com.clinicaojitos.domain.dto.CredencialesDto credenciales(
+            @PathVariable Long id,
+            @Valid @RequestBody(required = false) PacienteDto.ClaveRequest request) {
+        return pacienteService.cambiarClave(id, request == null ? null : request.password());
+    }
+
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR','RECEPCIONISTA')")
     @Operation(summary = "Actualiza los datos de un paciente")

@@ -77,6 +77,10 @@
 
     @if (menuAbierto()) {
       <div class="menu-usuario">
+        <a class="menu-usuario__opcion" routerLink="/configuracion" (click)="menuAbierto.set(false)">
+          <ui-icon nombre="lock" [tamano]="15" />
+          <span>Mi cuenta y contraseña</span>
+        </a>
         <button type="button" class="menu-usuario__opcion" (click)="cerrarSesion()">
           <ui-icon nombre="logOut" [tamano]="15" />
           <span>Cerrar sesión</span>

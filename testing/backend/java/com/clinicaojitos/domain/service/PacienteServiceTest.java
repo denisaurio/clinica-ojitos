@@ -48,6 +48,7 @@ class PacienteServiceTest {
     @Mock private UsuarioRepository usuarioRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private Mapeador mapeador;
+    @Mock private com.clinicaojitos.security.GeneradorDeCredenciales generador;
 
     @InjectMocks private PacienteService servicio;
 
@@ -166,5 +167,30 @@ class PacienteServiceTest {
 
         assertThat(p.getActivo()).isFalse();
         verify(pacienteRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("Cambia la contraseña del portal: la escrita o una aleatoria, y la cuenta se halla por el correo")
+    void cambiaClaveDelPortal() {
+        com.clinicaojitos.domain.entity.Paciente p = com.clinicaojitos.domain.entity.Paciente.builder()
+                .id(3L).nombres("María").apellidos("González").email("maria@correo.com").build();
+        com.clinicaojitos.domain.entity.Rol rol = com.clinicaojitos.domain.entity.Rol.builder()
+                .id(4).codigo("PACIENTE").build();
+        com.clinicaojitos.domain.entity.Usuario cuenta = com.clinicaojitos.domain.entity.Usuario.builder()
+                .id(9L).username("María González").email("maria@correo.com").rol(rol)
+                .intentosFallidos(3).build();
+        when(pacienteRepository.findById(3L)).thenReturn(java.util.Optional.of(p));
+        when(usuarioRepository.findByEmailIgnoreCase("maria@correo.com")).thenReturn(java.util.Optional.of(cuenta));
+        when(passwordEncoder.encode(org.mockito.ArgumentMatchers.anyString())).thenAnswer(i -> "hash:" + i.getArgument(0));
+        when(generador.nuevaPassword()).thenReturn("Ab3$cdEFgh2k");
+
+        var elegida = servicio.cambiarClave(3L, "ClaveNueva2026");
+        org.assertj.core.api.Assertions.assertThat(elegida.username()).isEqualTo("María González");
+        org.assertj.core.api.Assertions.assertThat(cuenta.getPasswordHash()).isEqualTo("hash:ClaveNueva2026");
+        org.assertj.core.api.Assertions.assertThat(cuenta.getIntentosFallidos()).isZero();
+
+        var aleatoria = servicio.cambiarClave(3L, null);
+        org.assertj.core.api.Assertions.assertThat(aleatoria.password()).isEqualTo("Ab3$cdEFgh2k");
+        org.assertj.core.api.Assertions.assertThat(cuenta.getPasswordHash()).isEqualTo("hash:Ab3$cdEFgh2k");
     }
 }

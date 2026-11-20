@@ -161,8 +161,9 @@
     </ui-modal>
 
     @if (cambioClave()) {
-      <app-cambiar-clave-medico
-        [medicoId]="m.id"
+      <ui-cambiar-clave
+        tipo="oftalmologo"
+        [id]="m.id"
         [nombre]="nombreCompleto()"
         (cerrar)="cambioClave.set(false)"
         (listo)="cambioClave.set(false); credenciales.set($event)"

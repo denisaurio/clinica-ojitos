@@ -36,7 +36,8 @@ import { IconComponent } from './ui-icon';
         }
         <input
           class="campo__input"
-          [type]="tipo()"
+          [type]="tipo() === 'password' && claveVisible() ? 'text' : tipo()"
+          [attr.autocomplete]="autocompletar() || null"
           [placeholder]="placeholder()"
           [disabled]="deshabilitado()"
           [value]="valorActual()"
@@ -44,7 +45,18 @@ import { IconComponent } from './ui-icon';
           (input)="alEscribir($event)"
           (blur)="alSalir()"
         />
-        @if (icono()) {
+        @if (tipo() === 'password') {
+          <!-- Ojito: muestra u oculta lo escrito para revisarlo antes de guardar. -->
+          <button
+            type="button"
+            class="campo__ojo"
+            [attr.aria-label]="claveVisible() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            [attr.title]="claveVisible() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            (click)="alternarClave($event)"
+          >
+            <ui-icon [nombre]="claveVisible() ? 'eye-off' : 'eye'" [tamano]="17" />
+          </button>
+        } @else if (icono()) {
           <ui-icon class="campo__sufijo" [nombre]="sufijoIcono()" [tamano]="15" />
         }
       </span>
@@ -67,6 +79,19 @@ export class InputComponent implements ControlValueAccessor {
   readonly listaId = input('');
   readonly sufijoIcono = input('');
   readonly tipo = input<'text' | 'email' | 'password' | 'date' | 'number' | 'tel' | 'search'>('text');
+  /**
+   * Atributo autocomplete. En contraseñas nuevas use "new-password": así el
+   * navegador no rellena el campo con la contraseña guardada de quien está
+   * usando el sistema (la que se guardaba sin que nadie la escribiera).
+   */
+  readonly autocompletar = input<string | null>(null);
+  protected readonly claveVisible = signal(false);
+
+  protected alternarClave(evento: Event): void {
+    // El botón vive dentro del <label>: sin esto el clic también enfoca/activa el campo.
+    evento.preventDefault();
+    this.claveVisible.update((v) => !v);
+  }
   readonly requerido = input(false);
   readonly deshabilitado = input(false);
   /** Mensaje de error; lo inyecta el formulario al perder el foco. */

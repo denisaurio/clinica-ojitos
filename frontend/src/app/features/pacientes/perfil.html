@@ -21,6 +21,11 @@
         >
           Ver historial médico
         </ui-button>
+        @if (puedeCambiarClave()) {
+          <ui-button variante="contorno" icono="lock" (click)="cambioClave.set(true)">
+            Cambiar contraseña
+          </ui-button>
+        }
         @if (puedeReservar()) {
           <ui-button variante="primario" icono="calendar" destino="/citas/reservar" [enlace]="true">
             Programar cita
@@ -109,6 +114,29 @@
         </ui-card>
       </div>
     </div>
+
+    @if (cambioClave()) {
+      <ui-cambiar-clave
+        tipo="paciente"
+        [id]="p.id"
+        [nombre]="p.nombreCompleto"
+        (cerrar)="cambioClave.set(false)"
+        (listo)="cambioClave.set(false); credenciales.set($event)"
+      />
+    }
+
+    @if (credenciales(); as c) {
+      <ui-credenciales
+        [credenciales]="c"
+        [titulo]="'Nueva contraseña de ' + p.nombreCompleto"
+        (cerrar)="credenciales.set(null)"
+      />
+    }
+  } @else if (errorCarga()) {
+    <ui-alert tipo="warning">{{ errorCarga() }}</ui-alert>
+    <ui-button variante="contorno" icono="arrow-left" destino="/pacientes" [enlace]="true">
+      Volver al listado
+    </ui-button>
   } @else {
     <ui-skeleton [lineas]="6" alto="18px" padding="20px 0" />
   }

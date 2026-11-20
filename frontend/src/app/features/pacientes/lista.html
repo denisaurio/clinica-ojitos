@@ -46,7 +46,16 @@
               <td>
                 <ui-badge variante="neutro">{{ paciente.seguro }}</ui-badge>
               </td>
-              <td>
+              <td class="acciones">
+                @if (puedeCambiarClave()) {
+                  <ui-button
+                    variante="fantasma"
+                    tamano="sm"
+                    icono="lock"
+                    title="Cambiar contraseña del portal"
+                    (click)="$event.stopPropagation(); cambioClave.set(paciente)"
+                  />
+                }
                 <ui-button
                   variante="fantasma"
                   tamano="sm"
@@ -82,5 +91,23 @@
     <ui-card class="tabla">
       <ui-skeleton [lineas]="5" alto="14px" padding="16px 20px" />
     </ui-card>
+  }
+
+  @if (cambioClave(); as p) {
+    <ui-cambiar-clave
+      tipo="paciente"
+      [id]="p.id"
+      [nombre]="p.nombreCompleto"
+      (cerrar)="cambioClave.set(null)"
+      (listo)="cambioClave.set(null); credenciales.set($event)"
+    />
+  }
+
+  @if (credenciales(); as c) {
+    <ui-credenciales
+      [credenciales]="c"
+      [titulo]="'Nueva contraseña de ' + c.nombreCompleto"
+      (cerrar)="credenciales.set(null)"
+    />
   }
 </div>
